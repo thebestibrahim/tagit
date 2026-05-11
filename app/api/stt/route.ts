@@ -1,0 +1,25 @@
+import { NextResponse } from "next/server";
+import Groq from "groq-sdk";
+import { toFile } from "groq-sdk";
+
+export async function POST(request: Request) {
+  const formData = await request.formData().catch(() => null);
+  if (!formData) return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
+
+  const audio = formData.get("audio") as Blob | null;
+  if (!audio) return NextResponse.json({ error: "audio field required" }, { status: 400 });
+
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
+
+  const arrayBuffer = await audio.arrayBuffer();
+  const file = await toFile(Buffer.from(arrayBuffer), "audio.webm", { type: "audio/webm" });
+
+  const transcription = await groq.audio.transcriptions.create({
+    file,
+    model: "whisper-large-v3-turbo",
+    response_format: "json",
+    language: "en",
+  });
+
+  return NextResponse.json({ text: transcription.text });
+}

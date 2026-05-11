@@ -1,0 +1,112 @@
+import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
+import { sendClaimNotificationEmail, APP_URL } from "@/lib/email";
+import { headers } from "next/headers";
+
+const admin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { autoRefreshToken: false, persistSession: false } }
+);
+
+export async function POST(request: Request) {
+  const body = await request.json().catch(() => ({}));
+  const { tag_id, claimant_name, claimant_email, claim_location } = body as {
+    tag_id?: string;
+    claimant_name?: string;
+    claimant_email?: string;
+    claim_location?: string;
+  };
+
+  if (!tag_id || !claimant_name || !claimant_email) {
+    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  // Verify tag is in a claimable state
+  const { data: tagData } = await admin
+    .from("tags")
+    .select("id, status, company_id, short_id")
+    .eq("id", tag_id)
+    .single();
+
+  const tag = tagData as {
+    id: string;
+    status: string;
+    company_id: string;
+    short_id: string;
+  } | null;
+
+  if (!tag) {
+    return NextResponse.json({ error: "Tag not found" }, { status: 404 });
+  }
+
+  const claimableStatuses = ["embedded", "activated", "unowned"];
+  if (!claimableStatuses.includes(tag.status)) {
+    return NextResponse.json(
+      { error: "This item is not available for claiming" },
+      { status: 409 }
+    );
+  }
+
+  // Check for existing pending claim
+  const { data: existingClaims } = await admin
+    .from("ownership_claims")
+    .select("id")
+    .eq("tag_id", tag_id)
+    .eq("status", "pending")
+    .limit(1);
+
+  if ((existingClaims ?? []).length > 0) {
+    return NextResponse.json(
+      { error: "A claim is already pending for this item" },
+      { status: 409 }
+    );
+  }
+
+  const headerStore = await headers();
+  const ip = headerStore.get("x-forwarded-for") ?? headerStore.get("x-real-ip") ?? null;
+
+  // Create claim
+  const { data: claimData, error: claimError } = await admin
+    .from("ownership_claims")
+    .insert({
+      tag_id,
+      claimant_name,
+      claimant_email,
+      claim_ip: ip,
+      claim_location: claim_location ?? null,
+      status: "pending",
+    } as never)
+    .select("id")
+    .single();
+
+  if (claimError || !claimData) {
+    return NextResponse.json({ error: "Failed to create claim" }, { status: 500 });
+  }
+
+  // Update tag status
+  await admin.from("tags").update({ status: "claim_pending" } as never).eq("id", tag_id);
+
+  // Fetch product name and company email for notification
+  const [{ data: productData }, { data: companyData }] = await Promise.all([
+    admin.from("products").select("name").eq("tag_id", tag_id).single(),
+    admin.from("companies").select("email, name").eq("id", tag.company_id).single(),
+  ]);
+
+  const product = productData as { name: string } | null;
+  const company = companyData as { email: string; name: string } | null;
+
+  if (product && company) {
+    const claim = claimData as { id: string };
+    const claimUrl = `${APP_URL}/dashboard/ownership/${claim.id}`;
+    await sendClaimNotificationEmail(company.email, {
+      companyName: company.name,
+      productName: product.name,
+      claimantName: claimant_name,
+      claimantEmail: claimant_email,
+      claimUrl,
+    }).catch(() => {});
+  }
+
+  return NextResponse.json({ success: true });
+}

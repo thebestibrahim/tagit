@@ -1,0 +1,214 @@
+import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/auth";
+import { redirect, notFound } from "next/navigation";
+import { format } from "date-fns";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import type { CompanyStatus } from "@/types/database";
+import ClaimReviewActions from "./ClaimReviewActions";
+
+type ClaimDetail = {
+  id: string;
+  tag_id: string;
+  claimant_name: string;
+  claimant_email: string;
+  claim_ip: string | null;
+  claim_location: string | null;
+  status: string;
+  reviewed_at: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  expires_at: string;
+};
+
+export default async function ClaimDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const user = await getUser();
+  if (!user) redirect("/auth/login");
+
+  const { data: companyData } = await supabase
+    .from("companies")
+    .select("id, status")
+    .eq("id", user.id)
+    .single();
+
+  const company = companyData as { id: string; status: CompanyStatus } | null;
+  if (!company || company.status !== "approved") redirect("/auth/unauthorized");
+
+  const { data: claimData } = await supabase
+    .from("ownership_claims")
+    .select("id, tag_id, claimant_name, claimant_email, claim_ip, claim_location, status, reviewed_at, rejection_reason, created_at, expires_at")
+    .eq("id", id)
+    .single();
+
+  if (!claimData) notFound();
+  const claim = claimData as ClaimDetail;
+
+  // Verify claim belongs to this company's tag
+  const { data: tagData } = await supabase
+    .from("tags")
+    .select("id, short_id, status, company_id")
+    .eq("id", claim.tag_id)
+    .single();
+
+  const tag = tagData as { id: string; short_id: string; status: string; company_id: string } | null;
+  if (!tag || tag.company_id !== company.id) notFound();
+
+  // Get product info
+  const { data: productData } = await supabase
+    .from("products")
+    .select("name, retail_price, currency")
+    .eq("tag_id", claim.tag_id)
+    .single();
+
+  const product = productData as { name: string; retail_price: number | null; currency: string } | null;
+
+  const expired = new Date(claim.expires_at) < new Date();
+  const canReview = claim.status === "pending" && !expired;
+
+  return (
+    <div className="p-8 max-w-3xl mx-auto">
+      <Link
+        href="/dashboard/ownership"
+        className="inline-flex items-center gap-1.5 mb-6"
+        style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}
+      >
+        <ArrowLeft size={14} />
+        Back to ownership
+      </Link>
+
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>
+            Ownership claim
+          </h1>
+          <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+            Submitted {format(new Date(claim.created_at), "MMMM d, yyyy")}
+          </p>
+        </div>
+        <span
+          className="px-3 py-1 rounded-full text-body-sm font-medium capitalize mt-1"
+          style={{
+            backgroundColor:
+              claim.status === "pending" ? "var(--color-soft-gold)" :
+              claim.status === "approved" ? "var(--color-verified-tint)" :
+              "var(--color-alert-tint)",
+            color:
+              claim.status === "pending" ? "var(--color-deep-gold)" :
+              claim.status === "approved" ? "var(--color-verified)" :
+              "var(--color-alert)",
+          }}
+        >
+          {expired && claim.status === "pending" ? "expired" : claim.status}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Claimant */}
+        <div
+          className="p-5 rounded-xl"
+          style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)" }}
+        >
+          <p className="text-micro font-medium uppercase tracking-wider mb-3" style={{ color: "var(--color-slate)" }}>
+            Claimant
+          </p>
+          <p className="font-semibold mb-0.5" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body)" }}>
+            {claim.claimant_name}
+          </p>
+          <p style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+            {claim.claimant_email}
+          </p>
+          {claim.claim_ip && (
+            <p className="mt-3" style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}>
+              IP: {claim.claim_ip}
+            </p>
+          )}
+          {claim.claim_location && (
+            <p style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}>
+              Location: {claim.claim_location}
+            </p>
+          )}
+        </div>
+
+        {/* Product */}
+        <div
+          className="p-5 rounded-xl"
+          style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)" }}
+        >
+          <p className="text-micro font-medium uppercase tracking-wider mb-3" style={{ color: "var(--color-slate)" }}>
+            Product
+          </p>
+          <p className="font-semibold mb-0.5" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body)" }}>
+            {product?.name ?? "—"}
+          </p>
+          <p style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+            Tag:{" "}
+            <span style={{ fontFamily: "var(--font-jetbrains-mono)", letterSpacing: "0.05em" }}>
+              {tag.short_id}
+            </span>
+          </p>
+          {product?.retail_price && (
+            <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+              {product.currency} {product.retail_price.toLocaleString()}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div
+        className="p-5 rounded-xl mb-6"
+        style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)" }}
+      >
+        <p className="text-micro font-medium uppercase tracking-wider mb-4" style={{ color: "var(--color-slate)" }}>
+          Timeline
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-graphite)", flexShrink: 0 }} />
+            <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
+              Claim submitted — {format(new Date(claim.created_at), "MMM d, yyyy 'at' HH:mm")}
+            </span>
+          </div>
+          {claim.reviewed_at && (
+            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+              <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: claim.status === "approved" ? "var(--color-verified)" : "var(--color-alert)", flexShrink: 0 }} />
+              <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
+                {claim.status === "approved" ? "Approved" : "Rejected"} — {format(new Date(claim.reviewed_at), "MMM d, yyyy 'at' HH:mm")}
+              </span>
+            </div>
+          )}
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-stone)", flexShrink: 0 }} />
+            <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)" }}>
+              Expires — {format(new Date(claim.expires_at), "MMM d, yyyy")}
+              {expired ? " (expired)" : ""}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Rejection reason (if rejected) */}
+      {claim.status === "rejected" && claim.rejection_reason && (
+        <div className="p-5 rounded-xl mb-6" style={{ backgroundColor: "var(--color-alert-tint)", border: "1px solid #F0C0C0" }}>
+          <p className="text-micro font-medium uppercase tracking-wider mb-2" style={{ color: "var(--color-alert)" }}>
+            Rejection reason
+          </p>
+          <p style={{ color: "var(--color-alert)", fontSize: "var(--text-body-sm)" }}>
+            {claim.rejection_reason}
+          </p>
+        </div>
+      )}
+
+      {/* Review actions */}
+      {canReview && (
+        <ClaimReviewActions claimId={claim.id} claimantName={claim.claimant_name} claimantEmail={claim.claimant_email} tagId={claim.tag_id} />
+      )}
+    </div>
+  );
+}
