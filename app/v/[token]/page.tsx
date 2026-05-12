@@ -4,11 +4,12 @@ import { createClient } from "@supabase/supabase-js";
 import { createHmac } from "crypto";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
-import { Shield, ShieldX, Clock, AlertTriangle, ChevronRight } from "lucide-react";
+import { ShieldX, ShieldCheck, Clock, AlertTriangle } from "lucide-react";
 import { INDUSTRY_FIELDS } from "@/lib/industry-fields";
 import ClaimForm from "./ClaimForm";
 import TransferForm from "./TransferForm";
 import VoiceWidget from "./VoiceWidget";
+import CollapsibleSection from "./CollapsibleSection";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,6 +35,26 @@ async function logScan(tagId: string, result: string, headerStore: Awaited<Retur
   } as never).then(() => {});
 }
 
+type OwnershipRecord = {
+  id: string;
+  owner_name: string;
+  owner_email: string;
+  acquisition_type: string;
+  acquired_at: string;
+  sale_price: number | null;
+  currency: string;
+  is_current: boolean;
+};
+
+type Product = {
+  id: string;
+  name: string;
+  industry_fields: Record<string, string>;
+  retail_price: number | null;
+  currency: string;
+  photos: string[];
+};
+
 export default async function ScanPage({
   params,
 }: {
@@ -42,16 +63,13 @@ export default async function ScanPage({
   const { token } = await params;
   const headerStore = await headers();
 
-  // Fetch tag
   const { data: tagData } = await admin
     .from("tags")
     .select("id, token, short_id, status, company_id, industry, hmac_signature")
     .eq("token", token)
     .single();
 
-  if (!tagData) {
-    notFound();
-  }
+  if (!tagData) notFound();
 
   const tag = tagData as {
     id: string;
@@ -64,7 +82,6 @@ export default async function ScanPage({
   };
 
   const hmacValid = validateHmac(tag.token, tag.hmac_signature);
-
   if (!hmacValid) {
     await logScan(tag.id, "invalid_hmac", headerStore);
     return <InvalidPage />;
@@ -72,23 +89,14 @@ export default async function ScanPage({
 
   await logScan(tag.id, "valid", headerStore);
 
-  // Fetch product
   const { data: productData } = await admin
     .from("products")
     .select("id, name, industry_fields, retail_price, currency, photos")
     .eq("tag_id", tag.id)
     .single();
 
-  const product = productData as {
-    id: string;
-    name: string;
-    industry_fields: Record<string, string>;
-    retail_price: number | null;
-    currency: string;
-    photos: string[];
-  } | null;
+  const product = productData as Product | null;
 
-  // Fetch company
   const { data: companyData } = await admin
     .from("companies")
     .select("id, name, logo_url, brand_primary_color, brand_secondary_color, brand_accent_color, brand_font, brand_story, custom_header_text, social_links, ai_enabled, ai_persona_name")
@@ -110,24 +118,13 @@ export default async function ScanPage({
     ai_persona_name: string | null;
   } | null;
 
-  // Fetch ownership records
   const { data: ownershipData } = await admin
     .from("ownership_records")
     .select("id, owner_name, owner_email, acquisition_type, acquired_at, sale_price, currency, is_current")
     .eq("tag_id", tag.id)
     .order("acquired_at", { ascending: true });
 
-  const ownershipRecords = (ownershipData ?? []) as {
-    id: string;
-    owner_name: string;
-    owner_email: string;
-    acquisition_type: string;
-    acquired_at: string;
-    sale_price: number | null;
-    currency: string;
-    is_current: boolean;
-  }[];
-
+  const ownershipRecords = (ownershipData ?? []) as OwnershipRecord[];
   const currentOwner = ownershipRecords.find((r) => r.is_current) ?? null;
 
   const primary = company?.brand_primary_color || "#0A0A0B";
@@ -142,126 +139,172 @@ export default async function ScanPage({
   const fontFamily = fontMap[company?.brand_font || "body"] || fontMap.body;
 
   return (
-    <div style={{ backgroundColor: secondary, minHeight: "100vh", fontFamily }}>
-      {/* Header */}
-      <header
-        style={{
-          backgroundColor: primary,
-          padding: "16px 20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          {company?.logo_url ? (
-            <img
-              src={company.logo_url}
-              alt={company.name}
-              style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "contain" }}
-            />
-          ) : null}
-          <span
-            style={{
-              fontSize: "18px",
-              fontWeight: "700",
-              color: secondary,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {company?.custom_header_text || company?.name || "Tagit"}
-          </span>
-        </div>
-        <span
-          style={{
-            fontSize: "11px",
-            fontWeight: "600",
-            color: accent,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
-          Tagit
-        </span>
-      </header>
-
-      <div style={{ maxWidth: "480px", margin: "0 auto", padding: "0 0 48px" }}>
-        {/* Verification badge */}
+    <div style={{ backgroundColor: "#FAFAF8", minHeight: "100vh", fontFamily }}>
+      {/* Brand header */}
+      <header style={{ backgroundColor: primary }}>
         <div
           style={{
-            margin: "0 20px",
-            padding: "12px 16px",
-            backgroundColor: "#DCEEE3",
-            borderRadius: "0 0 12px 12px",
+            padding: "14px 20px 12px",
             display: "flex",
             alignItems: "center",
-            gap: "8px",
+            justifyContent: "space-between",
           }}
         >
-          <Shield size={16} color="#2D6A4F" strokeWidth={2} />
-          <span style={{ fontSize: "13px", fontWeight: "600", color: "#2D6A4F" }}>
-            Verified by Tagit
-          </span>
-          <span
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {company?.logo_url && (
+              <img
+                src={company.logo_url}
+                alt=""
+                style={{ width: 28, height: 28, borderRadius: 4, objectFit: "contain", opacity: 0.9 }}
+              />
+            )}
+            <span
+              style={{
+                fontFamily: "'Instrument Serif',Georgia,serif",
+                fontSize: 20,
+                fontStyle: "italic",
+                color: secondary,
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {company?.custom_header_text || company?.name || "Tagit"}
+            </span>
+          </div>
+          <div
             style={{
-              marginLeft: "auto",
-              fontFamily: "'JetBrains Mono',monospace",
-              fontSize: "11px",
-              color: "#2D6A4F",
-              letterSpacing: "0.05em",
+              padding: "3px 10px 3px 7px",
+              border: `1px solid ${accent}50`,
+              borderRadius: 99,
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
             }}
           >
-            {tag.short_id}
-          </span>
+            <div style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: accent }} />
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono',monospace",
+                fontSize: 8,
+                color: accent,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+              }}
+            >
+              Tagit
+            </span>
+          </div>
         </div>
 
-        {/* Tag status states */}
-        {["created", "written", "shipped"].includes(tag.status) && (
-          <NotRegisteredYet />
-        )}
+        {/* Verified strip */}
+        <div
+          style={{
+            padding: "7px 20px",
+            backgroundColor: "rgba(45,106,79,0.22)",
+            borderTop: "1px solid rgba(255,255,255,0.06)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <ShieldCheck size={11} color="#4ADE80" strokeWidth={2.5} />
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono',monospace",
+                fontSize: 9,
+                color: "#4ADE80",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+              }}
+            >
+              Verified Authentic · HMAC Signed
+            </span>
+          </div>
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono',monospace",
+              fontSize: 9,
+              color: "#4ADE80",
+              opacity: 0.6,
+              letterSpacing: "0.08em",
+            }}
+          >
+            #{tag.short_id}
+          </span>
+        </div>
+      </header>
 
+      <div style={{ maxWidth: 480, margin: "0 auto", paddingBottom: 96 }}>
+        {/* Status edge cases */}
+        {["created", "written", "shipped"].includes(tag.status) && <NotRegisteredYet />}
         {tag.status === "flagged" && <FlaggedItem />}
         {tag.status === "suspended" && <SuspendedItem />}
 
-        {/* Product section */}
-        {product && (
-          <ProductSection
-            product={product}
-            industry={tag.industry}
-            accent={accent}
-            primary={primary}
-            secondary={secondary}
-          />
-        )}
+        {product ? (
+          <>
+            <ProductSection
+              product={product}
+              industry={tag.industry}
+              accent={accent}
+              ownershipRecords={ownershipRecords}
+            />
 
-        {/* Provenance */}
-        {ownershipRecords.length > 0 && (
-          <ProvenanceSection records={ownershipRecords} accent={accent} />
-        )}
-
-        {/* Action section */}
-        {product && (
-          <ActionSection
-            tag={tag}
-            product={product}
-            currentOwner={currentOwner}
-            accent={accent}
-            primary={primary}
-            secondary={secondary}
-          />
+            <ActionSection
+              tag={tag}
+              product={product}
+              currentOwner={currentOwner}
+              accent={accent}
+              primary={primary}
+              secondary={secondary}
+            />
+          </>
+        ) : (
+          !["created", "written", "shipped", "flagged", "suspended"].includes(tag.status) && (
+            <div style={{ padding: "48px 24px", textAlign: "center" }}>
+              <p style={{ fontSize: 14, color: "#9E9EA3" }}>No product registered to this tag yet.</p>
+            </div>
+          )
         )}
 
         {/* Tagit footer */}
-        <div style={{ margin: "32px 20px 0", textAlign: "center" }}>
-          <p style={{ fontSize: "11px", color: "#9E9EA3", margin: 0 }}>
-            Authenticated by{" "}
-            <span style={{ fontWeight: "600", color: "#6E6E73" }}>Tagit</span>
-            {" "}— Identity infrastructure for luxury
+        <div style={{ padding: "48px 24px 0", textAlign: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 5,
+              marginBottom: 8,
+            }}
+          >
+            <div style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#B8945D" }} />
+            <span
+              style={{
+                fontFamily: "'Instrument Serif',Georgia,serif",
+                fontSize: 15,
+                fontStyle: "italic",
+                color: "#0A0A0B",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Tagit
+            </span>
+          </div>
+          <p
+            style={{
+              margin: 0,
+              fontFamily: "'JetBrains Mono',monospace",
+              fontSize: 9,
+              color: "#C7C7CC",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+            }}
+          >
+            Identity Infrastructure for Physical Luxury
           </p>
         </div>
       </div>
 
-      {/* AI Voice Widget */}
       {company?.ai_enabled && (
         <VoiceWidget
           tagId={tag.id}
@@ -278,20 +321,12 @@ function ProductSection({
   product,
   industry,
   accent,
-  primary,
-  secondary,
+  ownershipRecords,
 }: {
-  product: {
-    name: string;
-    industry_fields: Record<string, string>;
-    retail_price: number | null;
-    currency: string;
-    photos: string[];
-  };
+  product: Product;
   industry: string;
   accent: string;
-  primary: string;
-  secondary: string;
+  ownershipRecords: OwnershipRecord[];
 }) {
   const fields = INDUSTRY_FIELDS[industry] ?? [];
   const filledFields = fields.filter(
@@ -305,217 +340,303 @@ function ProductSection({
   };
 
   const highlight = priorityKeys[industry] ?? [];
-  const highlightFields = filledFields.filter((f) => highlight.includes(f.key));
-  const otherFields = filledFields.filter((f) => !highlight.includes(f.key) && f.type !== "textarea");
-  const storyFields = filledFields.filter((f) => f.type === "textarea");
+  const highlightFields = filledFields.filter((f) => highlight.includes(f.key)).slice(0, 6);
+  const detailFields = filledFields.filter((f) => !highlight.includes(f.key) && f.type !== "textarea");
+  const storyFields = filledFields.filter(
+    (f) => f.type === "textarea" && product.industry_fields[f.key]
+  );
 
   const photo = product.photos?.[0];
+  const hasCollapsible = detailFields.length > 0 || storyFields.length > 0 || ownershipRecords.length > 0;
 
   return (
-    <div style={{ margin: "20px" }}>
-      {/* Product name */}
-      <div
-        style={{
-          padding: "24px",
-          backgroundColor: "#fff",
-          borderRadius: "16px",
-          border: "1px solid #E8E2D5",
-          marginBottom: "12px",
-        }}
-      >
-        {photo && (
-          <div
-            style={{
-              width: "100%",
-              aspectRatio: "4/3",
-              borderRadius: "8px",
-              overflow: "hidden",
-              marginBottom: "16px",
-              backgroundColor: "#F5F2EC",
-            }}
-          >
-            <img
-              src={photo}
-              alt={product.name}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          </div>
-        )}
+    <>
+      {/* Full-bleed product photo */}
+      {photo && (
+        <div
+          style={{
+            width: "100%",
+            aspectRatio: "4/5",
+            backgroundColor: "#F0EDE8",
+            overflow: "hidden",
+          }}
+        >
+          <img
+            src={photo}
+            alt={product.name}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
+      )}
 
+      {/* Product identity */}
+      <div style={{ padding: "24px 24px 0" }}>
+        {/* Industry label */}
+        <p
+          style={{
+            fontFamily: "'JetBrains Mono',monospace",
+            fontSize: 9,
+            color: accent,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            margin: "0 0 10px",
+          }}
+        >
+          {industry ? industry.charAt(0).toUpperCase() + industry.slice(1) : "Product"}
+        </p>
+
+        {/* Product name */}
         <h1
           style={{
-            margin: "0 0 4px",
-            fontSize: "26px",
-            fontWeight: "700",
+            fontFamily: "'Instrument Serif',Georgia,serif",
+            fontSize: 30,
+            fontWeight: 400,
+            fontStyle: "italic",
             color: "#0A0A0B",
-            letterSpacing: "-0.02em",
-            lineHeight: 1.2,
+            letterSpacing: "-0.025em",
+            lineHeight: 1.1,
+            margin: "0 0 10px",
           }}
         >
           {product.name}
         </h1>
 
+        {/* Retail price */}
         {product.retail_price && (
-          <p style={{ margin: "0 0 16px", fontSize: "14px", color: "#6E6E73" }}>
+          <p
+            style={{
+              fontFamily: "'JetBrains Mono',monospace",
+              fontSize: 11,
+              color: "#9E9EA3",
+              letterSpacing: "0.06em",
+              margin: "0 0 20px",
+            }}
+          >
             {product.currency} {product.retail_price.toLocaleString()}
           </p>
         )}
 
-        {/* Key details grid */}
+        {/* Highlight key fields — always visible */}
         {highlightFields.length > 0 && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "1px",
-              backgroundColor: "#E8E2D5",
-              borderRadius: "8px",
-              overflow: "hidden",
-              marginTop: "16px",
-            }}
-          >
+          <div style={{ borderTop: "1px solid #F0EDE8" }}>
             {highlightFields.map((f) => (
               <div
                 key={f.key}
                 style={{
-                  padding: "12px",
-                  backgroundColor: "#FAFAF8",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  padding: "10px 0",
+                  borderBottom: "1px solid #F0EDE8",
+                  gap: 16,
                 }}
               >
-                <p style={{ margin: "0 0 2px", fontSize: "10px", color: "#9E9EA3", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                <span
+                  style={{
+                    fontFamily: "'JetBrains Mono',monospace",
+                    fontSize: 9,
+                    color: "#9E9EA3",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    flexShrink: 0,
+                    paddingTop: 2,
+                  }}
+                >
                   {f.label}
-                </p>
-                <p style={{ margin: 0, fontSize: "13px", color: "#1F1F22", fontWeight: "500" }}>
+                </span>
+                <span
+                  style={{
+                    fontSize: 13,
+                    color: "#1F1F22",
+                    fontWeight: 500,
+                    textAlign: "right",
+                    lineHeight: 1.4,
+                  }}
+                >
                   {String(product.industry_fields[f.key])}
-                </p>
+                </span>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* More details */}
-      {otherFields.length > 0 && (
+      {/* Collapsible card — details, stories, provenance */}
+      {hasCollapsible && (
         <div
           style={{
-            padding: "20px 24px",
+            margin: "20px 24px 0",
             backgroundColor: "#fff",
-            borderRadius: "12px",
+            borderRadius: 16,
             border: "1px solid #E8E2D5",
-            marginBottom: "12px",
+            overflow: "hidden",
           }}
         >
-          <p style={{ margin: "0 0 12px", fontSize: "11px", fontWeight: "700", color: "#9E9EA3", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-            Details
-          </p>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <tbody>
-              {otherFields.map((f) => (
-                <tr key={f.key} style={{ borderBottom: "1px solid #F5F2EC" }}>
-                  <td style={{ padding: "8px 0", fontSize: "12px", color: "#9E9EA3", width: "45%" }}>
-                    {f.label}
-                  </td>
-                  <td style={{ padding: "8px 0", fontSize: "13px", color: "#1F1F22", fontWeight: "500" }}>
-                    {String(product.industry_fields[f.key])}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {/* More details */}
+          {detailFields.length > 0 && (
+            <CollapsibleSection title="Details" badge={String(detailFields.length)}>
+              <div style={{ padding: "4px 24px 20px" }}>
+                {detailFields.map((f, i) => (
+                  <div
+                    key={f.key}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      padding: "9px 0",
+                      borderBottom: i < detailFields.length - 1 ? "1px solid #F5F2EC" : "none",
+                      gap: 12,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "'JetBrains Mono',monospace",
+                        fontSize: 9,
+                        color: "#9E9EA3",
+                        letterSpacing: "0.06em",
+                        textTransform: "uppercase",
+                        flexShrink: 0,
+                        paddingTop: 2,
+                      }}
+                    >
+                      {f.label}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        color: "#1F1F22",
+                        fontWeight: 500,
+                        textAlign: "right",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {String(product.industry_fields[f.key])}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+          )}
+
+          {/* Story / textarea fields */}
+          {storyFields.map((f) => (
+            <CollapsibleSection key={f.key} title={f.label}>
+              <div style={{ padding: "4px 24px 20px" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 14,
+                    color: "#4A4A4F",
+                    lineHeight: 1.78,
+                    letterSpacing: "-0.003em",
+                  }}
+                >
+                  {String(product.industry_fields[f.key])}
+                </p>
+              </div>
+            </CollapsibleSection>
+          ))}
+
+          {/* Provenance — default open */}
+          {ownershipRecords.length > 0 && (
+            <CollapsibleSection
+              title="Provenance"
+              badge={String(ownershipRecords.length)}
+              defaultOpen
+            >
+              <div style={{ padding: "4px 24px 20px" }}>
+                {ownershipRecords.map((r, i) => (
+                  <div
+                    key={r.id}
+                    style={{ display: "flex", gap: 14 }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          backgroundColor: r.is_current ? accent : "#D4D4D4",
+                          flexShrink: 0,
+                          marginTop: 4,
+                        }}
+                      />
+                      {i < ownershipRecords.length - 1 && (
+                        <div
+                          style={{
+                            width: 1,
+                            flex: 1,
+                            backgroundColor: "#E8E2D5",
+                            margin: "4px 0",
+                          }}
+                        />
+                      )}
+                    </div>
+                    <div style={{ paddingBottom: i < ownershipRecords.length - 1 ? 16 : 0 }}>
+                      <p
+                        style={{
+                          margin: "0 0 3px",
+                          fontSize: 13,
+                          fontWeight: r.is_current ? 600 : 500,
+                          color: r.is_current ? "#1F1F22" : "#6E6E73",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {r.owner_name}
+                        {r.is_current && (
+                          <span
+                            style={{
+                              fontSize: 9,
+                              padding: "2px 7px",
+                              backgroundColor: "#DCEEE3",
+                              color: "#2D6A4F",
+                              borderRadius: 99,
+                              fontFamily: "'JetBrains Mono',monospace",
+                              letterSpacing: "0.04em",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            Current
+                          </span>
+                        )}
+                      </p>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontFamily: "'JetBrains Mono',monospace",
+                          fontSize: 9,
+                          color: "#9E9EA3",
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        {r.acquisition_type === "origin" ? "Brand origin" : "Transfer"} ·{" "}
+                        {new Date(r.acquired_at).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                        {r.sale_price
+                          ? ` · ${r.currency} ${r.sale_price.toLocaleString()}`
+                          : ""}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+          )}
         </div>
       )}
-
-      {/* Story / textarea fields */}
-      {storyFields.map((f) =>
-        product.industry_fields[f.key] ? (
-          <div
-            key={f.key}
-            style={{
-              padding: "20px 24px",
-              backgroundColor: "#fff",
-              borderRadius: "12px",
-              border: "1px solid #E8E2D5",
-              marginBottom: "12px",
-            }}
-          >
-            <p style={{ margin: "0 0 8px", fontSize: "11px", fontWeight: "700", color: "#9E9EA3", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              {f.label}
-            </p>
-            <p style={{ margin: 0, fontSize: "14px", color: "#4A4A4F", lineHeight: 1.6 }}>
-              {String(product.industry_fields[f.key])}
-            </p>
-          </div>
-        ) : null
-      )}
-    </div>
-  );
-}
-
-function ProvenanceSection({
-  records,
-  accent,
-}: {
-  records: {
-    id: string;
-    owner_name: string;
-    acquisition_type: string;
-    acquired_at: string;
-    sale_price: number | null;
-    currency: string;
-    is_current: boolean;
-  }[];
-  accent: string;
-}) {
-  return (
-    <div
-      style={{
-        margin: "0 20px 12px",
-        padding: "20px 24px",
-        backgroundColor: "#fff",
-        borderRadius: "12px",
-        border: "1px solid #E8E2D5",
-      }}
-    >
-      <p style={{ margin: "0 0 16px", fontSize: "11px", fontWeight: "700", color: "#9E9EA3", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-        Provenance
-      </p>
-      <div style={{ position: "relative" }}>
-        {records.map((r, i) => (
-          <div key={r.id} style={{ display: "flex", gap: "12px", marginBottom: i < records.length - 1 ? "0" : "0" }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <div
-                style={{
-                  width: "8px",
-                  height: "8px",
-                  borderRadius: "50%",
-                  backgroundColor: r.is_current ? accent : "#C7C7CC",
-                  flexShrink: 0,
-                  marginTop: "4px",
-                }}
-              />
-              {i < records.length - 1 && (
-                <div style={{ width: "1px", flex: 1, backgroundColor: "#E8E2D5", margin: "4px 0" }} />
-              )}
-            </div>
-            <div style={{ paddingBottom: i < records.length - 1 ? "16px" : "0" }}>
-              <p style={{ margin: "0 0 2px", fontSize: "13px", fontWeight: "600", color: "#1F1F22" }}>
-                {r.owner_name}
-                {r.is_current && (
-                  <span style={{ marginLeft: "6px", fontSize: "10px", padding: "1px 6px", backgroundColor: "#DCEEE3", color: "#2D6A4F", borderRadius: "99px", fontWeight: "600" }}>
-                    Current
-                  </span>
-                )}
-              </p>
-              <p style={{ margin: 0, fontSize: "12px", color: "#9E9EA3" }}>
-                {r.acquisition_type === "origin" ? "Original owner" : "Transfer"} ·{" "}
-                {new Date(r.acquired_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                {r.sale_price ? ` · ${r.currency} ${r.sale_price.toLocaleString()}` : ""}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -529,11 +650,7 @@ function ActionSection({
 }: {
   tag: { id: string; status: string; short_id: string };
   product: { name: string };
-  currentOwner: {
-    id: string;
-    owner_name: string;
-    owner_email: string;
-  } | null;
+  currentOwner: OwnershipRecord | null;
   accent: string;
   primary: string;
   secondary: string;
@@ -542,31 +659,107 @@ function ActionSection({
 
   if (claimableStatuses.includes(tag.status)) {
     return (
-      <div style={{ margin: "0 20px" }}>
-        <ClaimForm tagId={tag.id} productName={product.name} accent={accent} primary={primary} />
+      <div style={{ margin: "16px 24px 0" }}>
+        <div
+          style={{
+            padding: "20px 24px 24px",
+            backgroundColor: "#fff",
+            borderRadius: 16,
+            border: "1px solid #E8E2D5",
+          }}
+        >
+          <div style={{ marginBottom: 20 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                marginBottom: 6,
+              }}
+            >
+              <div
+                style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: "50%",
+                  backgroundColor: accent,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: "'JetBrains Mono',monospace",
+                  fontSize: 9,
+                  color: accent,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Unclaimed
+              </span>
+            </div>
+            <p
+              style={{
+                fontFamily: "'Instrument Serif',Georgia,serif",
+                fontSize: 20,
+                fontStyle: "italic",
+                color: "#0A0A0B",
+                margin: "0 0 6px",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Claim this piece
+            </p>
+            <p
+              style={{
+                fontSize: 13,
+                color: "#6E6E73",
+                margin: 0,
+                lineHeight: 1.6,
+                letterSpacing: "-0.003em",
+              }}
+            >
+              Register ownership and join the permanent provenance record.
+            </p>
+          </div>
+          <ClaimForm
+            tagId={tag.id}
+            productName={product.name}
+            accent={accent}
+            primary={primary}
+          />
+        </div>
       </div>
     );
   }
 
   if (tag.status === "claim_pending") {
     return (
-      <div
-        style={{
-          margin: "0 20px",
-          padding: "20px 24px",
-          backgroundColor: "#FBE8D8",
-          borderRadius: "12px",
-          border: "1px solid #D4B68A",
-        }}
-      >
-        <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-          <Clock size={18} color="#B85C00" style={{ marginTop: "2px", flexShrink: 0 }} />
+      <div style={{ margin: "16px 24px 0" }}>
+        <div
+          style={{
+            padding: "18px 20px",
+            backgroundColor: "#FBE8D8",
+            borderRadius: 12,
+            border: "1px solid #E8C99A",
+            display: "flex",
+            gap: 12,
+            alignItems: "flex-start",
+          }}
+        >
+          <Clock size={16} color="#B85C00" style={{ marginTop: 2, flexShrink: 0 }} />
           <div>
-            <p style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: "600", color: "#B85C00" }}>
+            <p
+              style={{
+                margin: "0 0 3px",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#B85C00",
+              }}
+            >
               Ownership claim pending
             </p>
-            <p style={{ margin: 0, fontSize: "13px", color: "#8B6F3F" }}>
-              A claim is currently under review by the brand. Check back soon.
+            <p style={{ margin: 0, fontSize: 12, color: "#8B6F3F", lineHeight: 1.55 }}>
+              A claim is under review by the brand. Check back soon.
             </p>
           </div>
         </div>
@@ -576,7 +769,7 @@ function ActionSection({
 
   if (tag.status === "owned" && currentOwner) {
     return (
-      <div style={{ margin: "0 20px" }}>
+      <div style={{ margin: "16px 24px 0" }}>
         <TransferForm
           tagId={tag.id}
           productName={product.name}
@@ -591,22 +784,31 @@ function ActionSection({
 
   if (tag.status === "transfer_pending") {
     return (
-      <div
-        style={{
-          margin: "0 20px",
-          padding: "20px 24px",
-          backgroundColor: "#FBE8D8",
-          borderRadius: "12px",
-          border: "1px solid #D4B68A",
-        }}
-      >
-        <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-          <Clock size={18} color="#B85C00" style={{ marginTop: "2px", flexShrink: 0 }} />
+      <div style={{ margin: "16px 24px 0" }}>
+        <div
+          style={{
+            padding: "18px 20px",
+            backgroundColor: "#FBE8D8",
+            borderRadius: 12,
+            border: "1px solid #E8C99A",
+            display: "flex",
+            gap: 12,
+            alignItems: "flex-start",
+          }}
+        >
+          <Clock size={16} color="#B85C00" style={{ marginTop: 2, flexShrink: 0 }} />
           <div>
-            <p style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: "600", color: "#B85C00" }}>
+            <p
+              style={{
+                margin: "0 0 3px",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#B85C00",
+              }}
+            >
               Transfer in progress
             </p>
-            <p style={{ margin: 0, fontSize: "13px", color: "#8B6F3F" }}>
+            <p style={{ margin: 0, fontSize: 12, color: "#8B6F3F", lineHeight: 1.55 }}>
               Ownership of this item is currently being transferred.
             </p>
           </div>
@@ -622,20 +824,42 @@ function NotRegisteredYet() {
   return (
     <div
       style={{
-        margin: "20px",
-        padding: "24px",
+        margin: "24px 24px 0",
+        padding: "32px 24px",
         backgroundColor: "#fff",
-        borderRadius: "12px",
+        borderRadius: 16,
         border: "1px solid #E8E2D5",
         textAlign: "center",
       }}
     >
-      <Clock size={32} color="#C7C7CC" style={{ margin: "0 auto 12px" }} />
-      <p style={{ margin: "0 0 4px", fontSize: "15px", fontWeight: "600", color: "#1F1F22" }}>
+      <div
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: "50%",
+          backgroundColor: "#F5F2EC",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          margin: "0 auto 16px",
+        }}
+      >
+        <Clock size={18} color="#C7C7CC" />
+      </div>
+      <p
+        style={{
+          margin: "0 0 6px",
+          fontFamily: "'Instrument Serif',Georgia,serif",
+          fontSize: 18,
+          fontStyle: "italic",
+          color: "#1F1F22",
+          letterSpacing: "-0.02em",
+        }}
+      >
         Not yet registered
       </p>
-      <p style={{ margin: 0, fontSize: "13px", color: "#9E9EA3", lineHeight: 1.5 }}>
-        This tag has not been registered to a product yet. If you recently purchased this item, please try again soon.
+      <p style={{ margin: 0, fontSize: 13, color: "#9E9EA3", lineHeight: 1.6 }}>
+        This tag has not been registered to a product yet.
       </p>
     </div>
   );
@@ -645,23 +869,24 @@ function FlaggedItem() {
   return (
     <div
       style={{
-        margin: "20px",
-        padding: "20px 24px",
+        margin: "24px 24px 0",
+        padding: "18px 20px",
         backgroundColor: "#F9DDDD",
-        borderRadius: "12px",
+        borderRadius: 12,
         border: "1px solid #F0C0C0",
+        display: "flex",
+        gap: 12,
+        alignItems: "flex-start",
       }}
     >
-      <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-        <AlertTriangle size={18} color="#B85C5C" style={{ marginTop: "2px", flexShrink: 0 }} />
-        <div>
-          <p style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: "600", color: "#B85C5C" }}>
-            Item flagged for review
-          </p>
-          <p style={{ margin: 0, fontSize: "13px", color: "#8B4040" }}>
-            This item has been flagged and is under review.
-          </p>
-        </div>
+      <AlertTriangle size={16} color="#B85C5C" style={{ marginTop: 2, flexShrink: 0 }} />
+      <div>
+        <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 600, color: "#B85C5C" }}>
+          Item flagged for review
+        </p>
+        <p style={{ margin: 0, fontSize: 12, color: "#8B4040", lineHeight: 1.55 }}>
+          This item has been flagged and is under review.
+        </p>
       </div>
     </div>
   );
@@ -671,23 +896,24 @@ function SuspendedItem() {
   return (
     <div
       style={{
-        margin: "20px",
-        padding: "20px 24px",
+        margin: "24px 24px 0",
+        padding: "18px 20px",
         backgroundColor: "#F9DDDD",
-        borderRadius: "12px",
+        borderRadius: 12,
         border: "1px solid #F0C0C0",
+        display: "flex",
+        gap: 12,
+        alignItems: "flex-start",
       }}
     >
-      <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-        <ShieldX size={18} color="#B85C5C" style={{ marginTop: "2px", flexShrink: 0 }} />
-        <div>
-          <p style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: "600", color: "#B85C5C" }}>
-            Item suspended
-          </p>
-          <p style={{ margin: 0, fontSize: "13px", color: "#8B4040" }}>
-            This item has been suspended. Please contact the brand for more information.
-          </p>
-        </div>
+      <ShieldX size={16} color="#B85C5C" style={{ marginTop: 2, flexShrink: 0 }} />
+      <div>
+        <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 600, color: "#B85C5C" }}>
+          Item suspended
+        </p>
+        <p style={{ margin: 0, fontSize: 12, color: "#8B4040", lineHeight: 1.55 }}>
+          This item has been suspended. Contact the brand for more information.
+        </p>
       </div>
     </div>
   );
@@ -698,22 +924,65 @@ function InvalidPage() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#FAFAF8",
+        backgroundColor: "#0A0A0B",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: "40px 20px",
       }}
     >
-      <div style={{ maxWidth: "360px", textAlign: "center" }}>
-        <ShieldX size={48} color="#B85C5C" style={{ margin: "0 auto 16px" }} />
-        <h1 style={{ margin: "0 0 8px", fontSize: "22px", fontWeight: "700", color: "#0A0A0B" }}>
+      <div style={{ maxWidth: "320px", textAlign: "center" }}>
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: "50%",
+            backgroundColor: "rgba(184,92,92,0.12)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "0 auto 20px",
+          }}
+        >
+          <ShieldX size={24} color="#B85C5C" />
+        </div>
+        <h1
+          style={{
+            fontFamily: "'Instrument Serif',Georgia,serif",
+            fontSize: 26,
+            fontStyle: "italic",
+            fontWeight: 400,
+            color: "#FAFAF8",
+            margin: "0 0 10px",
+            letterSpacing: "-0.02em",
+          }}
+        >
           Authentication failed
         </h1>
-        <p style={{ margin: 0, fontSize: "14px", color: "#6E6E73", lineHeight: 1.6 }}>
-          This tag could not be authenticated. It may have been tampered with or is not a genuine Tagit tag.
+        <p style={{ margin: "0 0 24px", fontSize: 13, color: "#71717A", lineHeight: 1.65 }}>
+          This tag could not be verified. It may have been tampered with or is not a genuine Tagit tag.
         </p>
-        <p style={{ margin: "16px 0 0", fontSize: "12px", color: "#9E9EA3" }}>Powered by Tagit</p>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 5,
+          }}
+        >
+          <div style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#B8945D" }} />
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono',monospace",
+              fontSize: 9,
+              color: "#B8945D",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+            }}
+          >
+            Tagit
+          </span>
+        </div>
       </div>
     </div>
   );

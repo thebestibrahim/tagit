@@ -40,26 +40,25 @@ export default function Quote() {
             "remain present in everything",
             "they've ever made.",
           ].map((line, i) => (
-            <div key={i} style={{ overflow: "hidden" }}>
-              <motion.p
-                initial={{ y: "110%", opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ delay: i * 0.08, duration: 0.9, ease: EASE }}
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "clamp(24px, 3.2vw, 48px)",
-                  fontWeight: 400,
-                  fontStyle: "italic",
-                  color: i < 4 ? "#FAFAF8" : "#C9A66B",
-                  letterSpacing: "-0.025em",
-                  lineHeight: 1.25,
-                  margin: 0,
-                }}
-              >
-                {line}
-              </motion.p>
-            </div>
+            <motion.p
+              key={i}
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ delay: i * 0.1, duration: 0.85, ease: EASE }}
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(24px, 3.2vw, 48px)",
+                fontWeight: 400,
+                fontStyle: "italic",
+                color: i < 4 ? "#FAFAF8" : "#C9A66B",
+                letterSpacing: "-0.025em",
+                lineHeight: 1.25,
+                margin: 0,
+              }}
+            >
+              {line}
+            </motion.p>
           ))}
 
           <motion.footer
