@@ -137,6 +137,28 @@ export default function NewBatchForm({ companies }: { companies: Company[] }) {
               {size.toLocaleString()}
             </button>
           ))}
+          <input
+            type="number"
+            min={1}
+            max={10000}
+            placeholder="Custom"
+            value={BATCH_SIZES.includes(form.batch_size) ? "" : form.batch_size}
+            onChange={(e) => {
+              const val = parseInt(e.target.value, 10);
+              if (!isNaN(val) && val > 0) set("batch_size", val);
+            }}
+            style={{
+              width: 90,
+              padding: "8px 12px",
+              borderRadius: "var(--radius-sm)",
+              fontSize: "var(--text-body-sm)",
+              fontWeight: 500,
+              border: `1px solid ${!BATCH_SIZES.includes(form.batch_size) ? "var(--color-onyx)" : "var(--color-stone)"}`,
+              backgroundColor: !BATCH_SIZES.includes(form.batch_size) ? "var(--color-onyx)" : "var(--color-pearl)",
+              color: !BATCH_SIZES.includes(form.batch_size) ? "var(--color-pearl)" : "var(--color-graphite)",
+              outline: "none",
+            }}
+          />
         </div>
       </div>
 
