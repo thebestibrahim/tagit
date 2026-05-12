@@ -6,6 +6,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/dashboard";
+  const type = searchParams.get("type");
 
   if (code) {
     const cookieStore = await cookies();
@@ -32,5 +33,6 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/auth/forgot-password?error=link_expired`);
+  const typeParam = type ? `&type=${type}` : "";
+  return NextResponse.redirect(`${origin}/auth/forgot-password?error=link_expired${typeParam}`);
 }

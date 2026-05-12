@@ -26,6 +26,7 @@ const inputBase: React.CSSProperties = {
 export default function ForgotPasswordForm() {
   const searchParams = useSearchParams();
   const linkExpired = searchParams.get("error") === "link_expired";
+  const isAdmin = searchParams.get("type") === "admin";
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,7 +48,8 @@ export default function ForgotPasswordForm() {
     setLoading(true);
 
     const supabase = createClient();
-    const redirectTo = `${window.location.origin}/auth/callback?next=/auth/reset-password`;
+    const next = isAdmin ? "/auth/reset-password?type=admin" : "/auth/reset-password";
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}${isAdmin ? "&type=admin" : ""}`;
 
     const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo,
@@ -90,7 +92,7 @@ export default function ForgotPasswordForm() {
 
         <div style={{ position: "relative" }}>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#D4B68A", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 24 }}>
-            Account Recovery
+            {isAdmin ? "Internal Dashboard" : "Account Recovery"}
           </p>
           <h2
             style={{
@@ -108,7 +110,9 @@ export default function ForgotPasswordForm() {
             <em style={{ color: "#C9A66B" }}>access.</em>
           </h2>
           <p style={{ fontSize: 14, color: "#4A4A4F", lineHeight: 1.7, margin: 0, letterSpacing: "-0.003em" }}>
-            We&apos;ll send a secure link to your email. Click it to set a new password and return to your dashboard.
+            {isAdmin
+              ? "We’ll send a secure link to your admin email. Click it to set a new password and return to the dashboard."
+              : "We’ll send a secure link to your email. Click it to set a new password and return to your dashboard."}
           </p>
         </div>
 

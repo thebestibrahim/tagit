@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, ArrowLeft, Eye, EyeOff, CheckCircle2 } from "lucide-react";
@@ -25,6 +25,10 @@ const inputBase: React.CSSProperties = {
 
 export default function ResetPasswordForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isAdmin = searchParams.get("type") === "admin";
+  const loginHref = isAdmin ? "/auth/login?type=admin" : "/auth/login";
+  const forgotHref = isAdmin ? "/auth/forgot-password?type=admin" : "/auth/forgot-password";
   const [ready, setReady] = useState(false);
   const [sessionError, setSessionError] = useState("");
   const [password, setPassword] = useState("");
@@ -82,7 +86,7 @@ export default function ResetPasswordForm() {
     setDone(true);
     setLoading(false);
 
-    setTimeout(() => router.push("/auth/login"), 3000);
+    setTimeout(() => router.push(loginHref), 3000);
   }
 
   const passwordStrength = (() => {
@@ -122,7 +126,7 @@ export default function ResetPasswordForm() {
 
         <div style={{ position: "relative" }}>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#D4B68A", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 24 }}>
-            New Password
+            {isAdmin ? "Internal Dashboard" : "New Password"}
           </p>
           <h2
             style={{
@@ -154,7 +158,7 @@ export default function ResetPasswordForm() {
 
         <div style={{ marginBottom: 48 }}>
           <Link
-            href="/auth/login"
+            href={loginHref}
             style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#9E9EA3", textDecoration: "none", letterSpacing: "-0.005em" }}
           >
             <ArrowLeft size={13} />
@@ -190,7 +194,7 @@ export default function ResetPasswordForm() {
                 Your password has been updated. Redirecting you to sign in…
               </p>
               <Link
-                href="/auth/login"
+                href={loginHref}
                 style={{ fontSize: 13, color: "#4A4A4F", textDecoration: "none", borderBottom: "1px solid #E8E2D5" }}
               >
                 Sign in now →
@@ -209,7 +213,7 @@ export default function ResetPasswordForm() {
                 {sessionError} Reset links are single-use and expire after 1 hour.
               </p>
               <Link
-                href="/auth/forgot-password"
+                href={forgotHref}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",

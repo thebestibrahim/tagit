@@ -207,7 +207,7 @@ export default function LoginForm() {
                 <label htmlFor="password" style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", letterSpacing: "-0.003em" }}>
                   Password
                 </label>
-                <Link href="/auth/forgot-password" style={{ fontSize: 12, color: "#9E9EA3", textDecoration: "none", letterSpacing: "-0.003em" }}>
+                <Link href={isAdmin ? "/auth/forgot-password?type=admin" : "/auth/forgot-password"} style={{ fontSize: 12, color: "#9E9EA3", textDecoration: "none", letterSpacing: "-0.003em" }}>
                   Forgot password?
                 </Link>
               </div>
