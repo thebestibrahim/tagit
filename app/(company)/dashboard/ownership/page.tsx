@@ -6,7 +6,6 @@ import { format } from "date-fns";
 import { Users, ChevronRight } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
-import type { CompanyStatus } from "@/types/database";
 
 type Claim = {
   id: string;
@@ -16,8 +15,7 @@ type Claim = {
   status: string;
   created_at: string;
   expires_at: string;
-  tags: { short_id: string } | null;
-  productName?: string;
+  tags: { short_id: string; products: { name: string }[] | null } | null;
 };
 
 const STATUS_FILTER = ["all", "pending", "approved", "rejected"];
@@ -40,15 +38,6 @@ export default async function OwnershipPage({
   const user = await getUser();
   if (!user) redirect("/auth/login");
 
-  const { data: companyData } = await supabase
-    .from("companies")
-    .select("status")
-    .eq("id", user.id)
-    .single();
-
-  const company = companyData as { status: CompanyStatus } | null;
-  if (!company || company.status !== "approved") redirect("/auth/unauthorized");
-
   const params = await searchParams;
   const statusFilter = STATUS_FILTER.includes(params.status ?? "") ? params.status : "pending";
   const q = params.q?.trim() ?? "";
@@ -56,20 +45,11 @@ export default async function OwnershipPage({
   const from = (page - 1) * PER_PAGE;
   const to = from + PER_PAGE - 1;
 
-  // Get tag IDs for this company
-  const { data: tagIds } = await supabase
-    .from("tags")
-    .select("id")
-    .eq("company_id", user.id);
-
-  const ids = (tagIds ?? []).map((t: { id: string }) => t.id);
-
-  if (ids.length === 0) return <EmptyState />;
-
+  // Single query — joins tags + products to avoid sequential round trips
   let query = supabase
     .from("ownership_claims")
-    .select("id, tag_id, claimant_name, claimant_email, status, created_at, expires_at, tags(short_id)", { count: "exact" })
-    .in("tag_id", ids)
+    .select("id, tag_id, claimant_name, claimant_email, status, created_at, expires_at, tags!inner(short_id, company_id, products(name))", { count: "exact" })
+    .eq("tags.company_id", user.id)
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -82,19 +62,7 @@ export default async function OwnershipPage({
 
   const { data, count } = await query;
   const totalPages = Math.ceil((count ?? 0) / PER_PAGE);
-  const rawClaims = (data ?? []) as Claim[];
-
-  // Fetch product names for each tag_id
-  const tagIdSet = [...new Set(rawClaims.map((c) => c.tag_id))];
-  const { data: productsData } = tagIdSet.length
-    ? await supabase.from("products").select("tag_id, name").in("tag_id", tagIdSet)
-    : { data: [] };
-
-  const productsByTag = Object.fromEntries(
-    ((productsData ?? []) as { tag_id: string; name: string }[]).map((p) => [p.tag_id, p.name])
-  );
-
-  const claims: Claim[] = rawClaims.map((c) => ({ ...c, productName: productsByTag[c.tag_id] }));
+  const claims = (data ?? []) as Claim[];
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -176,7 +144,7 @@ export default async function OwnershipPage({
                     </td>
                     <td className="px-5 py-4">
                       <span style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-                        {claim.productName ?? "—"}
+                        {claim.tags?.products?.[0]?.name ?? "—"}
                       </span>
                     </td>
                     <td className="px-5 py-4">
@@ -239,18 +207,6 @@ export default async function OwnershipPage({
           )}
           </>
         )}
-      </div>
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <h1 className="text-h2 font-semibold mb-4" style={{ color: "var(--color-charcoal)" }}>Ownership</h1>
-      <div className="py-16 text-center rounded-xl" style={{ border: "1px solid var(--color-cream)", color: "var(--color-mist)" }}>
-        <Users size={32} className="mx-auto mb-3 opacity-30" />
-        <p style={{ fontSize: "var(--text-body-sm)" }}>No tags registered yet</p>
       </div>
     </div>
   );

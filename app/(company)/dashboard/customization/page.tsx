@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import type { CompanyStatus } from "@/types/database";
 import CustomizationForm from "./CustomizationForm";
 
 type Company = {
@@ -13,23 +12,21 @@ type Company = {
   brand_story: string | null;
   custom_header_text: string | null;
   social_links: Record<string, string>;
-  status: CompanyStatus;
 };
 
 export default async function CustomizationPage() {
   const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getUser();
   if (!user) redirect("/auth/login");
 
   const { data } = await supabase
     .from("companies")
-    .select("name, brand_primary_color, brand_secondary_color, brand_accent_color, brand_font, brand_story, custom_header_text, social_links, status")
+    .select("name, brand_primary_color, brand_secondary_color, brand_accent_color, brand_font, brand_story, custom_header_text, social_links")
     .eq("id", user.id)
     .single();
 
   const company = data as Company | null;
-  if (!company || company.status !== "approved") redirect("/auth/unauthorized");
+  if (!company) redirect("/auth/unauthorized");
 
   return (
     <div className="p-8 max-w-3xl mx-auto">

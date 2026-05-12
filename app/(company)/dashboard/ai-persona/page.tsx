@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import type { CompanyStatus } from "@/types/database";
 import PersonaForm from "./PersonaForm";
 
 export default async function AiPersonaPage() {
@@ -11,12 +10,11 @@ export default async function AiPersonaPage() {
 
   const { data: companyData } = await supabase
     .from("companies")
-    .select("status, ai_enabled, ai_persona_name, ai_persona_prompt, ai_persona_voice_id, elevenlabs_api_key")
+    .select("ai_enabled, ai_persona_name, ai_persona_prompt, ai_persona_voice_id, elevenlabs_api_key")
     .eq("id", user.id)
     .single();
 
   const company = companyData as {
-    status: CompanyStatus;
     ai_enabled: boolean;
     ai_persona_name: string | null;
     ai_persona_prompt: string | null;
@@ -24,7 +22,7 @@ export default async function AiPersonaPage() {
     elevenlabs_api_key: string | null;
   } | null;
 
-  if (!company || company.status !== "approved") redirect("/auth/unauthorized");
+  if (!company) redirect("/auth/unauthorized");
 
   return (
     <div className="p-8 max-w-2xl mx-auto">

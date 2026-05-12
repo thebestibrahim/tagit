@@ -6,7 +6,6 @@ import { format } from "date-fns";
 import { Tag } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
-import type { CompanyStatus } from "@/types/database";
 
 const STATUS_FILTERS = ["all", "created", "embedded", "owned", "unowned", "flagged"];
 
@@ -32,15 +31,6 @@ export default async function CompanyTagsPage({
   const supabase = await createClient();
   const user = await getUser();
   if (!user) redirect("/auth/login");
-
-  const { data: companyData } = await supabase
-    .from("companies")
-    .select("status")
-    .eq("id", user.id)
-    .single();
-
-  const company = companyData as { status: CompanyStatus } | null;
-  if (!company || company.status !== "approved") redirect("/auth/unauthorized");
 
   const params = await searchParams;
   const statusFilter = STATUS_FILTERS.includes(params.status ?? "") ? params.status : "all";

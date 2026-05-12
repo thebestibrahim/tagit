@@ -5,21 +5,10 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { format, subDays } from "date-fns";
 import { BarChart2, Eye, Package, Award, TrendingUp } from "lucide-react";
-import type { CompanyStatus } from "@/types/database";
-
 export default async function AnalyticsPage() {
   const supabase = await createClient();
   const user = await getUser();
   if (!user) redirect("/auth/login");
-
-  const { data: companyData } = await supabase
-    .from("companies")
-    .select("status")
-    .eq("id", user.id)
-    .single();
-
-  const company = companyData as { status: CompanyStatus } | null;
-  if (!company || company.status !== "approved") redirect("/auth/unauthorized");
 
   // Fetch this company's tags
   const { data: tagsData } = await supabase
@@ -68,9 +57,9 @@ export default async function AnalyticsPage() {
         .select("tag_id")
         .in("tag_id", tagIds)
         .gte("created_at", thirtyDaysAgo)
-    : { data: [] };
+    : { data: [] as { tag_id: string }[] };
 
-  const uniqueItemsScanned = new Set((recentScans ?? []).map((s: { tag_id: string }) => s.tag_id)).size;
+  const uniqueItemsScanned = new Set((recentScans ?? []).map((s) => s.tag_id)).size;
 
   const ownedTags = tags.filter((t) => t.status === "owned").length;
   const totalTags = tags.length;
@@ -101,24 +90,18 @@ export default async function AnalyticsPage() {
   const chartMax = Math.max(...chartDays.map((d) => d.count), 1);
 
   // ── Top 5 most scanned products (last 30 days) ──
-  // Count per tag_id — one query per tag, batched
+  // Derive counts from the recentScans data already fetched above — no extra queries
   let topProducts: { name: string; photo: string | null; scans: number }[] = [];
   if (tagIds.length > 0) {
-    const tagCounts = await Promise.all(
-      tagIds.map(async (tid) => {
-        const { count } = await supabase
-          .from("scan_logs")
-          .select("*", { count: "exact", head: true })
-          .eq("tag_id", tid)
-          .gte("created_at", thirtyDaysAgo);
-        return { tag_id: tid, count: count ?? 0 };
-      })
-    );
+    const tagCountMap: Record<string, number> = {};
+    for (const s of (recentScans ?? [])) {
+      tagCountMap[s.tag_id] = (tagCountMap[s.tag_id] ?? 0) + 1;
+    }
 
-    const top5 = tagCounts
-      .filter((t) => t.count > 0)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+    const top5 = Object.entries(tagCountMap)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([tag_id, count]) => ({ tag_id, count }));
 
     if (top5.length > 0) {
       const { data: productsData } = await supabase

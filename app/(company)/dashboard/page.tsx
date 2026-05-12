@@ -10,36 +10,28 @@ export default async function CompanyOverviewPage() {
 
   const supabase = await createClient();
 
-  const { data: rawTags } = await supabase
-    .from("tags")
-    .select("id, status")
-    .eq("company_id", user.id);
+  const [{ data: rawTags }, { data: rawProducts }] = await Promise.all([
+    supabase.from("tags").select("id, status").eq("company_id", user.id),
+    supabase.from("products").select("id").eq("company_id", user.id),
+  ]);
 
   const tags = (rawTags ?? []) as { id: string; status: string }[];
   const tagIds = tags.map((t) => t.id);
-
-  const { data: rawProducts } = await supabase
-    .from("products")
-    .select("id")
-    .eq("company_id", user.id);
-
   const products = (rawProducts ?? []) as { id: string }[];
 
-  const { data: rawClaims } = tagIds.length
+  const { count: pendingClaimsCount } = tagIds.length
     ? await supabase
         .from("ownership_claims")
-        .select("id")
+        .select("id", { count: "exact", head: true })
         .eq("status", "pending")
         .in("tag_id", tagIds)
-    : { data: [] };
-
-  const pendingClaims = (rawClaims ?? []) as { id: string }[];
+    : { count: 0 };
 
   const quickStats = [
     { label: "Total tags",          value: tags.length,                                     icon: Tag,         href: "/dashboard/tags",      accent: false },
     { label: "Products registered", value: products.length,                                  icon: Package,     href: "/dashboard/products",  accent: false },
     { label: "Owned tags",          value: tags.filter((t) => t.status === "owned").length, icon: Users,       href: "/dashboard/ownership", accent: false },
-    { label: "Pending claims",      value: pendingClaims.length,                             icon: AlertCircle, href: "/dashboard/ownership", accent: pendingClaims.length > 0 },
+    { label: "Pending claims",      value: pendingClaimsCount ?? 0,                          icon: AlertCircle, href: "/dashboard/ownership", accent: (pendingClaimsCount ?? 0) > 0 },
   ];
 
   return (
@@ -119,7 +111,7 @@ export default async function CompanyOverviewPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
             { title: "Register a product",         desc: "Link a product record to an unassigned tag",                                                          href: "/dashboard/products/new" },
-            { title: "Review ownership claims",    desc: `${pendingClaims.length} pending claim${pendingClaims.length !== 1 ? "s" : ""} awaiting your approval`, href: "/dashboard/ownership" },
+            { title: "Review ownership claims",    desc: `${pendingClaimsCount ?? 0} pending claim${(pendingClaimsCount ?? 0) !== 1 ? "s" : ""} awaiting your approval`, href: "/dashboard/ownership" },
             { title: "Customize brand experience", desc: "Update colours, fonts, and brand story",                                                              href: "/dashboard/customization" },
           ].map((action) => (
             <Link
