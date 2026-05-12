@@ -26,9 +26,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
   }
 
-  const VALID_SIZES = [50, 100, 250, 500, 1000];
-  if (!VALID_SIZES.includes(batch_size)) {
-    return NextResponse.json({ error: "Invalid batch size." }, { status: 400 });
+  if (!Number.isInteger(batch_size) || batch_size < 1 || batch_size > 10000) {
+    return NextResponse.json({ error: "Batch size must be between 1 and 10,000." }, { status: 400 });
   }
 
   const admin = createAdminClient(
