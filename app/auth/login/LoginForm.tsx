@@ -203,9 +203,14 @@ export default function LoginForm() {
             </div>
 
             <div>
-              <label htmlFor="password" style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
-                Password
-              </label>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <label htmlFor="password" style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", letterSpacing: "-0.003em" }}>
+                  Password
+                </label>
+                <Link href="/auth/forgot-password" style={{ fontSize: 12, color: "#9E9EA3", textDecoration: "none", letterSpacing: "-0.003em" }}>
+                  Forgot password?
+                </Link>
+              </div>
               <input
                 id="password"
                 type="password"
