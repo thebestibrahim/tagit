@@ -70,24 +70,11 @@ export default function TransferForm({
     setError("");
     setLoading(true);
 
-    const verifyRes = await fetch("/api/otp/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: ownerEmail, code: otp.trim(), purpose: "transfer" }),
-    });
-
-    const verifyData = await verifyRes.json();
-    if (!verifyRes.ok) {
-      setError(verifyData.error || "Invalid code");
-      setLoading(false);
-      return;
-    }
-
-    // Confirm transfer (send acceptance email to recipient)
+    // OTP verification and transfer confirmation happen atomically server-side
     const confirmRes = await fetch("/api/transfer/confirm", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ transfer_id: transferId }),
+      body: JSON.stringify({ transfer_id: transferId, email: ownerEmail, code: otp.trim() }),
     });
 
     const confirmData = await confirmRes.json();

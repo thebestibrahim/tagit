@@ -50,30 +50,16 @@ export default function ClaimForm({
     setError("");
     setLoading(true);
 
-    // Verify OTP
-    const verifyRes = await fetch("/api/otp/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, code: otp.trim(), purpose: "claim" }),
-    });
-
-    const verifyData = await verifyRes.json();
-    if (!verifyRes.ok) {
-      setError(verifyData.error || "Invalid code");
-      setLoading(false);
-      return;
-    }
-
-    // Submit claim
+    // OTP verification and claim creation happen atomically server-side
     const claimRes = await fetch("/api/claim", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tag_id: tagId, claimant_name: name, claimant_email: email }),
+      body: JSON.stringify({ tag_id: tagId, claimant_name: name, claimant_email: email, otp_code: otp.trim() }),
     });
 
     const claimData = await claimRes.json();
     if (!claimRes.ok) {
-      setError(claimData.error || "Failed to submit claim");
+      setError(claimData.error || "Invalid code or failed to submit claim");
       setLoading(false);
       return;
     }

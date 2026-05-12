@@ -9,6 +9,10 @@ export async function POST(request: Request) {
   const audio = formData.get("audio") as Blob | null;
   if (!audio) return NextResponse.json({ error: "audio field required" }, { status: 400 });
 
+  if (audio.size > 10 * 1024 * 1024) {
+    return NextResponse.json({ error: "Audio file too large (max 10MB)" }, { status: 413 });
+  }
+
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
 
   const arrayBuffer = await audio.arrayBuffer();

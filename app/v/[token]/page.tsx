@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { createClient } from "@supabase/supabase-js";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { ShieldX, ShieldCheck, Clock, AlertTriangle } from "lucide-react";
@@ -18,10 +18,14 @@ const admin = createClient(
 );
 
 function validateHmac(token: string, signature: string) {
-  const expected = createHmac("sha256", process.env.TAGIT_HMAC_SECRET!)
-    .update(token)
-    .digest("hex");
-  return expected === signature;
+  try {
+    const expected = createHmac("sha256", process.env.TAGIT_HMAC_SECRET!)
+      .update(token)
+      .digest("hex");
+    return timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(signature, "hex"));
+  } catch {
+    return false;
+  }
 }
 
 async function logScan(tagId: string, result: string, headerStore: Awaited<ReturnType<typeof headers>>) {

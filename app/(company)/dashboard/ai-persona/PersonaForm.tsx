@@ -18,11 +18,13 @@ type InitialValues = {
   ai_persona_name: string;
   ai_persona_prompt: string;
   ai_persona_voice_id: string;
-  elevenlabs_api_key: string;
+  has_custom_key: boolean;
 };
 
 export default function PersonaForm({ initialValues }: { initialValues: InitialValues }) {
   const [form, setForm] = useState(initialValues);
+  // New API key input — empty means "keep existing", non-empty means "update"
+  const [newApiKey, setNewApiKey] = useState("");
   const [saving, setSaving] = useState(false);
   const [playingVoice, setPlayingVoice] = useState<string | null>(null);
   const audioRef = useState<HTMLAudioElement | null>(null);
@@ -59,10 +61,19 @@ export default function PersonaForm({ initialValues }: { initialValues: InitialV
     e.preventDefault();
     setSaving(true);
 
+    const payload: Record<string, unknown> = {
+      ai_enabled: form.ai_enabled,
+      ai_persona_name: form.ai_persona_name,
+      ai_persona_prompt: form.ai_persona_prompt,
+      ai_persona_voice_id: form.ai_persona_voice_id,
+    };
+    // Only include the key if the user explicitly typed a new one
+    if (newApiKey.trim()) payload.elevenlabs_api_key = newApiKey.trim();
+
     const res = await fetch("/api/company/ai-persona", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
 
     setSaving(false);
@@ -223,13 +234,24 @@ export default function PersonaForm({ initialValues }: { initialValues: InitialV
         <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
           ElevenLabs API key <span style={{ color: "var(--color-mist)", fontWeight: 400 }}>(optional)</span>
         </Label>
-        <input
-          type="password"
-          value={form.elevenlabs_api_key}
-          onChange={(e) => set("elevenlabs_api_key", e.target.value)}
-          placeholder="sk_..."
-          style={inputStyle}
-        />
+        {form.has_custom_key && !newApiKey && (
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-md" style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-smoke)", fontSize: "var(--text-body-sm)", color: "var(--color-slate)" }}>
+            <span style={{ letterSpacing: "0.1em" }}>••••••••••••••••</span>
+            <button type="button" onClick={() => setNewApiKey(" ")} style={{ marginLeft: "auto", fontSize: "var(--text-caption)", color: "var(--color-gold)", background: "none", border: "none", cursor: "pointer" }}>
+              Replace
+            </button>
+          </div>
+        )}
+        {(!form.has_custom_key || newApiKey) && (
+          <input
+            type="password"
+            value={newApiKey.trim() ? newApiKey : ""}
+            onChange={(e) => setNewApiKey(e.target.value)}
+            placeholder="sk_... (leave blank to use shared key)"
+            style={inputStyle}
+            autoComplete="off"
+          />
+        )}
         <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
           Leave blank to use the Tagit shared key (free tier, limited). Add your own for unlimited voice generation.
         </p>

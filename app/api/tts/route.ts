@@ -27,16 +27,21 @@ export async function POST(request: Request) {
 
   const { data: companyData } = await admin
     .from("companies")
-    .select("ai_persona_voice_id, elevenlabs_api_key")
+    .select("ai_enabled, ai_persona_voice_id, elevenlabs_api_key")
     .eq("id", tag.company_id)
     .single();
 
   const company = companyData as {
+    ai_enabled: boolean;
     ai_persona_voice_id: string | null;
     elevenlabs_api_key: string | null;
   } | null;
 
-  const voiceId = company?.ai_persona_voice_id || "21m00Tcm4TlvDq8ikWAM";
+  if (!company?.ai_enabled) {
+    return NextResponse.json({ error: "AI persona not enabled for this brand" }, { status: 403 });
+  }
+
+  const voiceId = company.ai_persona_voice_id || "21m00Tcm4TlvDq8ikWAM";
   const apiKey = company?.elevenlabs_api_key || process.env.ELEVENLABS_API_KEY!;
 
   const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {

@@ -46,7 +46,7 @@ export default async function AiPersonaPage() {
           ai_persona_name: company.ai_persona_name ?? "",
           ai_persona_prompt: company.ai_persona_prompt ?? "",
           ai_persona_voice_id: company.ai_persona_voice_id ?? "21m00Tcm4TlvDq8ikWAM",
-          elevenlabs_api_key: company.elevenlabs_api_key ?? "",
+          has_custom_key: Boolean(company.elevenlabs_api_key),
         }}
       />
     </div>

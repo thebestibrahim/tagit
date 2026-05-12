@@ -9,15 +9,19 @@ export async function PATCH(request: Request) {
   const body = await request.json().catch(() => ({}));
   const { ai_enabled, ai_persona_name, ai_persona_prompt, ai_persona_voice_id, elevenlabs_api_key } = body;
 
+  const update: Record<string, unknown> = {
+    ai_enabled: Boolean(ai_enabled),
+    ai_persona_name: ai_persona_name || null,
+    ai_persona_prompt: ai_persona_prompt || null,
+    ai_persona_voice_id: ai_persona_voice_id || "21m00Tcm4TlvDq8ikWAM",
+  };
+  if (elevenlabs_api_key !== undefined) {
+    update.elevenlabs_api_key = elevenlabs_api_key || null;
+  }
+
   const { error } = await supabase
     .from("companies")
-    .update({
-      ai_enabled: Boolean(ai_enabled),
-      ai_persona_name: ai_persona_name || null,
-      ai_persona_prompt: ai_persona_prompt || null,
-      ai_persona_voice_id: ai_persona_voice_id || "21m00Tcm4TlvDq8ikWAM",
-      elevenlabs_api_key: elevenlabs_api_key || null,
-    } as never)
+    .update(update as never)
     .eq("id", user.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -16,6 +16,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "message and tag_id required" }, { status: 400 });
   }
 
+  if (typeof message !== "string" || message.length > 500) {
+    return NextResponse.json({ error: "Message too long (max 500 characters)" }, { status: 400 });
+  }
+
   // Fetch tag → company + product in parallel
   const [{ data: tagData }, { data: productData }] = await Promise.all([
     admin.from("tags").select("id, industry, company_id").eq("id", tag_id).single(),

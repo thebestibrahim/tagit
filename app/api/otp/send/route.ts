@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { hash } from "bcryptjs";
+import { randomInt } from "crypto";
 import { NextResponse } from "next/server";
 import { sendOtpEmail } from "@/lib/email";
 
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const code = randomInt(100000, 1000000).toString();
   const code_hash = await hash(code, 10);
 
   const { error } = await admin.from("otp_codes").insert({
