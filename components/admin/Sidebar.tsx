@@ -8,6 +8,7 @@ import {
   Tag,
   Package,
   ScanLine,
+  Settings,
   LogOut,
   ChevronRight,
 } from "lucide-react";
@@ -20,6 +21,7 @@ const navItems = [
   { label: "Tags",        href: "/admin/tags",        icon: Tag },
   { label: "Batches",     href: "/admin/batches",     icon: Package },
   { label: "Scan Logs",   href: "/admin/scans",       icon: ScanLine },
+  { label: "Settings",    href: "/admin/settings",    icon: Settings },
 ];
 
 export function AdminSidebar() {
