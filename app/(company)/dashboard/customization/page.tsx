@@ -22,14 +22,29 @@ export default async function CustomizationPage() {
   const user = await getUser();
   if (!user) redirect("/auth/login");
 
+  // brand_text_color and brand_template require docs/add-brand-fields.sql migration.
+  // Select them separately so a missing column doesn't break the whole page.
   const { data } = await supabase
     .from("companies")
-    .select("name, logo_url, brand_primary_color, brand_secondary_color, brand_accent_color, brand_text_color, brand_font, brand_template, brand_story, custom_header_text, social_links")
+    .select("name, logo_url, brand_primary_color, brand_secondary_color, brand_accent_color, brand_font, brand_story, custom_header_text, social_links")
     .eq("id", user.id)
     .single();
 
-  const company = data as Company | null;
-  if (!company) redirect("/auth/unauthorized");
+  const { data: extData } = await supabase
+    .from("companies")
+    .select("brand_text_color, brand_template")
+    .eq("id", user.id)
+    .single()
+    .then((r) => ({ data: r.error ? null : r.data }));
+
+  if (!data) redirect("/auth/unauthorized");
+
+  const ext = extData as { brand_text_color?: string; brand_template?: string } | null;
+  const company: Company = {
+    ...(data as Omit<Company, "brand_text_color" | "brand_template">),
+    brand_text_color: ext?.brand_text_color ?? "#FAFAF8",
+    brand_template:   ext?.brand_template   ?? "classic",
+  };
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
