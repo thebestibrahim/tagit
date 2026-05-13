@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Bot, Mic, Volume2, Play, Square } from "lucide-react";
+import { Loader2, Bot, Mic, Volume2, Play, Square, Sparkles, CheckCircle2, ChevronDown } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
 const VOICES = [
@@ -21,16 +21,19 @@ type InitialValues = {
   has_custom_key: boolean;
 };
 
+const isConfigured = (v: InitialValues) =>
+  Boolean(v.ai_persona_name?.trim() && v.ai_persona_prompt?.trim());
+
 export default function PersonaForm({ initialValues }: { initialValues: InitialValues }) {
+  const configured = isConfigured(initialValues);
+  const [editing, setEditing] = useState(!configured);
   const [form, setForm] = useState(initialValues);
-  // New API key input — empty means "keep existing", non-empty means "update"
   const [newApiKey, setNewApiKey] = useState("");
   const [saving, setSaving] = useState(false);
   const [playingVoice, setPlayingVoice] = useState<string | null>(null);
   const audioRef = useState<HTMLAudioElement | null>(null);
 
   async function previewVoice(voiceId: string) {
-    // Stop current if playing
     if (audioRef[0]) { audioRef[0].pause(); audioRef[0] = null; }
     if (playingVoice === voiceId) { setPlayingVoice(null); return; }
 
@@ -67,7 +70,6 @@ export default function PersonaForm({ initialValues }: { initialValues: InitialV
       ai_persona_prompt: form.ai_persona_prompt,
       ai_persona_voice_id: form.ai_persona_voice_id,
     };
-    // Only include the key if the user explicitly typed a new one
     if (newApiKey.trim()) payload.elevenlabs_api_key = newApiKey.trim();
 
     const res = await fetch("/api/company/ai-persona", {
@@ -79,6 +81,8 @@ export default function PersonaForm({ initialValues }: { initialValues: InitialV
     setSaving(false);
     if (res.ok) {
       toast.success("AI persona saved.");
+      setEditing(false);
+      setNewApiKey("");
     } else {
       const json = await res.json().catch(() => ({}));
       toast.error(json.error ?? "Failed to save.");
@@ -97,6 +101,190 @@ export default function PersonaForm({ initialValues }: { initialValues: InitialV
     fontFamily: "inherit",
   } as React.CSSProperties;
 
+  const voiceName = VOICES.find((v) => v.id === form.ai_persona_voice_id)?.label.split("—")[0].trim() ?? "Rachel";
+
+  // ── Empty state ──────────────────────────────────────────────────────────────
+  if (!editing && !isConfigured(form)) {
+    return (
+      <div
+        className="rounded-2xl p-8 text-center"
+        style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)" }}
+      >
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
+          style={{ backgroundColor: "var(--color-soft-gold)", border: "1px solid var(--color-champagne)" }}
+        >
+          <Sparkles size={28} style={{ color: "var(--color-gold)" }} />
+        </div>
+        <h2
+          className="font-display mb-2"
+          style={{ fontSize: 22, color: "var(--color-charcoal)", letterSpacing: "-0.02em", fontStyle: "italic" }}
+        >
+          Set up your AI persona
+        </h2>
+        <p className="mb-6 mx-auto" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)", maxWidth: 380, lineHeight: 1.65 }}>
+          Give your customers a voice to talk to. After scanning a tag, they can ask your AI persona anything about the product, brand, or provenance.
+        </p>
+
+        <div className="flex flex-col gap-3 mb-8 text-left mx-auto" style={{ maxWidth: 340 }}>
+          {[
+            "Answers product questions in your brand voice",
+            "Powered by your brand story and product data",
+            "Works on every scan page automatically",
+          ].map((point) => (
+            <div key={point} className="flex items-start gap-3">
+              <CheckCircle2 size={16} style={{ color: "var(--color-verified)", marginTop: 2, flexShrink: 0 }} />
+              <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>{point}</span>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={() => setEditing(true)}
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold"
+          style={{
+            backgroundColor: "var(--color-onyx)",
+            color: "var(--color-pearl)",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "var(--text-body-sm)",
+          }}
+        >
+          <Bot size={16} />
+          Configure AI persona
+        </button>
+      </div>
+    );
+  }
+
+  // ── Summary card (configured, not editing) ───────────────────────────────────
+  if (!editing && isConfigured(form)) {
+    return (
+      <div className="space-y-4">
+        {/* Status + enable toggle */}
+        <div
+          className="flex items-center justify-between rounded-xl px-5 py-4"
+          style={{ border: "1px solid var(--color-cream)", backgroundColor: form.ai_enabled ? "var(--color-verified-tint)" : "var(--color-smoke)" }}
+        >
+          <div className="flex items-center gap-3">
+            <Bot size={20} style={{ color: form.ai_enabled ? "var(--color-verified)" : "var(--color-slate)" }} />
+            <div>
+              <p className="font-semibold" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)" }}>
+                {form.ai_enabled ? "AI Persona is live" : "AI Persona is paused"}
+              </p>
+              <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>
+                {form.ai_enabled ? "Customers can talk to your brand on scan pages" : "Toggle on to activate on all scan pages"}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={async () => {
+              const newVal = !form.ai_enabled;
+              set("ai_enabled", newVal);
+              await fetch("/api/company/ai-persona", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ai_enabled: newVal }),
+              });
+            }}
+            style={{
+              width: "44px",
+              height: "24px",
+              borderRadius: "999px",
+              backgroundColor: form.ai_enabled ? "var(--color-verified)" : "var(--color-stone)",
+              border: "none",
+              cursor: "pointer",
+              position: "relative",
+              transition: "background-color 0.2s",
+              flexShrink: 0,
+            }}
+          >
+            <span
+              style={{
+                position: "absolute",
+                top: "3px",
+                left: form.ai_enabled ? "23px" : "3px",
+                width: "18px",
+                height: "18px",
+                borderRadius: "50%",
+                backgroundColor: "#fff",
+                transition: "left 0.2s",
+              }}
+            />
+          </button>
+        </div>
+
+        {/* Summary */}
+        <div
+          className="rounded-xl p-5 space-y-4"
+          style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)" }}
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-slate)" }}>
+                Persona
+              </p>
+              <p className="font-semibold" style={{ fontSize: "var(--text-body)", color: "var(--color-charcoal)" }}>
+                {form.ai_persona_name || "Unnamed"}
+              </p>
+            </div>
+            <div>
+              <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-slate)" }}>
+                Voice
+              </p>
+              <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>{voiceName}</p>
+            </div>
+            <div>
+              <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-slate)" }}>
+                API Key
+              </p>
+              <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
+                {form.has_custom_key ? "Custom key" : "Shared (Tagit)"}
+              </p>
+            </div>
+          </div>
+          {form.ai_persona_prompt && (
+            <div>
+              <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-slate)" }}>
+                Instructions
+              </p>
+              <p
+                style={{
+                  fontSize: "var(--text-body-sm)",
+                  color: "var(--color-graphite)",
+                  lineHeight: 1.6,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {form.ai_persona_prompt}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={() => setEditing(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium"
+          style={{
+            fontSize: "var(--text-body-sm)",
+            backgroundColor: "var(--color-linen)",
+            color: "var(--color-graphite)",
+            border: "1px solid var(--color-cream)",
+            cursor: "pointer",
+          }}
+        >
+          <ChevronDown size={14} />
+          Edit persona
+        </button>
+      </div>
+    );
+  }
+
+  // ── Edit form ──────────────────────────────────────────────────────────────
   return (
     <form onSubmit={handleSave} className="space-y-8">
       {/* Enable toggle */}
@@ -268,21 +456,39 @@ export default function PersonaForm({ initialValues }: { initialValues: InitialV
         </p>
       </div>
 
-      <button
-        type="submit"
-        disabled={saving}
-        className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium"
-        style={{
-          fontSize: "var(--text-body-sm)",
-          backgroundColor: saving ? "var(--color-stone)" : "var(--color-onyx)",
-          color: "var(--color-pearl)",
-          border: "none",
-          cursor: saving ? "not-allowed" : "pointer",
-        }}
-      >
-        {saving && <Loader2 size={14} className="animate-spin" />}
-        {saving ? "Saving…" : "Save persona"}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={saving}
+          className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium"
+          style={{
+            fontSize: "var(--text-body-sm)",
+            backgroundColor: saving ? "var(--color-stone)" : "var(--color-onyx)",
+            color: "var(--color-pearl)",
+            border: "none",
+            cursor: saving ? "not-allowed" : "pointer",
+          }}
+        >
+          {saving && <Loader2 size={14} className="animate-spin" />}
+          {saving ? "Saving…" : "Save persona"}
+        </button>
+        {isConfigured(form) && (
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            style={{
+              fontSize: "var(--text-body-sm)",
+              backgroundColor: "transparent",
+              color: "var(--color-slate)",
+              border: "none",
+              cursor: "pointer",
+              padding: "12px 0",
+            }}
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   );
 }

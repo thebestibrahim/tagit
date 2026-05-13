@@ -1,0 +1,58 @@
+import { createClient as createServerClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
+
+const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
+const ALLOWED_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml"]);
+
+export async function POST(request: Request) {
+  const authClient = await createServerClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const formData = await request.formData();
+  const file = formData.get("file");
+
+  if (!file || !(file instanceof File)) {
+    return NextResponse.json({ error: "No file provided" }, { status: 400 });
+  }
+  if (!ALLOWED_TYPES.has(file.type)) {
+    return NextResponse.json({ error: "Invalid file type. Use PNG, JPG, WebP, or SVG." }, { status: 400 });
+  }
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: "File too large (max 2 MB)" }, { status: 413 });
+  }
+
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+
+  const ext = file.name.split(".").pop() ?? "png";
+  const path = `${user.id}/logo.${ext}`;
+  const arrayBuffer = await file.arrayBuffer();
+
+  const { error: uploadError } = await admin.storage
+    .from("logos")
+    .upload(path, arrayBuffer, {
+      contentType: file.type,
+      upsert: true,
+    });
+
+  if (uploadError) {
+    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+  }
+
+  const { data: urlData } = admin.storage.from("logos").getPublicUrl(path);
+  const logo_url = urlData.publicUrl;
+
+  const { error: dbError } = await admin
+    .from("companies")
+    .update({ logo_url } as never)
+    .eq("id", user.id);
+
+  if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
+
+  return NextResponse.json({ logo_url });
+}

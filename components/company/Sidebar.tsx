@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   ChevronRight,
+  Layers,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ const navItems = [
   { label: "Overview",       href: "/dashboard",                 icon: LayoutDashboard },
   { label: "Products",       href: "/dashboard/products",        icon: Package },
   { label: "Tags",           href: "/dashboard/tags",            icon: Tag },
+  { label: "Batches",        href: "/dashboard/batches",         icon: Layers },
   { label: "Ownership",      href: "/dashboard/ownership",       icon: Users },
   { label: "Customization",  href: "/dashboard/customization",   icon: Paintbrush },
   { label: "AI Persona",     href: "/dashboard/ai-persona",      icon: Bot },

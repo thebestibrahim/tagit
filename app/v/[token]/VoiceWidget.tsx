@@ -13,23 +13,35 @@ interface VoiceWidgetProps {
   primaryColor: string;
 }
 
+const MAX_RECORDING_SECONDS = 30;
+
 export default function VoiceWidget({ tagId, personaName, accentColor, primaryColor }: VoiceWidgetProps) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [widgetState, setWidgetState] = useState<WidgetState>("idle");
   const [textInput, setTextInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isRecording = widgetState === "recording";
   const isThinking = widgetState === "thinking";
   const isSpeaking = widgetState === "speaking";
   const isBusy = isThinking || isSpeaking || isRecording;
+
+  function stopRecordingTimer() {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    setRecordingSeconds(0);
+  }
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -113,12 +125,27 @@ export default function VoiceWidget({ tagId, personaName, accentColor, primaryCo
     }
 
     chunksRef.current = [];
-    const mr = new MediaRecorder(stream, { mimeType: "audio/webm" });
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+    const mr = new MediaRecorder(stream, { mimeType });
     mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-    mr.onstop = () => { stream.getTracks().forEach((t) => t.stop()); processAudio(); };
+    mr.onstop = () => {
+      stream.getTracks().forEach((t) => t.stop());
+      stopRecordingTimer();
+      processAudio();
+    };
     mr.start();
     mediaRecorderRef.current = mr;
     setWidgetState("recording");
+    setRecordingSeconds(0);
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingSeconds((s) => {
+        if (s + 1 >= MAX_RECORDING_SECONDS) {
+          mediaRecorderRef.current?.stop();
+          return 0;
+        }
+        return s + 1;
+      });
+    }, 1000);
   }, [widgetState]);
 
   async function processAudio() {
@@ -177,7 +204,7 @@ export default function VoiceWidget({ tagId, personaName, accentColor, primaryCo
     sendMessage(textInput);
   }
 
-  const micLabel = isRecording ? "Tap to send" : isSpeaking ? "Tap to stop" : isThinking ? "Thinking…" : "Ask anything";
+  const micLabel = isRecording ? `Listening… tap to send (${MAX_RECORDING_SECONDS - recordingSeconds}s)` : isSpeaking ? "Tap to stop" : isThinking ? "Thinking…" : "Type or tap mic to speak";
 
   return (
     <>
@@ -439,11 +466,12 @@ export default function VoiceWidget({ tagId, personaName, accentColor, primaryCo
                   type="button"
                   onClick={toggleRecording}
                   disabled={isThinking}
+                  aria-label={isRecording ? "Stop recording" : isSpeaking ? "Stop speaking" : "Start recording"}
                   style={{
                     width: 46,
                     height: 46,
                     borderRadius: "50%",
-                    backgroundColor: isRecording ? "#B85C5C" : accentColor,
+                    backgroundColor: isRecording ? "#B85C5C" : isSpeaking ? "#6E6E73" : accentColor,
                     border: "none",
                     cursor: isThinking ? "not-allowed" : "pointer",
                     display: "flex",
@@ -454,12 +482,16 @@ export default function VoiceWidget({ tagId, personaName, accentColor, primaryCo
                     transition: "background-color 0.2s, transform 0.15s",
                     boxShadow: isRecording ? `0 0 0 6px rgba(184,92,92,0.2), 0 0 0 12px rgba(184,92,92,0.1)` : "none",
                     animation: isRecording ? "mic-pulse 1.5s ease-in-out infinite" : "none",
+                    WebkitTapHighlightColor: "transparent",
+                    touchAction: "manipulation",
                   }}
                 >
                   {isSpeaking ? (
                     <Square size={16} color="#fff" fill="#fff" />
                   ) : isRecording ? (
-                    <MicOff size={18} color="#fff" />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: "-0.03em" }}>
+                      {MAX_RECORDING_SECONDS - recordingSeconds}
+                    </span>
                   ) : (
                     <Mic size={18} color="#fff" />
                   )}
@@ -474,6 +506,7 @@ export default function VoiceWidget({ tagId, personaName, accentColor, primaryCo
       {!open && (
         <button
           onClick={() => setOpen(true)}
+          aria-label="Open voice assistant"
           style={{
             position: "fixed",
             bottom: 24,
@@ -490,6 +523,8 @@ export default function VoiceWidget({ tagId, personaName, accentColor, primaryCo
             boxShadow: `0 4px 20px ${accentColor}60, 0 2px 8px rgba(10,10,11,0.15)`,
             zIndex: 50,
             animation: "float 3s ease-in-out infinite",
+            WebkitTapHighlightColor: "transparent",
+            touchAction: "manipulation",
           }}
         >
           <Mic size={22} color="#fff" />

@@ -103,7 +103,7 @@ export default async function ScanPage({
 
   const { data: companyData } = await admin
     .from("companies")
-    .select("id, name, logo_url, brand_primary_color, brand_secondary_color, brand_accent_color, brand_font, brand_story, custom_header_text, social_links, ai_enabled, ai_persona_name")
+    .select("id, name, logo_url, brand_primary_color, brand_secondary_color, brand_accent_color, brand_text_color, brand_font, brand_template, brand_story, custom_header_text, social_links, ai_enabled, ai_persona_name")
     .eq("id", tag.company_id)
     .single();
 
@@ -114,7 +114,9 @@ export default async function ScanPage({
     brand_primary_color: string;
     brand_secondary_color: string;
     brand_accent_color: string;
+    brand_text_color: string;
     brand_font: string;
+    brand_template: string;
     brand_story: string | null;
     custom_header_text: string | null;
     social_links: Record<string, string>;
@@ -134,6 +136,7 @@ export default async function ScanPage({
   const primary = company?.brand_primary_color || "#0A0A0B";
   const secondary = company?.brand_secondary_color || "#FAFAF8";
   const accent = company?.brand_accent_color || "#B8945D";
+  const textColor = company?.brand_text_color || "#FAFAF8";
 
   const fontMap: Record<string, string> = {
     body: "system-ui,-apple-system,sans-serif",
@@ -167,7 +170,7 @@ export default async function ScanPage({
                 fontFamily: "'Instrument Serif',Georgia,serif",
                 fontSize: 20,
                 fontStyle: "italic",
-                color: secondary,
+                color: textColor,
                 letterSpacing: "-0.02em",
               }}
             >
@@ -270,8 +273,86 @@ export default async function ScanPage({
           )
         )}
 
+        {/* Social links */}
+        {company && Object.values(company.social_links ?? {}).some(Boolean) && (
+          <div style={{ padding: "32px 24px 0", display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+            {company.social_links?.website && (
+              <a
+                href={company.social_links.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 16px",
+                  borderRadius: 99,
+                  border: "1px solid #E8E2D5",
+                  backgroundColor: "#fff",
+                  fontSize: 12,
+                  color: "#1F1F22",
+                  textDecoration: "none",
+                  fontWeight: 500,
+                  letterSpacing: "-0.003em",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                Website
+              </a>
+            )}
+            {company.social_links?.instagram && (
+              <a
+                href={company.social_links.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 16px",
+                  borderRadius: 99,
+                  border: "1px solid #E8E2D5",
+                  backgroundColor: "#fff",
+                  fontSize: 12,
+                  color: "#1F1F22",
+                  textDecoration: "none",
+                  fontWeight: 500,
+                  letterSpacing: "-0.003em",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                Instagram
+              </a>
+            )}
+            {company.social_links?.twitter && (
+              <a
+                href={company.social_links.twitter}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 16px",
+                  borderRadius: 99,
+                  border: "1px solid #E8E2D5",
+                  backgroundColor: "#fff",
+                  fontSize: 12,
+                  color: "#1F1F22",
+                  textDecoration: "none",
+                  fontWeight: 500,
+                  letterSpacing: "-0.003em",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.256 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
+                X / Twitter
+              </a>
+            )}
+          </div>
+        )}
+
         {/* Tagit footer */}
-        <div style={{ padding: "48px 24px 0", textAlign: "center" }}>
+        <div style={{ padding: "32px 24px 0", textAlign: "center" }}>
           <div
             style={{
               display: "flex",
