@@ -85,6 +85,12 @@ export default async function ScanPage({
     hmac_signature: string;
   };
 
+  // If TAGIT_HMAC_SECRET is not configured (misconfigured deployment / new environment),
+  // show a neutral maintenance page rather than telling customers their item is fake.
+  if (!process.env.TAGIT_HMAC_SECRET) {
+    return <MaintenancePage />;
+  }
+
   const hmacValid = validateHmac(tag.token, tag.hmac_signature);
   if (!hmacValid) {
     await logScan(tag.id, "invalid_hmac", headerStore);
@@ -101,11 +107,28 @@ export default async function ScanPage({
 
   const product = productData as Product | null;
 
-  const { data: companyData } = await admin
+  // Split into two queries — stable columns first, then migration-dependent columns.
+  // This way a missing DB column (migration not yet run) never breaks the scan page.
+  const { data: companyBase } = await admin
     .from("companies")
-    .select("id, name, logo_url, brand_primary_color, brand_secondary_color, brand_accent_color, brand_text_color, brand_font, brand_template, brand_story, custom_header_text, social_links, ai_enabled, ai_persona_name")
+    .select("id, name, logo_url, brand_primary_color, brand_secondary_color, brand_accent_color, brand_font, brand_story, custom_header_text, social_links, ai_enabled, ai_persona_name")
     .eq("id", tag.company_id)
     .single();
+
+  const { data: companyExt } = await admin
+    .from("companies")
+    .select("brand_text_color, brand_template")
+    .eq("id", tag.company_id)
+    .single()
+    .then((r) => ({ data: r.error ? null : r.data }));
+
+  const companyData = companyBase
+    ? {
+        ...companyBase,
+        brand_text_color: (companyExt as { brand_text_color?: string } | null)?.brand_text_color ?? "#FAFAF8",
+        brand_template:   (companyExt as { brand_template?: string }   | null)?.brand_template   ?? "classic",
+      }
+    : null;
 
   const company = companyData as {
     id: string;
@@ -999,6 +1022,75 @@ function SuspendedItem() {
         <p style={{ margin: 0, fontSize: 12, color: "#8B4040", lineHeight: 1.55 }}>
           This item has been suspended. Contact the brand for more information.
         </p>
+      </div>
+    </div>
+  );
+}
+
+function MaintenancePage() {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#0A0A0B",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "40px 20px",
+      }}
+    >
+      <div style={{ maxWidth: "320px", textAlign: "center" }}>
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: "50%",
+            backgroundColor: "rgba(184,148,93,0.12)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "0 auto 20px",
+          }}
+        >
+          <Clock size={24} color="#B8945D" />
+        </div>
+        <h1
+          style={{
+            fontFamily: "'Instrument Serif',Georgia,serif",
+            fontSize: 26,
+            fontStyle: "italic",
+            fontWeight: 400,
+            color: "#FAFAF8",
+            margin: "0 0 10px",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Briefly unavailable
+        </h1>
+        <p style={{ margin: "0 0 24px", fontSize: 13, color: "#71717A", lineHeight: 1.65 }}>
+          This page is temporarily unavailable due to a service update. Please try again in a few minutes.
+        </p>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 5,
+          }}
+        >
+          <div style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#B8945D" }} />
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono',monospace",
+              fontSize: 9,
+              color: "#B8945D",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+            }}
+          >
+            Tagit
+          </span>
+        </div>
       </div>
     </div>
   );
