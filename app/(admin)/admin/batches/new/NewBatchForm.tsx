@@ -23,6 +23,7 @@ export default function NewBatchForm({ companies }: { companies: Company[] }) {
     company_id: "",
     industry: "",
     batch_size: 100,
+    batch_name: "",
     notes: "",
   });
 
@@ -160,6 +161,30 @@ export default function NewBatchForm({ companies }: { companies: Company[] }) {
             }}
           />
         </div>
+      </div>
+
+      {/* Batch name */}
+      <div className="space-y-1.5">
+        <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+          Batch name <span style={{ color: "var(--color-mist)", fontWeight: 400 }}>(optional)</span>
+        </Label>
+        <input
+          type="text"
+          value={form.batch_name}
+          onChange={(e) => set("batch_name", e.target.value)}
+          placeholder="e.g. Spring 2026 Collection"
+          maxLength={80}
+          style={{
+            width: "100%",
+            border: "1px solid var(--color-stone)",
+            borderRadius: "var(--radius-sm)",
+            padding: "10px 12px",
+            fontSize: "var(--text-body-sm)",
+            color: "var(--color-onyx)",
+            backgroundColor: "var(--color-pearl)",
+            outline: "none",
+          }}
+        />
       </div>
 
       {/* Notes */}

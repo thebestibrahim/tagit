@@ -20,6 +20,7 @@ const SUGGESTED_QTY = [25, 50, 100, 250, 500, 1000];
 
 export default function BatchRequestPage() {
   const router = useRouter();
+  const [batchName, setBatchName] = useState("");
   const [industry, setIndustry] = useState("");
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
@@ -35,7 +36,7 @@ export default function BatchRequestPage() {
     const res = await fetch("/api/company/batch-request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ industry, quantity: qty, notes }),
+      body: JSON.stringify({ industry, quantity: qty, notes, batch_name: batchName }),
     });
     const json = await res.json();
     setLoading(false);
@@ -72,6 +73,31 @@ export default function BatchRequestPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Batch name */}
+        <div className="space-y-1.5">
+          <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+            Batch name <span style={{ color: "var(--color-mist)", fontWeight: 400 }}>(optional)</span>
+          </Label>
+          <input
+            type="text"
+            value={batchName}
+            onChange={(e) => setBatchName(e.target.value)}
+            placeholder="e.g. Spring 2026 Collection, Lagos Flagship Launch"
+            maxLength={80}
+            style={{
+              width: "100%",
+              border: "1px solid var(--color-stone)",
+              borderRadius: "var(--radius-sm)",
+              padding: "10px 12px",
+              fontSize: "var(--text-body-sm)",
+              color: "var(--color-onyx)",
+              backgroundColor: "var(--color-pearl)",
+              outline: "none",
+              fontFamily: "inherit",
+            }}
+          />
+        </div>
+
         {/* Industry */}
         <div className="space-y-3">
           <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>

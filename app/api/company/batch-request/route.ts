@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const { industry, quantity, notes } = body;
+  const { industry, quantity, notes, batch_name } = body;
 
   if (!ALLOWED_INDUSTRIES.has(industry)) {
     return NextResponse.json({ error: "Invalid industry" }, { status: 400 });
@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     batch_size: qty,
     status: "pending",
     notes: notes?.trim() || null,
+    batch_name: batch_name?.trim() || null,
     created_by: user.id,
   } as never);
 

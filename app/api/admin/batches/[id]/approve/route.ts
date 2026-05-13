@@ -1,5 +1,5 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { nanoid, customAlphabet } from "nanoid";
 import { createHmac } from "crypto";
@@ -12,22 +12,16 @@ function generateHmac(token: string): string {
     .digest("hex");
 }
 
-export async function POST(request: Request) {
+export async function POST(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id: batchId } = await params;
+
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
-
   if (!user || user.app_metadata?.role !== "tagit_admin") {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
-  const { company_id, industry, batch_size, notes, batch_name } = await request.json();
-
-  if (!company_id || !industry || !batch_size) {
-    return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
-  }
-
-  if (!Number.isInteger(batch_size) || batch_size < 1 || batch_size > 10000) {
-    return NextResponse.json({ error: "Batch size must be between 1 and 10,000." }, { status: 400 });
   }
 
   const admin = createAdminClient(
@@ -36,54 +30,53 @@ export async function POST(request: Request) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  const { data: batchData, error: batchError } = await admin
+  const { data: batchData, error: fetchError } = await admin
     .from("tag_batches")
-    .insert({
-      company_id,
-      industry,
-      batch_size,
-      notes: notes ?? null,
-      batch_name: batch_name?.trim() || null,
-      created_by: user.id,
-      status: "pending",
-    } as never)
-    .select("id")
+    .select("id, company_id, industry, batch_size, status")
+    .eq("id", batchId)
     .single();
 
-  if (batchError) {
-    return NextResponse.json({ error: batchError.message }, { status: 500 });
+  if (fetchError || !batchData) {
+    return NextResponse.json({ error: "Batch not found." }, { status: 404 });
   }
 
-  const batchId = (batchData as { id: string }).id;
+  const batch = batchData as {
+    id: string; company_id: string; industry: string; batch_size: number; status: string;
+  };
 
-  const tags = Array.from({ length: batch_size }, () => {
+  if (batch.status !== "pending") {
+    return NextResponse.json({ error: "This batch has already been processed." }, { status: 400 });
+  }
+
+  const tags = Array.from({ length: batch.batch_size }, () => {
     const token = nanoid(21);
     return {
       token,
       short_id: shortId(),
-      company_id,
-      industry,
+      company_id: batch.company_id,
+      industry: batch.industry,
       batch_id: batchId,
       status: "created",
       hmac_signature: generateHmac(token),
     };
   });
 
-  // Insert in chunks of 500 to avoid request size limits
   const chunkSize = 500;
   for (let i = 0; i < tags.length; i += chunkSize) {
-    const chunk = tags.slice(i, i + chunkSize);
-    const { error } = await admin.from("tags").insert(chunk as never);
+    const { error } = await admin.from("tags").insert(tags.slice(i, i + chunkSize) as never);
     if (error) {
-      await admin.from("tag_batches").delete().eq("id", batchId);
       return NextResponse.json({ error: "Tag generation failed: " + error.message }, { status: 500 });
     }
   }
 
-  await admin
+  const { error: updateError } = await admin
     .from("tag_batches")
     .update({ status: "generated" } as never)
     .eq("id", batchId);
 
-  return NextResponse.json({ success: true, batch_id: batchId, count: batch_size });
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true, count: batch.batch_size });
 }

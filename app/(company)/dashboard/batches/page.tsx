@@ -9,6 +9,7 @@ type Batch = {
   id: string;
   industry: string;
   batch_size: number;
+  batch_name: string | null;
   status: "pending" | "generated" | "written" | "shipped";
   notes: string | null;
   created_at: string;
@@ -36,7 +37,7 @@ export default async function CompanyBatchesPage() {
 
   const { data } = await supabase
     .from("tag_batches")
-    .select("id, industry, batch_size, status, notes, created_at, shipped_at")
+    .select("id, industry, batch_size, batch_name, status, notes, created_at, shipped_at")
     .eq("company_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -122,8 +123,13 @@ export default async function CompanyBatchesPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <p className="font-semibold capitalize" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)" }}>
-                        {batch.industry} — {batch.batch_size.toLocaleString()} tags
+                        {batch.batch_name || `${batch.industry} — ${batch.batch_size.toLocaleString()} tags`}
                       </p>
+                      {batch.batch_name && (
+                        <span style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>
+                          {batch.industry} · {batch.batch_size.toLocaleString()} tags
+                        </span>
+                      )}
                       <span
                         className="px-2 py-0.5 rounded-full text-micro font-medium capitalize flex items-center gap-1"
                         style={{ backgroundColor: s.bg, color: s.color }}
