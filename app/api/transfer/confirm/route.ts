@@ -106,16 +106,23 @@ export async function POST(request: Request) {
   const product = productData as { name: string; companies: { name: string } } | null;
 
   const acceptanceUrl = `${APP_URL}/v/transfer/${transfer.acceptance_token}`;
-  if (owner && product) {
+
+  let emailSent = false;
+  let emailError: string | null = null;
+  try {
     await sendTransferAcceptanceEmail(transfer.to_email, {
       recipientName: transfer.to_name,
-      productName: product.name,
-      fromName: owner.owner_name,
-      companyName: product.companies?.name || "the brand",
+      productName: product?.name ?? "your item",
+      fromName: owner?.owner_name ?? "the current owner",
+      companyName: (product?.companies as { name: string } | null)?.name ?? "the brand",
       acceptanceUrl,
       salePrice: transfer.sale_price ?? undefined,
-    }).catch(() => {});
+    });
+    emailSent = true;
+  } catch (err) {
+    emailError = err instanceof Error ? err.message : "Email delivery failed";
+    console.error("[transfer/confirm] acceptance email failed:", emailError);
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, acceptanceUrl, emailSent, emailError });
 }

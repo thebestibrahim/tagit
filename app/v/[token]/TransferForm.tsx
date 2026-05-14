@@ -29,6 +29,9 @@ export default function TransferForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [transferId, setTransferId] = useState("");
+  const [acceptanceUrl, setAcceptanceUrl] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   async function handleInitiate(e: React.FormEvent) {
     e.preventDefault();
@@ -84,8 +87,18 @@ export default function TransferForm({
       return;
     }
 
+    setAcceptanceUrl(confirmData.acceptanceUrl ?? "");
+    setEmailSent(confirmData.emailSent ?? false);
     setStep("success");
     setLoading(false);
+  }
+
+  function handleCopy() {
+    if (!acceptanceUrl) return;
+    navigator.clipboard.writeText(acceptanceUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   }
 
   if (step === "closed") {
@@ -134,20 +147,65 @@ export default function TransferForm({
     return (
       <div
         style={{
-          padding: "28px 24px",
+          padding: "24px",
           backgroundColor: "#DCEEE3",
           borderRadius: "16px",
           border: "1px solid #B5D9C5",
-          textAlign: "center",
         }}
       >
-        <CheckCircle2 size={36} color="#2D6A4F" style={{ margin: "0 auto 12px" }} />
-        <p style={{ margin: "0 0 6px", fontSize: "16px", fontWeight: "700", color: "#1E4D3A" }}>
-          Transfer initiated
-        </p>
-        <p style={{ margin: 0, fontSize: "13px", color: "#2D6A4F", lineHeight: 1.5 }}>
-          An acceptance email has been sent to <strong>{recipientEmail}</strong>. The transfer will complete once they accept.
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+          <CheckCircle2 size={22} color="#2D6A4F" style={{ flexShrink: 0 }} />
+          <p style={{ margin: 0, fontSize: "15px", fontWeight: "700", color: "#1E4D3A" }}>
+            Transfer initiated
+          </p>
+        </div>
+
+        {emailSent ? (
+          <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#2D6A4F", lineHeight: 1.55 }}>
+            An acceptance email has been sent to <strong>{recipientEmail}</strong>.
+            The transfer completes once they click the link.
+          </p>
+        ) : (
+          <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#2D6A4F", lineHeight: 1.55 }}>
+            The email could not be delivered automatically. Share the link below
+            directly with <strong>{recipientEmail}</strong> via WhatsApp, SMS, or any
+            other channel. The transfer completes once they accept.
+          </p>
+        )}
+
+        {acceptanceUrl && (
+          <div
+            style={{
+              backgroundColor: "rgba(255,255,255,0.6)",
+              border: "1px solid #B5D9C5",
+              borderRadius: "10px",
+              padding: "12px 14px",
+            }}
+          >
+            <p style={{ margin: "0 0 6px", fontSize: "10px", fontWeight: "700", color: "#2D6A4F", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Acceptance link
+            </p>
+            <p style={{ margin: "0 0 10px", fontSize: "12px", color: "#1E4D3A", wordBreak: "break-all", lineHeight: 1.5, fontFamily: "monospace" }}>
+              {acceptanceUrl}
+            </p>
+            <button
+              onClick={handleCopy}
+              style={{
+                padding: "7px 16px",
+                fontSize: "12px",
+                fontWeight: "600",
+                color: "#1E4D3A",
+                backgroundColor: copied ? "#B5D9C5" : "rgba(255,255,255,0.8)",
+                border: "1px solid #2D6A4F",
+                borderRadius: "6px",
+                cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+            >
+              {copied ? "Copied!" : "Copy link"}
+            </button>
+          </div>
+        )}
       </div>
     );
   }
