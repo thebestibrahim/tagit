@@ -85,19 +85,15 @@ export default async function ScanPage({
     hmac_signature: string;
   };
 
-  // If TAGIT_HMAC_SECRET is not configured (misconfigured deployment / new environment),
-  // show a neutral maintenance page rather than telling customers their item is fake.
-  if (!process.env.TAGIT_HMAC_SECRET) {
-    return <MaintenancePage />;
-  }
+  // HMAC is used for the "Verified Authentic" badge only — it is NOT a page gate.
+  // nanoid(21) tokens have 126 bits of entropy, making them impossible to guess.
+  // Blocking the page on HMAC failure silently breaks tags whenever the secret
+  // rotates or a deployment race occurs, which is far worse than showing the page.
+  const hmacValid = process.env.TAGIT_HMAC_SECRET
+    ? validateHmac(tag.token, tag.hmac_signature)
+    : false;
 
-  const hmacValid = validateHmac(tag.token, tag.hmac_signature);
-  if (!hmacValid) {
-    await logScan(tag.id, "invalid_hmac", headerStore);
-    return <InvalidPage />;
-  }
-
-  await logScan(tag.id, "valid", headerStore);
+  await logScan(tag.id, hmacValid ? "valid" : "unverified", headerStore);
 
   const { data: productData } = await admin
     .from("products")
@@ -229,7 +225,7 @@ export default async function ScanPage({
         <div
           style={{
             padding: "7px 20px",
-            backgroundColor: "rgba(45,106,79,0.22)",
+            backgroundColor: hmacValid ? "rgba(45,106,79,0.22)" : "rgba(184,148,93,0.12)",
             borderTop: "1px solid rgba(255,255,255,0.06)",
             display: "flex",
             alignItems: "center",
@@ -237,24 +233,28 @@ export default async function ScanPage({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <ShieldCheck size={11} color="#4ADE80" strokeWidth={2.5} />
+            {hmacValid ? (
+              <ShieldCheck size={11} color="#4ADE80" strokeWidth={2.5} />
+            ) : (
+              <ShieldCheck size={11} color="#B8945D" strokeWidth={2.5} />
+            )}
             <span
               style={{
                 fontFamily: "'JetBrains Mono',monospace",
                 fontSize: 9,
-                color: "#4ADE80",
+                color: hmacValid ? "#4ADE80" : "#B8945D",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
               }}
             >
-              Verified Authentic · HMAC Signed
+              {hmacValid ? "Verified Authentic · HMAC Signed" : "Tagit Registered"}
             </span>
           </div>
           <span
             style={{
               fontFamily: "'JetBrains Mono',monospace",
               fontSize: 9,
-              color: "#4ADE80",
+              color: hmacValid ? "#4ADE80" : "#B8945D",
               opacity: 0.6,
               letterSpacing: "0.08em",
             }}
