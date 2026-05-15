@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { Loader2, Bot, Mic, Volume2, Play, Square, Sparkles, CheckCircle2, ChevronDown } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -31,10 +31,10 @@ export default function PersonaForm({ initialValues }: { initialValues: InitialV
   const [newApiKey, setNewApiKey] = useState("");
   const [saving, setSaving] = useState(false);
   const [playingVoice, setPlayingVoice] = useState<string | null>(null);
-  const audioRef = useState<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   async function previewVoice(voiceId: string) {
-    if (audioRef[0]) { audioRef[0].pause(); audioRef[0] = null; }
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     if (playingVoice === voiceId) { setPlayingVoice(null); return; }
 
     setPlayingVoice(voiceId);
@@ -47,8 +47,8 @@ export default function PersonaForm({ initialValues }: { initialValues: InitialV
       if (!res.ok) { toast.error("Could not play voice sample."); setPlayingVoice(null); return; }
       const blob = await res.blob();
       const audio = new Audio(URL.createObjectURL(blob));
-      audioRef[0] = audio;
-      audio.onended = () => { setPlayingVoice(null); audioRef[0] = null; };
+      audioRef.current = audio;
+      audio.onended = () => { setPlayingVoice(null); audioRef.current = null; };
       audio.play();
     } catch {
       toast.error("Could not play voice sample.");

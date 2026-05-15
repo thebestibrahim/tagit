@@ -29,7 +29,7 @@ export default function Quote() {
             pointerEvents: "none",
           }}
         >
-          "
+          &ldquo;
         </motion.div>
 
         <blockquote style={{ margin: 0 }}>

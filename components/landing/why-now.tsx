@@ -49,7 +49,7 @@ export default function WhyNow() {
             Between 2026 and 2030, the European Union will require every luxury product sold
             in its market to carry a verifiable digital identity.{" "}
             <strong style={{ color: "#1F1F22", fontWeight: 550 }}>
-              Brands without this infrastructure will lose access to the world's largest luxury market.
+              Brands without this infrastructure will lose access to the world&apos;s largest luxury market.
             </strong>{" "}
             Tagit is built to be that infrastructure — and to give you everything else that comes with it.
           </p>

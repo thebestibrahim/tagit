@@ -193,10 +193,10 @@ export default function RegisterForm() {
                   margin: "0 0 16px",
                 }}
               >
-                You're in the queue.
+                You&apos;re in the queue.
               </h1>
               <p style={{ fontSize: 14, color: "#6E6E73", lineHeight: 1.7, margin: "0 0 32px", letterSpacing: "-0.005em" }}>
-                We've received the application for <strong style={{ color: "#1F1F22", fontWeight: 550 }}>{form.name}</strong>.
+                We&apos;ve received the application for <strong style={{ color: "#1F1F22", fontWeight: 550 }}>{form.name}</strong>.
                 Our team will review it and be in touch at{" "}
                 <strong style={{ color: "#1F1F22", fontWeight: 550 }}>{form.email}</strong> within 24 hours.
               </p>

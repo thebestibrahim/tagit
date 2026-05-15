@@ -87,7 +87,7 @@ export default function Manifesto() {
         >
           Tagit is built on a single belief: that every piece of craftsmanship —
           every stitch, every brushstroke, every complication — deserves to carry
-          its maker's name, its origin, its journey forward. Permanently.
+          its maker&apos;s name, its origin, its journey forward. Permanently.
         </motion.p>
 
         {/* Attribution */}

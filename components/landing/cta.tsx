@@ -74,7 +74,7 @@ export default function CtaSection() {
                 letterSpacing: "-0.005em",
               }}
             >
-              Tagit is currently onboarding founding brand partners. Apply for access and we'll be in
+              Tagit is currently onboarding founding brand partners. Apply for access and we&apos;ll be in
               touch within 48 hours.
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>

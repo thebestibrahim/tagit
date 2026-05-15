@@ -47,7 +47,7 @@ export default function Pricing() {
           </h2>
           <p style={{ margin: 0, fontSize: 15, color: "#6E6E73", letterSpacing: "-0.005em", maxWidth: 480, marginInline: "auto", lineHeight: 1.65 }}>
             Every brand is different. Pricing is based on catalogue size and tag volume.
-            Talk to us and we'll build the right structure together.
+            Talk to us and we&apos;ll build the right structure together.
           </p>
         </motion.div>
 

@@ -41,6 +41,66 @@ type TagRow = {
   batch_id: string | null;
 };
 
+function TagTable({ rows }: { rows: TagRow[] }) {
+  return (
+    <table className="w-full">
+      <thead>
+        <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
+          {["Short ID", "Industry", "Status", "Created", "Scan"].map((h) => (
+            <th key={h} className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>
+              {h}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((tag, i) => {
+          const badge = BADGE[tag.status] ?? BADGE.created;
+          return (
+            <tr
+              key={tag.id}
+              style={{
+                backgroundColor: "var(--color-pearl)",
+                borderBottom: i < rows.length - 1 ? "1px solid var(--color-cream)" : "none",
+              }}
+            >
+              <td className="px-5 py-4">
+                <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)", letterSpacing: "0.05em" }}>
+                  {tag.short_id}
+                </span>
+              </td>
+              <td className="px-5 py-4">
+                <span className="capitalize" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
+                  {tag.industry}
+                </span>
+              </td>
+              <td className="px-5 py-4">
+                <span className="px-2 py-0.5 rounded-full text-micro font-medium capitalize" style={{ backgroundColor: badge.bg, color: badge.color }}>
+                  {tag.status.replace(/_/g, " ")}
+                </span>
+              </td>
+              <td className="px-5 py-4">
+                <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+                  {format(new Date(tag.created_at), "MMM d, yyyy")}
+                </span>
+              </td>
+              <td className="px-5 py-4">
+                <Link
+                  href={`/v/${tag.token}`}
+                  target="_blank"
+                  style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)", textDecoration: "underline" }}
+                >
+                  Preview
+                </Link>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
 type BatchRow = {
   id: string;
   industry: string;
@@ -107,64 +167,6 @@ export default async function CompanyTagsPage({
     if (!tagsByBatch.has(key)) tagsByBatch.set(key, []);
     tagsByBatch.get(key)!.push(tag);
   }
-
-  const TagTable = ({ rows }: { rows: TagRow[] }) => (
-    <table className="w-full">
-      <thead>
-        <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
-          {["Short ID", "Industry", "Status", "Created", "Scan"].map((h) => (
-            <th key={h} className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>
-              {h}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((tag, i) => {
-          const badge = BADGE[tag.status] ?? BADGE.created;
-          return (
-            <tr
-              key={tag.id}
-              style={{
-                backgroundColor: "var(--color-pearl)",
-                borderBottom: i < rows.length - 1 ? "1px solid var(--color-cream)" : "none",
-              }}
-            >
-              <td className="px-5 py-4">
-                <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)", letterSpacing: "0.05em" }}>
-                  {tag.short_id}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <span className="capitalize" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
-                  {tag.industry}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <span className="px-2 py-0.5 rounded-full text-micro font-medium capitalize" style={{ backgroundColor: badge.bg, color: badge.color }}>
-                  {tag.status.replace(/_/g, " ")}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                  {format(new Date(tag.created_at), "MMM d, yyyy")}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <Link
-                  href={`/v/${tag.token}`}
-                  target="_blank"
-                  style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)", textDecoration: "underline" }}
-                >
-                  Preview
-                </Link>
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  );
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
