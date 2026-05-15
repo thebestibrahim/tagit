@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { Loader2, Save, Smartphone, Upload, X, Shield } from "lucide-react";
+import { Loader2, Save, Smartphone, Upload, X, Shield, Award } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -16,6 +16,7 @@ type Company = {
   brand_text_color: string;
   brand_font: string;
   brand_template: string;
+  cert_template: string;
   brand_story: string | null;
   custom_header_text: string | null;
   social_links: Record<string, string>;
@@ -37,6 +38,24 @@ const TEMPLATES = [
   { value: "classic",   label: "Classic",   desc: "Full product card with fields grid" },
   { value: "minimal",   label: "Minimal",   desc: "Photo, name, and key facts only" },
   { value: "editorial", label: "Editorial", desc: "Large type, story-first layout" },
+];
+
+const CERT_TEMPLATES = [
+  {
+    value: "classic",
+    label: "Classic",
+    desc: "Gold header bar, centred seal, formal document",
+  },
+  {
+    value: "minimal",
+    label: "Minimal",
+    desc: "White, left-aligned, modern luxury editorial",
+  },
+  {
+    value: "heritage",
+    label: "Heritage",
+    desc: "Dark brand header, ornate border, premium feel",
+  },
 ];
 
 function ScanPagePreview({
@@ -180,6 +199,7 @@ export default function CustomizationForm({ company }: { company: Company }) {
     brand_text_color:      company.brand_text_color      || "#FAFAF8",
     brand_font:            company.brand_font            || "body",
     brand_template:        company.brand_template        || "classic",
+    cert_template:         company.cert_template         || "classic",
     brand_story:           company.brand_story ?? "",
     custom_header_text:    company.custom_header_text ?? "",
     social_instagram:      (company.social_links as Record<string, string>)?.instagram ?? "",
@@ -229,6 +249,7 @@ export default function CustomizationForm({ company }: { company: Company }) {
         brand_text_color:      form.brand_text_color,
         brand_font:            form.brand_font,
         brand_template:        form.brand_template,
+        cert_template:         form.cert_template,
         brand_story:           form.brand_story || null,
         custom_header_text:    form.custom_header_text || null,
         social_links: Object.fromEntries(
@@ -419,6 +440,45 @@ export default function CustomizationForm({ company }: { company: Company }) {
               </button>
             ))}
           </div>
+        </section>
+
+        {/* Certificate Template */}
+        <section className="rounded-2xl p-6" style={{ backgroundColor: "var(--color-pearl)", border: "1px solid var(--color-cream)" }}>
+          <div className="flex items-center gap-2 mb-1">
+            <Award size={14} style={{ color: "var(--color-gold)" }} />
+            <h2 className="font-semibold" style={{ fontSize: "var(--text-body)", color: "var(--color-charcoal)" }}>Certificate template</h2>
+          </div>
+          <p className="mb-4" style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>
+            Design of the PDF certificate of authenticity emailed to owners on claim or transfer. Your logo and brand colours are applied automatically.
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            {CERT_TEMPLATES.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => set("cert_template", t.value)}
+                style={{
+                  padding: "14px 12px",
+                  borderRadius: "var(--radius-md)",
+                  border: `2px solid ${form.cert_template === t.value ? "var(--color-gold)" : "var(--color-cream)"}`,
+                  backgroundColor: form.cert_template === t.value ? "var(--color-soft-gold)" : "var(--color-smoke)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  transition: "all 0.15s",
+                }}
+              >
+                <p className="font-semibold mb-1" style={{ fontSize: "var(--text-body-sm)", color: form.cert_template === t.value ? "var(--color-deep-gold)" : "var(--color-charcoal)" }}>
+                  {t.label}
+                </p>
+                <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)", lineHeight: 1.45 }}>
+                  {t.desc}
+                </p>
+              </button>
+            ))}
+          </div>
+          <p className="mt-3" style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
+            Certificates include a QR code for instant authenticity verification and are legally time-stamped on the Tagit Ownership Ledger.
+          </p>
         </section>
 
         {/* Typography */}

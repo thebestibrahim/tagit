@@ -12,6 +12,7 @@ type Company = {
   brand_text_color: string;
   brand_font: string;
   brand_template: string;
+  cert_template: string;
   brand_story: string | null;
   custom_header_text: string | null;
   social_links: Record<string, string>;
@@ -32,18 +33,24 @@ export default async function CustomizationPage() {
 
   const { data: extData } = await supabase
     .from("companies")
-    .select("brand_text_color, brand_template")
+    .select("brand_text_color, brand_template, cert_template")
     .eq("id", user.id)
     .single()
     .then((r) => ({ data: r.error ? null : r.data }));
 
   if (!data) redirect("/auth/unauthorized");
 
-  const ext = extData as { brand_text_color?: string; brand_template?: string } | null;
+  const ext = extData as {
+    brand_text_color?: string;
+    brand_template?: string;
+    cert_template?: string;
+  } | null;
+
   const company: Company = {
-    ...(data as Omit<Company, "brand_text_color" | "brand_template">),
+    ...(data as Omit<Company, "brand_text_color" | "brand_template" | "cert_template">),
     brand_text_color: ext?.brand_text_color ?? "#FAFAF8",
     brand_template:   ext?.brand_template   ?? "classic",
+    cert_template:    ext?.cert_template    ?? "classic",
   };
 
   return (

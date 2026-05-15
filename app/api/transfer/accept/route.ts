@@ -1,6 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { sendTransferCompleteEmail, APP_URL } from "@/lib/email";
+import { sendTransferCompleteEmail, sendCertificateEmail, APP_URL } from "@/lib/email";
+import {
+  generateCertNumber,
+  generateCertificatePdf,
+  fetchLogoDataUrl,
+} from "@/lib/certificate";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -54,7 +59,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Transfer has expired" }, { status: 410 });
   }
 
-  // Get current owner record
   const { data: currentOwnerData } = await admin
     .from("ownership_records")
     .select("id, owner_name, owner_email")
@@ -71,64 +75,152 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Owner record not found" }, { status: 404 });
   }
 
-  // Complete transfer in a logical sequence
   const completedAt = new Date().toISOString();
 
-  // 1. Mark old ownership as ended
+  // End old ownership
   await admin
     .from("ownership_records")
     .update({ is_current: false, ended_at: completedAt } as never)
     .eq("id", currentOwner.id);
 
-  // 2. Create new ownership record
-  const { error: insertError } = await admin.from("ownership_records").insert({
-    tag_id: transfer.tag_id,
-    owner_name: transfer.to_name,
-    owner_email: transfer.to_email,
-    acquisition_type: "transfer",
-    acquired_from_id: currentOwner.id,
-    sale_price: transfer.sale_price,
-    is_current: true,
-  } as never);
+  // Create new ownership record — capture ID
+  const { data: newOwnerData, error: insertError } = await admin
+    .from("ownership_records")
+    .insert({
+      tag_id: transfer.tag_id,
+      owner_name: transfer.to_name,
+      owner_email: transfer.to_email,
+      acquisition_type: "transfer",
+      acquired_from_id: currentOwner.id,
+      sale_price: transfer.sale_price,
+      is_current: true,
+    } as never)
+    .select("id")
+    .single();
 
   if (insertError) {
     return NextResponse.json({ error: "Failed to create ownership record" }, { status: 500 });
   }
 
-  // 3. Update tag status to owned
-  await admin.from("tags").update({ status: "owned" } as never).eq("id", transfer.tag_id);
+  const newOwner = newOwnerData as { id: string };
 
-  // 4. Mark transfer as completed
-  await admin
-    .from("transfer_requests")
-    .update({ status: "completed", completed_at: completedAt } as never)
-    .eq("id", transfer.id);
+  await Promise.all([
+    admin.from("tags").update({ status: "owned" } as never).eq("id", transfer.tag_id),
+    admin.from("transfer_requests")
+      .update({ status: "completed", completed_at: completedAt } as never)
+      .eq("id", transfer.id),
+  ]);
 
-  // Fetch product and tag token for email
+  // Fetch product, tag, and company branding in parallel
   const [{ data: productData }, { data: tagData }] = await Promise.all([
     admin.from("products").select("name").eq("tag_id", transfer.tag_id).single(),
-    admin.from("tags").select("token").eq("id", transfer.tag_id).single(),
+    admin.from("tags").select("token, short_id, company_id").eq("id", transfer.tag_id).single(),
   ]);
 
   const product = productData as { name: string } | null;
-  const tagToken = (tagData as { token: string } | null)?.token ?? transfer.tag_id;
-  const tagUrl = `${APP_URL}/v/${tagToken}`;
+  const tag = tagData as { token: string; short_id: string; company_id: string } | null;
+  const tagUrl = `${APP_URL}/v/${tag?.token ?? transfer.tag_id}`;
 
-  if (product) {
+  // Fetch company branding
+  const { data: companyData } = tag
+    ? await admin
+        .from("companies")
+        .select("name, logo_url, brand_primary_color, brand_accent_color, cert_template")
+        .eq("id", tag.company_id)
+        .single()
+    : { data: null };
+
+  const company = companyData as {
+    name: string;
+    logo_url: string | null;
+    brand_primary_color: string;
+    brand_accent_color: string;
+    cert_template: string | null;
+  } | null;
+
+  if (product && company && tag) {
+    const certNumber = generateCertNumber();
+    const template = (company.cert_template ?? "classic") as "classic" | "minimal" | "heritage";
+
+    const { data: certRecord } = await admin
+      .from("certificates")
+      .insert({
+        cert_number: certNumber,
+        ownership_record_id: newOwner.id,
+        tag_id: transfer.tag_id,
+        cert_type: "transfer",
+        template,
+        issued_to_name: transfer.to_name,
+        issued_to_email: transfer.to_email,
+      } as never)
+      .select("id")
+      .single();
+
+    const certId = (certRecord as { id: string } | null)?.id ?? "";
+    const verifyUrl = `${APP_URL}/certificate/${certId}`;
+    const logoDataUrl = await fetchLogoDataUrl(company.logo_url);
+
+    const pdfBuffer = await generateCertificatePdf({
+      certNumber,
+      certId,
+      certType: "transfer",
+      ownerName: transfer.to_name,
+      ownerEmail: transfer.to_email,
+      productName: product.name,
+      companyName: company.name,
+      companyLogoDataUrl: logoDataUrl,
+      brandPrimaryColor: company.brand_primary_color,
+      brandAccentColor: company.brand_accent_color,
+      issuedAt: new Date(),
+      tagShortId: tag.short_id,
+      verifyUrl,
+      fromOwnerName: currentOwner.owner_name,
+      template,
+    }).catch(() => null);
+
+    await Promise.all([
+      // Transfer complete emails (sender + recipient)
+      sendTransferCompleteEmail(transfer.to_email, {
+        name: transfer.to_name,
+        productName: product.name,
+        tagUrl,
+        role: "recipient",
+      }).catch(() => {}),
+      sendTransferCompleteEmail(currentOwner.owner_email, {
+        name: currentOwner.owner_name,
+        productName: product.name,
+        tagUrl,
+        role: "sender",
+      }).catch(() => {}),
+      // Certificate email with PDF to new owner
+      pdfBuffer
+        ? sendCertificateEmail(transfer.to_email, {
+            ownerName: transfer.to_name,
+            productName: product.name,
+            companyName: company.name,
+            certNumber,
+            certType: "transfer",
+            tagUrl,
+            pdfBuffer,
+          }).catch(() => {})
+        : Promise.resolve(),
+    ]);
+  } else if (product) {
+    // Fallback: send transfer complete emails without certificate
     await Promise.all([
       sendTransferCompleteEmail(transfer.to_email, {
         name: transfer.to_name,
         productName: product.name,
         tagUrl,
         role: "recipient",
-      }),
+      }).catch(() => {}),
       sendTransferCompleteEmail(currentOwner.owner_email, {
         name: currentOwner.owner_name,
         productName: product.name,
         tagUrl,
         role: "sender",
-      }),
-    ]).catch(() => {});
+      }).catch(() => {}),
+    ]);
   }
 
   return NextResponse.json({ success: true });

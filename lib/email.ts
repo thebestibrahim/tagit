@@ -248,4 +248,52 @@ export async function sendCompanyRejectedEmail(
   });
 }
 
+export async function sendCertificateEmail(
+  to: string,
+  opts: {
+    ownerName: string;
+    productName: string;
+    companyName: string;
+    certNumber: string;
+    certType: "ownership" | "transfer";
+    tagUrl: string;
+    pdfBuffer: Buffer;
+  }
+) {
+  const isTransfer = opts.certType === "transfer";
+  const subject = isTransfer
+    ? `Your Certificate of Transfer — ${opts.productName}`
+    : `Your Certificate of Authenticity — ${opts.productName}`;
+
+  const html = base(`
+    ${heading(isTransfer ? "Certificate of Transfer" : "Certificate of Authenticity")}
+    ${para(
+      `Congratulations, ${opts.ownerName}. Your ownership of <strong>${opts.productName}</strong> by ${opts.companyName} has been recorded on Tagit.`
+    )}
+    ${para(
+      "Your certificate of authenticity is attached to this email as a PDF. It is your legal proof of ownership — keep it safe."
+    )}
+    <table style="width:100%;border-collapse:collapse;margin:16px 0">
+      ${keyVal("Certificate no.", opts.certNumber)}
+      ${keyVal("Item", opts.productName)}
+      ${keyVal("Brand", opts.companyName)}
+    </table>
+    <div style="margin:24px 0">${button("View your item", opts.tagUrl)}</div>
+    ${para('<span style="color:#9E9EA3;font-size:13px">Scan the QR code on your certificate to verify authenticity at any time.</span>')}
+  `);
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject,
+    html,
+    attachments: [
+      {
+        filename: `tagit-certificate-${opts.certNumber}.pdf`,
+        content: opts.pdfBuffer,
+      },
+    ],
+  });
+}
+
 export { APP_URL };
