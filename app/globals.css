@@ -325,8 +325,8 @@
   .lp-section-padding { padding-top: 72px !important; padding-bottom: 72px !important; }
   .nav-links { display: none !important; }
   .nav-signin { display: none !important; }
-  .hero-below { grid-template-columns: 1fr !important; gap: 40px !important; }
-  .hero-cards { justify-content: flex-start !important; }
+  .hero-layout { grid-template-columns: 1fr !important; gap: 48px !important; }
+  .hero-visual { height: 400px !important; }
   .stats-inner { padding-top: 64px !important; padding-bottom: 64px !important; }
   .stats-grid { grid-template-columns: repeat(2, 1fr) !important; row-gap: 40px !important; }
   .stats-item { border-left: none !important; padding-left: 0 !important; }
@@ -347,6 +347,7 @@
 }
 @media (max-width: 480px) {
   .lp-section-padding { padding-top: 56px !important; padding-bottom: 56px !important; }
+  .hero-visual { height: 320px !important; }
   .stats-grid { grid-template-columns: 1fr !important; }
   .stats-item:nth-child(even) { border-left: none !important; padding-left: 0 !important; }
   .problem-row { grid-template-columns: 1fr !important; }

@@ -54,7 +54,7 @@ export default function VerifiedCard() {
         {[
           ["MATERIAL", "Hand-woven Aso-Oke"],
           ["ORIGIN", "Lagos Atelier, 2024"],
-          ["RETAIL", "₦ 850,000"],
+          ["RETAIL", "₦ 4,200,000"],
         ].map(([label, value]) => (
           <div key={label} style={{ display: "flex", gap: 8 }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#9E9EA3", letterSpacing: "0.08em", width: 60, flexShrink: 0, paddingTop: 1 }}>
