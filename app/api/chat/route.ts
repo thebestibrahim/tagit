@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,6 +10,11 @@ const admin = createClient(
 );
 
 export async function POST(request: Request) {
+  const ip = getIp(request);
+  if (!rateLimit(`chat:${ip}`, 30, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => ({}));
   const { message, tag_id } = body as { message?: string; tag_id?: string };
 
