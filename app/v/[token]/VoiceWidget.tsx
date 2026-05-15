@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Mic, MicOff, X, Send, Square } from "lucide-react";
+import { Mic, X, Send, Square } from "lucide-react";
 
 type Message = { role: "user" | "assistant"; text: string };
 type WidgetState = "idle" | "recording" | "thinking" | "speaking";
@@ -47,8 +47,13 @@ export default function VoiceWidget({ tagId, personaName, accentColor, primaryCo
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, widgetState]);
 
+  const hasGreetedRef = useRef(false);
+
+  // greet is intentionally excluded — adding it would cause re-greeting on every render.
+  // hasGreetedRef gate ensures it runs at most once per widget lifetime.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (open && messages.length === 0) greet();
+    if (open && !hasGreetedRef.current) { hasGreetedRef.current = true; greet(); }
     if (open) setTimeout(() => inputRef.current?.focus(), 400);
   }, [open]);
 
@@ -107,10 +112,10 @@ export default function VoiceWidget({ tagId, personaName, accentColor, primaryCo
   }
 
   const toggleRecording = useCallback(async () => {
-    if (isSpeaking) { stopSpeaking(); return; }
-    if (isThinking) return;
+    if (widgetState === "speaking") { stopSpeaking(); return; }
+    if (widgetState === "thinking") return;
 
-    if (isRecording) {
+    if (widgetState === "recording") {
       mediaRecorderRef.current?.stop();
       return;
     }
@@ -146,6 +151,8 @@ export default function VoiceWidget({ tagId, personaName, accentColor, primaryCo
         return s + 1;
       });
     }, 1000);
+  // widgetState covers all derived booleans; processAudio only reads refs/stable setters
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [widgetState]);
 
   async function processAudio() {

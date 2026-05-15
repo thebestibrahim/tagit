@@ -76,7 +76,8 @@ export async function POST(request: Request) {
     const { error } = await admin.from("tags").insert(chunk as never);
     if (error) {
       await admin.from("tag_batches").delete().eq("id", batchId);
-      return NextResponse.json({ error: "Tag generation failed: " + error.message }, { status: 500 });
+      console.error(error);
+      return NextResponse.json({ error: "Tag generation failed" }, { status: 500 });
     }
   }
 

@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import AcceptTransferButton from "./AcceptTransferButton";
 import { ShieldX } from "lucide-react";
+import Image from "next/image";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -90,7 +91,7 @@ export default async function TransferAcceptPage({
     <div style={{ minHeight: "100vh", backgroundColor: "#FAFAF8", fontFamily: "system-ui,-apple-system,sans-serif" }}>
       <header style={{ backgroundColor: primary, padding: "16px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
         {product?.companies?.logo_url && (
-          <img src={product.companies.logo_url} alt="" style={{ width: "28px", height: "28px", borderRadius: "4px", objectFit: "contain" }} />
+          <Image src={product.companies.logo_url} alt="" width={28} height={28} style={{ borderRadius: "4px", objectFit: "contain" }} />
         )}
         <span style={{ fontSize: "16px", fontWeight: "700", color: "#FAFAF8" }}>
           {product?.companies?.name || "Tagit"}

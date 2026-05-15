@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- logo state can be a blob URL from file input */
 "use client";
 
 import { useState, useRef } from "react";

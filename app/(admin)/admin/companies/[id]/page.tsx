@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ChevronLeft, Package } from "lucide-react";
+import Image from "next/image";
 import type { CompanyStatus, Industry } from "@/types/database";
 import ReviewActions from "./ReviewActions";
 
@@ -176,7 +177,7 @@ export default async function CompanyDetailPage({
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
                       {p.photos?.[0] ? (
-                        <img src={p.photos[0]} alt="" style={{ width: "36px", height: "36px", borderRadius: "4px", objectFit: "cover", border: "1px solid var(--color-cream)", flexShrink: 0 }} />
+                        <Image src={p.photos[0]} alt="" width={36} height={36} style={{ borderRadius: "4px", objectFit: "cover", border: "1px solid var(--color-cream)", flexShrink: 0 }} />
                       ) : (
                         <div style={{ width: "36px", height: "36px", borderRadius: "4px", backgroundColor: "var(--color-linen)", flexShrink: 0 }} />
                       )}

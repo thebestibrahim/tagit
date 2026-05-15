@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
@@ -60,9 +61,11 @@ export function CompanySidebar({ companyName, logoUrl }: CompanySidebarProps) {
         style={{ borderBottom: "1px solid #2E2A1E", backgroundColor: "#171510" }}
       >
         {logoUrl ? (
-          <img
+          <Image
             src={logoUrl}
             alt={companyName}
+            width={32}
+            height={32}
             className="w-8 h-8 rounded object-contain"
             style={{ border: "1px solid #27272A" }}
           />

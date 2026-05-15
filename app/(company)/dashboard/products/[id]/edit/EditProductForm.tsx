@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, ImagePlus, X } from "lucide-react";
@@ -174,7 +175,7 @@ export default function EditProductForm({
         <div className="flex flex-wrap gap-3">
           {existing.filter((p) => !p.toDelete).map((img, i) => (
             <div key={i} style={{ position: "relative", width: "96px", height: "96px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-cream)" }}>
-              <img src={img.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <Image src={img.url} alt="" fill style={{ objectFit: "cover" }} />
               <button type="button" onClick={() => removeExisting(i)} style={{ position: "absolute", top: "4px", right: "4px", width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "rgba(10,10,11,0.7)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <X size={11} color="#fff" />
               </button>
@@ -182,6 +183,7 @@ export default function EditProductForm({
           ))}
           {newPhotos.map((img, i) => (
             <div key={`new-${i}`} style={{ position: "relative", width: "96px", height: "96px", borderRadius: "var(--radius-md)", overflow: "hidden", border: "2px solid var(--color-gold)" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- blob URL from file input, incompatible with next/image */}
               <img src={img.preview} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <button type="button" onClick={() => removeNew(i)} style={{ position: "absolute", top: "4px", right: "4px", width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "rgba(10,10,11,0.7)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <X size={11} color="#fff" />

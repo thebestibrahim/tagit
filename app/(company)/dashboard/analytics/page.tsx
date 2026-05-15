@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { createClient } from "@/lib/supabase/server";
+import Image from "next/image";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { format, subDays } from "date-fns";
@@ -289,12 +290,12 @@ export default async function AnalyticsPage() {
               {topProducts.map((p, i) => (
                 <div key={i} className="flex items-center gap-3">
                   {p.photo ? (
-                    <img
+                    <Image
                       src={p.photo}
                       alt=""
+                      width={32}
+                      height={32}
                       style={{
-                        width: "32px",
-                        height: "32px",
                         borderRadius: "4px",
                         objectFit: "cover",
                         border: "1px solid var(--color-cream)",

@@ -46,7 +46,7 @@ export async function POST(
       } as never)
       .eq("id", id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) { console.error(error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
 
     if (company) {
       await sendCompanyApprovedEmail(company.email, {
@@ -60,7 +60,7 @@ export async function POST(
       .update({ status: "rejected" } as never)
       .eq("id", id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) { console.error(error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
 
     if (company) {
       await sendCompanyRejectedEmail(company.email, {

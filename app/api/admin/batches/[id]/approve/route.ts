@@ -65,7 +65,8 @@ export async function POST(
   for (let i = 0; i < tags.length; i += chunkSize) {
     const { error } = await admin.from("tags").insert(tags.slice(i, i + chunkSize) as never);
     if (error) {
-      return NextResponse.json({ error: "Tag generation failed: " + error.message }, { status: 500 });
+      console.error(error);
+      return NextResponse.json({ error: "Tag generation failed" }, { status: 500 });
     }
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { Loader2, Save, Smartphone, Upload, X, Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -94,10 +95,12 @@ function ScanPagePreview({
       >
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
           {logoUrl && (
-            <img
+            <Image
               src={logoUrl}
               alt=""
-              style={{ width: 22, height: 22, borderRadius: 3, objectFit: "contain", opacity: 0.9, flexShrink: 0 }}
+              width={22}
+              height={22}
+              style={{ borderRadius: 3, objectFit: "contain", opacity: 0.9, flexShrink: 0 }}
             />
           )}
           <span style={{ fontSize: "13px", fontWeight: 700, color: textColor, letterSpacing: "-0.01em", lineHeight: 1.2 }}>
@@ -269,7 +272,8 @@ export default function CustomizationForm({ company }: { company: Company }) {
           <div className="flex items-center gap-4">
             {logoPreview ? (
               <div style={{ position: "relative", width: 64, height: 64 }}>
-                <img
+                {/* eslint-disable-next-line @next/next/no-img-element -- blob URL from file input, incompatible with next/image */}
+              <img
                   src={logoPreview}
                   alt="Logo"
                   style={{ width: 64, height: 64, borderRadius: 8, objectFit: "contain", border: "1px solid var(--color-cream)", backgroundColor: "#fff" }}

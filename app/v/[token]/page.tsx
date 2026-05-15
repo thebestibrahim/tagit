@@ -5,6 +5,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { ShieldX, ShieldCheck, Clock, AlertTriangle } from "lucide-react";
+import Image from "next/image";
 import { INDUSTRY_FIELDS } from "@/lib/industry-fields";
 import ClaimForm from "./ClaimForm";
 import TransferForm from "./TransferForm";
@@ -178,10 +179,12 @@ export default async function ScanPage({
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {company?.logo_url && (
-              <img
+              <Image
                 src={company.logo_url}
                 alt=""
-                style={{ width: 28, height: 28, borderRadius: 4, objectFit: "contain", opacity: 0.9 }}
+                width={28}
+                height={28}
+                style={{ borderRadius: 4, objectFit: "contain", opacity: 0.9 }}
               />
             )}
             <span
@@ -469,10 +472,11 @@ function ProductSection({
             overflow: "hidden",
           }}
         >
-          <img
+          <Image
             src={photo}
             alt={product.name}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            fill
+            style={{ objectFit: "cover" }}
           />
         </div>
       )}

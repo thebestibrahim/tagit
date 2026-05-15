@@ -271,6 +271,7 @@ export default function ProductForm({
                 border: "1px solid var(--color-cream)",
               }}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element -- blob URL from file input, incompatible with next/image */}
               <img
                 src={img.preview}
                 alt=""
