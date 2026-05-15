@@ -23,7 +23,6 @@ export default async function AnalyticsPage() {
   const now = new Date();
   const thirtyDaysAgo = subDays(now, 30).toISOString();
   const sixtyDaysAgo = subDays(now, 60).toISOString();
-  const fourteenDaysAgo = subDays(now, 14).toISOString();
 
   // ── Accurate counts using head:true (no row transfer, no 1000-row cap) ──
   const [{ count: totalScans }, { count: prevScans }] = await Promise.all([

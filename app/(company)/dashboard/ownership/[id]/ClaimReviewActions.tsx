@@ -7,14 +7,8 @@ import { toast } from "sonner";
 
 export default function ClaimReviewActions({
   claimId,
-  claimantName,
-  claimantEmail,
-  tagId,
 }: {
   claimId: string;
-  claimantName: string;
-  claimantEmail: string;
-  tagId: string;
 }) {
   const router = useRouter();
   const [rejecting, setRejecting] = useState(false);

@@ -154,7 +154,6 @@ export default async function ScanPage({
   const currentOwner = ownershipRecords.find((r) => r.is_current) ?? null;
 
   const primary = company?.brand_primary_color || "#0A0A0B";
-  const secondary = company?.brand_secondary_color || "#FAFAF8";
   const accent = company?.brand_accent_color || "#B8945D";
   const textColor = company?.brand_text_color || "#FAFAF8";
 
@@ -288,7 +287,6 @@ export default async function ScanPage({
               currentOwner={currentOwner}
               accent={accent}
               primary={primary}
-              secondary={secondary}
             />
           </>
         ) : (
@@ -758,14 +756,12 @@ function ActionSection({
   currentOwner,
   accent,
   primary,
-  secondary,
 }: {
   tag: { id: string; status: string; short_id: string };
   product: { name: string };
   currentOwner: OwnershipRecord | null;
   accent: string;
   primary: string;
-  secondary: string;
 }) {
   const claimableStatuses = ["embedded", "activated", "unowned"];
 
@@ -884,7 +880,6 @@ function ActionSection({
       <div style={{ margin: "16px 24px 0" }}>
         <TransferForm
           tagId={tag.id}
-          productName={product.name}
           currentOwnerEmail={currentOwner.owner_email}
           currentOwnerName={currentOwner.owner_name}
           accent={accent}
@@ -1031,140 +1026,3 @@ function SuspendedItem() {
   );
 }
 
-function MaintenancePage() {
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#0A0A0B",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "40px 20px",
-      }}
-    >
-      <div style={{ maxWidth: "320px", textAlign: "center" }}>
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: "50%",
-            backgroundColor: "rgba(184,148,93,0.12)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 20px",
-          }}
-        >
-          <Clock size={24} color="#B8945D" />
-        </div>
-        <h1
-          style={{
-            fontFamily: "'Instrument Serif',Georgia,serif",
-            fontSize: 26,
-            fontStyle: "italic",
-            fontWeight: 400,
-            color: "#FAFAF8",
-            margin: "0 0 10px",
-            letterSpacing: "-0.02em",
-          }}
-        >
-          Briefly unavailable
-        </h1>
-        <p style={{ margin: "0 0 24px", fontSize: 13, color: "#71717A", lineHeight: 1.65 }}>
-          This page is temporarily unavailable due to a service update. Please try again in a few minutes.
-        </p>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 5,
-          }}
-        >
-          <div style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#B8945D" }} />
-          <span
-            style={{
-              fontFamily: "'JetBrains Mono',monospace",
-              fontSize: 9,
-              color: "#B8945D",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-            }}
-          >
-            Tagit
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function InvalidPage() {
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#0A0A0B",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "40px 20px",
-      }}
-    >
-      <div style={{ maxWidth: "320px", textAlign: "center" }}>
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: "50%",
-            backgroundColor: "rgba(184,92,92,0.12)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 20px",
-          }}
-        >
-          <ShieldX size={24} color="#B85C5C" />
-        </div>
-        <h1
-          style={{
-            fontFamily: "'Instrument Serif',Georgia,serif",
-            fontSize: 26,
-            fontStyle: "italic",
-            fontWeight: 400,
-            color: "#FAFAF8",
-            margin: "0 0 10px",
-            letterSpacing: "-0.02em",
-          }}
-        >
-          Authentication failed
-        </h1>
-        <p style={{ margin: "0 0 24px", fontSize: 13, color: "#71717A", lineHeight: 1.65 }}>
-          This tag could not be verified. It may have been tampered with or is not a genuine Tagit tag.
-        </p>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 5,
-          }}
-        >
-          <div style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#B8945D" }} />
-          <span
-            style={{
-              fontFamily: "'JetBrains Mono',monospace",
-              fontSize: 9,
-              color: "#B8945D",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-            }}
-          >
-            Tagit
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}

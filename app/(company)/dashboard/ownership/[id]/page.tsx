@@ -207,7 +207,7 @@ export default async function ClaimDetailPage({
 
       {/* Review actions */}
       {canReview && (
-        <ClaimReviewActions claimId={claim.id} claimantName={claim.claimant_name} claimantEmail={claim.claimant_email} tagId={claim.tag_id} />
+        <ClaimReviewActions claimId={claim.id} />
       )}
     </div>
   );

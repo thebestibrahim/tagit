@@ -51,10 +51,10 @@ export default function VoiceWidget({ tagId, personaName, accentColor, primaryCo
 
   // greet is intentionally excluded — adding it would cause re-greeting on every render.
   // hasGreetedRef gate ensures it runs at most once per widget lifetime.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (open && !hasGreetedRef.current) { hasGreetedRef.current = true; greet(); }
     if (open) setTimeout(() => inputRef.current?.focus(), 400);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   async function greet() {

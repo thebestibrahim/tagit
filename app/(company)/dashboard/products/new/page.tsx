@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";

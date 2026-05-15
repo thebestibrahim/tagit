@@ -7,14 +7,12 @@ type Step = "closed" | "form" | "otp" | "success";
 
 export default function TransferForm({
   tagId,
-  productName,
   currentOwnerEmail,
   currentOwnerName,
   accent,
   primary,
 }: {
   tagId: string;
-  productName: string;
   currentOwnerEmail: string;
   currentOwnerName: string;
   accent: string;
