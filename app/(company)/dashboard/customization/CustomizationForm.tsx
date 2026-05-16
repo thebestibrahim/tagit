@@ -5,7 +5,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import {
   Loader2, Save, Smartphone, Upload, X, Shield,
-  Award, Palette, FileText, Globe,
+  Award, Palette, Globe,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,6 +48,145 @@ const CERT_TEMPLATES = [
   { value: "minimal",  label: "Minimal",  desc: "White, left-aligned, clean modern luxury" },
   { value: "heritage", label: "Heritage", desc: "Dark brand header, ornate border, premium feel" },
 ];
+
+// ─── Certificate mini-previews ─────────────────────────────────────────────
+
+function CertPreviewClassic({ primary, accent, logoUrl, companyName }: { primary: string; accent: string; logoUrl: string | null; companyName: string }) {
+  return (
+    <div style={{ width: "100%", aspectRatio: "1/1.41", backgroundColor: "#FAFAF8", borderRadius: 6, overflow: "hidden", display: "flex", flexDirection: "column", fontFamily: "system-ui,sans-serif", fontSize: 10 }}>
+      {/* Gold header */}
+      <div style={{ backgroundColor: accent, padding: "5px 8px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+        <span style={{ fontSize: 4, fontWeight: 700, color: "#fff", letterSpacing: 2 }}>CERTIFICATE OF AUTHENTICITY</span>
+        <span style={{ fontSize: 4, color: "rgba(255,255,255,0.6)", letterSpacing: 1 }}>TAGIT</span>
+      </div>
+      {/* Body */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 10px" }}>
+        {logoUrl
+          ? <img src={logoUrl} alt="" style={{ width: 16, height: 16, objectFit: "contain", marginBottom: 3 }} /> /* eslint-disable-line @next/next/no-img-element */
+          : <div style={{ width: 16, height: 16, borderRadius: 3, backgroundColor: primary, marginBottom: 3 }} />
+        }
+        <span style={{ fontSize: 5, fontWeight: 700, color: "#0A0A0B", marginBottom: 2 }}>{companyName}</span>
+        <div style={{ width: 40, height: 1, backgroundColor: accent, marginBottom: 5 }} />
+        <span style={{ fontSize: 4, color: "#6E6E73", marginBottom: 2 }}>This certifies that</span>
+        <span style={{ fontSize: 7, fontWeight: 700, color: "#0A0A0B", marginBottom: 2 }}>Owner Name</span>
+        <span style={{ fontSize: 4, color: "#6E6E73", marginBottom: 2 }}>is the verified owner of</span>
+        <span style={{ fontSize: 6, fontWeight: 700, color: accent, marginBottom: 6 }}>Product Name</span>
+        {/* Details box */}
+        <div style={{ width: "100%", backgroundColor: "#F5F2EC", borderRadius: 4, padding: "4px 6px", marginBottom: 6 }}>
+          <div style={{ display: "flex", gap: 6 }}>
+            {[["CERT NO.", "TGT-2026-XX"], ["ISSUED", "16 May 2026"], ["TYPE", "Original"]].map(([l, v]) => (
+              <div key={l} style={{ flex: 1 }}>
+                <div style={{ fontSize: 3, color: "#9E9EA3", letterSpacing: 0.5, marginBottom: 1 }}>{l}</div>
+                <div style={{ fontSize: 3.5, fontWeight: 600, color: "#0A0A0B" }}>{v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Seal */}
+        <div style={{ width: 20, height: 20, borderRadius: "50%", border: `1.5px solid ${accent}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 3, fontWeight: 700, color: accent, letterSpacing: 0.5 }}>TAGIT</span>
+        </div>
+      </div>
+      {/* Footer */}
+      <div style={{ borderTop: "1px solid #E8E2D5", padding: "4px 8px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontSize: 3, color: "#9E9EA3" }}>tagit.co/certificate/...</span>
+        <div style={{ width: 14, height: 14, backgroundColor: "#0A0A0B", borderRadius: 2 }} />
+      </div>
+    </div>
+  );
+}
+
+function CertPreviewMinimal({ accent, primary, logoUrl, companyName }: { accent: string; primary: string; logoUrl: string | null; companyName: string }) {
+  return (
+    <div style={{ width: "100%", aspectRatio: "1/1.41", backgroundColor: "#fff", borderRadius: 6, overflow: "hidden", display: "flex", fontFamily: "system-ui,sans-serif" }}>
+      {/* Left accent bar */}
+      <div style={{ width: 4, backgroundColor: accent, flexShrink: 0 }} />
+      {/* Content */}
+      <div style={{ flex: 1, padding: "8px 8px", display: "flex", flexDirection: "column" }}>
+        {/* Header row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+            {logoUrl
+              /* eslint-disable-next-line @next/next/no-img-element */
+              ? <img src={logoUrl} alt="" style={{ width: 12, height: 12, objectFit: "contain" }} />
+              : <div style={{ width: 12, height: 12, borderRadius: 2, backgroundColor: primary }} />
+            }
+            <span style={{ fontSize: 4.5, fontWeight: 700, color: primary }}>{companyName}</span>
+          </div>
+          <span style={{ fontSize: 3, color: "#9E9EA3", letterSpacing: 0.5 }}>CERTIFICATE</span>
+        </div>
+        <div style={{ height: 1, backgroundColor: "#E8E2D5", marginBottom: 6 }} />
+        <span style={{ fontSize: 3.5, color: accent, letterSpacing: 1, marginBottom: 2 }}>AUTHENTICATED ITEM</span>
+        <span style={{ fontSize: 8, fontWeight: 700, color: "#0A0A0B", lineHeight: 1.2, marginBottom: 2 }}>Product Name</span>
+        <span style={{ fontSize: 4, color: accent, marginBottom: 6 }}>by {companyName}</span>
+        <span style={{ fontSize: 3, color: "#9E9EA3", letterSpacing: 0.5, marginBottom: 2 }}>ISSUED TO</span>
+        <span style={{ fontSize: 6, fontWeight: 700, color: "#0A0A0B", marginBottom: 1 }}>Owner Name</span>
+        <span style={{ fontSize: 3.5, color: "#6E6E73", marginBottom: 8 }}>owner@email.com</span>
+        <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+          {[["DATE", "16 May 2026"], ["TYPE", "Original"]].map(([l, v]) => (
+            <div key={l}>
+              <div style={{ fontSize: 3, color: "#9E9EA3", marginBottom: 1 }}>{l}</div>
+              <div style={{ fontSize: 3.5, fontWeight: 600, color: "#0A0A0B" }}>{v}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ flex: 1 }} />
+        <div style={{ borderTop: "1px solid #E8E2D5", paddingTop: 4, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 4, fontWeight: 700, color: "#0A0A0B" }}>Tagit</span>
+          <div style={{ width: 14, height: 14, backgroundColor: "#0A0A0B", borderRadius: 2 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CertPreviewHeritage({ primary, accent, logoUrl, companyName }: { primary: string; accent: string; logoUrl: string | null; companyName: string }) {
+  return (
+    <div style={{ width: "100%", aspectRatio: "1/1.41", backgroundColor: "#FAFAF8", borderRadius: 6, overflow: "hidden", display: "flex", flexDirection: "column", fontFamily: "Georgia,serif", position: "relative" }}>
+      {/* Outer border */}
+      <div style={{ position: "absolute", inset: 3, border: `1px solid ${accent}`, borderRadius: 4, pointerEvents: "none", zIndex: 1 }} />
+      <div style={{ position: "absolute", inset: 5, border: "1px solid #E8E2D5", borderRadius: 3, pointerEvents: "none", zIndex: 1 }} />
+      {/* Header */}
+      <div style={{ backgroundColor: primary, padding: "8px 12px", display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+        {logoUrl
+          /* eslint-disable-next-line @next/next/no-img-element */
+          ? <img src={logoUrl} alt="" style={{ width: 14, height: 14, objectFit: "contain", marginBottom: 2, opacity: 0.9 }} />
+          : null
+        }
+        <span style={{ fontSize: 5.5, fontWeight: 700, color: "#fff", letterSpacing: 0.5 }}>{companyName}</span>
+        <div style={{ width: 30, height: 1, backgroundColor: accent, marginTop: 3 }} />
+      </div>
+      {/* Body */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "6px 10px" }}>
+        <span style={{ fontSize: 3, color: "#9E9EA3", letterSpacing: 1.5, marginBottom: 3 }}>CERTIFICATE OF AUTHENTIC OWNERSHIP</span>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, marginBottom: 3, width: "100%" }}>
+          <div style={{ width: "70%", height: 1, backgroundColor: accent }} />
+          <div style={{ width: "70%", height: 1, backgroundColor: "#E8E2D5" }} />
+        </div>
+        <span style={{ fontSize: 4, color: "#6E6E73", fontStyle: "italic", marginBottom: 2 }}>This is to certify that</span>
+        <span style={{ fontSize: 7.5, fontWeight: 700, color: "#0A0A0B", marginBottom: 2 }}>Owner Name</span>
+        <span style={{ fontSize: 3.5, color: "#6E6E73", textAlign: "center", marginBottom: 2 }}>is the rightful and verified original owner of</span>
+        <span style={{ fontSize: 5.5, fontStyle: "italic", color: accent, marginBottom: 2 }}>Product Name</span>
+        <span style={{ fontSize: 3.5, color: "#9E9EA3", fontStyle: "italic", marginBottom: 5 }}>as recorded on the Tagit Ownership Ledger</span>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, marginBottom: 6, width: "100%" }}>
+          <div style={{ width: "60%", height: 1, backgroundColor: "#E8E2D5" }} />
+          <div style={{ width: "60%", height: 1, backgroundColor: accent }} />
+        </div>
+        {/* Seal */}
+        <div style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: primary, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 3, fontWeight: 700, color: accent, letterSpacing: 0.5 }}>TAGIT</span>
+        </div>
+      </div>
+      {/* Footer */}
+      <div style={{ backgroundColor: primary, padding: "4px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontSize: 3, color: accent, letterSpacing: 0.5 }}>TGT-2026-XXXXXX</span>
+        <div style={{ width: 12, height: 12, backgroundColor: "#fff", borderRadius: 1, padding: 1 }}>
+          <div style={{ width: "100%", height: "100%", backgroundColor: "#0A0A0B", borderRadius: 1 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type Tab = "brand" | "scan" | "certificates";
 
@@ -453,17 +592,20 @@ export default function CustomizationForm({ company }: { company: Company }) {
               {CERT_TEMPLATES.map((t) => {
                 const active = form.cert_template === t.value;
                 return (
-                  <button key={t.value} type="button" onClick={() => set("cert_template", t.value)} style={{ padding: "20px 16px", borderRadius: "var(--radius-md)", border: `2px solid ${active ? "var(--color-gold)" : "var(--color-cream)"}`, backgroundColor: active ? "var(--color-soft-gold)" : "var(--color-smoke)", cursor: "pointer", textAlign: "left", transition: "all 0.15s", position: "relative" }}>
+                  <button key={t.value} type="button" onClick={() => set("cert_template", t.value)} style={{ padding: "12px", borderRadius: "var(--radius-md)", border: `2px solid ${active ? "var(--color-gold)" : "var(--color-cream)"}`, backgroundColor: active ? "var(--color-soft-gold)" : "var(--color-smoke)", cursor: "pointer", textAlign: "left", transition: "all 0.15s", position: "relative" }}>
                     {active && (
-                      <div style={{ position: "absolute", top: 10, right: 10, width: 18, height: 18, borderRadius: "50%", backgroundColor: "var(--color-gold)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ position: "absolute", top: 10, right: 10, width: 18, height: 18, borderRadius: "50%", backgroundColor: "var(--color-gold)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}>
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </div>
                     )}
-                    <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: active ? "var(--color-gold)" : "var(--color-stone)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                      <FileText size={16} color={active ? "#fff" : "var(--color-mist)"} />
+                    {/* Live certificate preview */}
+                    <div style={{ marginBottom: 10, borderRadius: 6, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.10)" }}>
+                      {t.value === "classic" && <CertPreviewClassic primary={form.brand_primary_color} accent={form.brand_accent_color} logoUrl={logoPreview} companyName={company.name} />}
+                      {t.value === "minimal"  && <CertPreviewMinimal  primary={form.brand_primary_color} accent={form.brand_accent_color} logoUrl={logoPreview} companyName={company.name} />}
+                      {t.value === "heritage" && <CertPreviewHeritage primary={form.brand_primary_color} accent={form.brand_accent_color} logoUrl={logoPreview} companyName={company.name} />}
                     </div>
-                    <p className="font-semibold mb-1" style={{ fontSize: "var(--text-body-sm)", color: active ? "var(--color-deep-gold)" : "var(--color-charcoal)" }}>{t.label}</p>
-                    <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)", lineHeight: 1.5 }}>{t.desc}</p>
+                    <p className="font-semibold mb-0.5" style={{ fontSize: "var(--text-body-sm)", color: active ? "var(--color-deep-gold)" : "var(--color-charcoal)" }}>{t.label}</p>
+                    <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)", lineHeight: 1.45 }}>{t.desc}</p>
                   </button>
                 );
               })}
