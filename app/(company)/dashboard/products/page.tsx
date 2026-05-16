@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { Plus, Package } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
+import CopyLinkButton from "@/components/ui/CopyLinkButton";
 
 const STATUS_FILTERS = ["all", "owned", "claim_pending", "embedded", "unowned", "flagged"];
 
@@ -15,7 +16,7 @@ type Product = {
   retail_price: number | null;
   currency: string;
   created_at: string;
-  tags: { short_id: string; status: string } | null;
+  tags: { short_id: string; status: string; token: string } | null;
 };
 
 const PER_PAGE = 15;
@@ -38,7 +39,7 @@ export default async function ProductsPage({
 
   let query = supabase
     .from("products")
-    .select("id, name, retail_price, currency, created_at, tags(short_id, status)", { count: "exact" })
+    .select("id, name, retail_price, currency, created_at, tags(short_id, status, token)", { count: "exact" })
     .eq("company_id", user.id)
     .order("created_at", { ascending: false })
     .range(from, to);
@@ -60,6 +61,13 @@ export default async function ProductsPage({
     const s = p.toString();
     return `/dashboard/products${s ? `?${s}` : ""}`;
   }
+
+  const tagStatusColor = (status: string) => {
+    if (status === "owned") return { bg: "#ECFDF5", color: "#065F46" };
+    if (status === "claim_pending") return { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" };
+    if (status === "flagged") return { bg: "var(--color-alert-tint)", color: "var(--color-alert)" };
+    return { bg: "var(--color-linen)", color: "var(--color-slate)" };
+  };
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -131,49 +139,82 @@ export default async function ProductsPage({
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((product, i) => (
-                  <tr
-                    key={product.id}
-                    style={{ backgroundColor: "var(--color-pearl)", borderBottom: i < filtered.length - 1 ? "1px solid var(--color-cream)" : "none" }}
-                  >
-                    <td className="px-5 py-4">
-                      <p className="font-medium" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>
-                        {product.name}
-                      </p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-graphite)", letterSpacing: "0.05em" }}>
-                        {product.tags?.short_id ?? "—"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span
-                        className="px-2 py-0.5 rounded-full text-micro font-medium capitalize"
-                        style={{
-                          backgroundColor: product.tags?.status === "owned" ? "#ECFDF5" : "var(--color-soft-gold)",
-                          color: product.tags?.status === "owned" ? "#065F46" : "var(--color-deep-gold)",
-                        }}
-                      >
-                        {product.tags?.status?.replace("_", " ") ?? "—"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-                        {product.retail_price ? `${product.currency} ${product.retail_price.toLocaleString()}` : "—"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                        {format(new Date(product.created_at), "MMM d, yyyy")}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <Link href={`/dashboard/products/${product.id}/edit`} style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)", textDecoration: "underline" }}>
-                        Edit
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map((product, i) => {
+                  const badge = tagStatusColor(product.tags?.status ?? "");
+                  const scanUrl = product.tags?.token
+                    ? `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${product.tags.token}`
+                    : null;
+
+                  return (
+                    <tr
+                      key={product.id}
+                      style={{
+                        backgroundColor: "var(--color-pearl)",
+                        borderBottom: i < filtered.length - 1 ? "1px solid var(--color-cream)" : "none",
+                      }}
+                    >
+                      <td className="px-5 py-4">
+                        <Link
+                          href={`/dashboard/products/${product.id}`}
+                          style={{ textDecoration: "none" }}
+                        >
+                          <p
+                            className="font-medium"
+                            style={{
+                              color: "var(--color-charcoal)",
+                              fontSize: "var(--text-body-sm)",
+                              textDecoration: "underline",
+                              textDecorationColor: "transparent",
+                              transition: "text-decoration-color 0.15s",
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.textDecorationColor = "var(--color-charcoal)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.textDecorationColor = "transparent")}
+                          >
+                            {product.name}
+                          </p>
+                        </Link>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-graphite)", letterSpacing: "0.05em" }}>
+                          {product.tags?.short_id ?? "—"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span
+                          className="px-2 py-0.5 rounded-full text-micro font-medium capitalize"
+                          style={{ backgroundColor: badge.bg, color: badge.color }}
+                        >
+                          {product.tags?.status?.replace(/_/g, " ") ?? "—"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+                          {product.retail_price
+                            ? `${product.currency} ${product.retail_price.toLocaleString()}`
+                            : "—"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+                          {format(new Date(product.created_at), "MMM d, yyyy")}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          {scanUrl && (
+                            <CopyLinkButton url={scanUrl} label="Copy link" />
+                          )}
+                          <Link
+                            href={`/dashboard/products/${product.id}/edit`}
+                            style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)", textDecoration: "underline" }}
+                          >
+                            Edit
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
 

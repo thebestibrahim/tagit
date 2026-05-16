@@ -6,6 +6,7 @@ import CustomizationForm from "./CustomizationForm";
 type Company = {
   name: string;
   logo_url: string | null;
+  signature_url: string | null;
   brand_primary_color: string;
   brand_secondary_color: string;
   brand_accent_color: string;
@@ -33,7 +34,7 @@ export default async function CustomizationPage() {
 
   const { data: extData } = await supabase
     .from("companies")
-    .select("brand_text_color, brand_template, cert_template")
+    .select("brand_text_color, brand_template, cert_template, signature_url")
     .eq("id", user.id)
     .single()
     .then((r) => ({ data: r.error ? null : r.data }));
@@ -44,13 +45,15 @@ export default async function CustomizationPage() {
     brand_text_color?: string;
     brand_template?: string;
     cert_template?: string;
+    signature_url?: string | null;
   } | null;
 
   const company: Company = {
-    ...(data as Omit<Company, "brand_text_color" | "brand_template" | "cert_template">),
+    ...(data as Omit<Company, "brand_text_color" | "brand_template" | "cert_template" | "signature_url">),
     brand_text_color: ext?.brand_text_color ?? "#FAFAF8",
     brand_template:   ext?.brand_template   ?? "classic",
     cert_template:    ext?.cert_template    ?? "classic",
+    signature_url:    ext?.signature_url    ?? null,
   };
 
   return (

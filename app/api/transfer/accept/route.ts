@@ -125,7 +125,7 @@ export async function POST(request: Request) {
   const { data: companyData } = tag
     ? await admin
         .from("companies")
-        .select("name, logo_url, brand_primary_color, brand_accent_color, cert_template")
+        .select("name, logo_url, signature_url, brand_primary_color, brand_accent_color, cert_template")
         .eq("id", tag.company_id)
         .single()
     : { data: null };
@@ -133,6 +133,7 @@ export async function POST(request: Request) {
   const company = companyData as {
     name: string;
     logo_url: string | null;
+    signature_url: string | null;
     brand_primary_color: string;
     brand_accent_color: string;
     cert_template: string | null;
@@ -158,7 +159,10 @@ export async function POST(request: Request) {
 
     const certId = (certRecord as { id: string } | null)?.id ?? "";
     const verifyUrl = `${APP_URL}/certificate/${certId}`;
-    const logoDataUrl = await fetchLogoDataUrl(company.logo_url);
+    const [logoDataUrl, signatureDataUrl] = await Promise.all([
+      fetchLogoDataUrl(company.logo_url),
+      fetchLogoDataUrl(company.signature_url),
+    ]);
 
     const pdfBuffer = await generateCertificatePdf({
       certNumber,
@@ -169,6 +173,7 @@ export async function POST(request: Request) {
       productName: product.name,
       companyName: company.name,
       companyLogoDataUrl: logoDataUrl,
+      companySignatureDataUrl: signatureDataUrl,
       brandPrimaryColor: company.brand_primary_color,
       brandAccentColor: company.brand_accent_color,
       issuedAt: new Date(),

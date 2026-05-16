@@ -10,6 +10,10 @@ import { createClient } from "@/lib/supabase/client";
 import { INDUSTRY_FIELDS, groupFields } from "@/lib/industry-fields";
 import type { FieldDef } from "@/lib/industry-fields";
 
+const CURRENCIES = [
+  "NGN", "USD", "EUR", "GBP", "AED", "CHF", "JPY", "CAD", "AUD", "CNY",
+] as const;
+
 type Tag = { id: string; short_id: string; token: string };
 type ImageEntry = { file: File; preview: string };
 
@@ -27,6 +31,7 @@ export default function ProductForm({
   const [selectedTag, setSelectedTag] = useState("");
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [currency, setCurrency] = useState<typeof CURRENCIES[number]>("NGN");
   const [fields, setFields] = useState<Record<string, string>>({});
   const [images, setImages] = useState<ImageEntry[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -95,7 +100,7 @@ export default function ProductForm({
         name: name.trim(),
         industry_fields: fields,
         retail_price: price ? parseFloat(price) : null,
-        currency: "NGN",
+        currency,
         photos: photoUrls,
       }),
     });
@@ -234,17 +239,39 @@ export default function ProductForm({
           </div>
           <div className="space-y-1.5">
             <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-              Retail price (NGN)
+              Retail price
             </Label>
-            <Input
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="e.g. 450000"
-              min="0"
-              step="0.01"
-              style={{ backgroundColor: "var(--color-pearl)", borderColor: "var(--color-stone)", color: "var(--color-onyx)", fontSize: "var(--text-body-sm)" }}
-            />
+            <div className="flex gap-2">
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as typeof CURRENCIES[number])}
+                style={{
+                  border: "1px solid var(--color-stone)",
+                  borderRadius: "var(--radius-sm)",
+                  padding: "8px 10px",
+                  fontSize: "var(--text-body-sm)",
+                  color: "var(--color-onyx)",
+                  backgroundColor: "var(--color-pearl)",
+                  fontFamily: "var(--font-jetbrains-mono)",
+                  outline: "none",
+                  width: "90px",
+                  flexShrink: 0,
+                }}
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <Input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="e.g. 450000"
+                min="0"
+                step="0.01"
+                style={{ backgroundColor: "var(--color-pearl)", borderColor: "var(--color-stone)", color: "var(--color-onyx)", fontSize: "var(--text-body-sm)", flex: 1 }}
+              />
+            </div>
           </div>
         </div>
       </div>

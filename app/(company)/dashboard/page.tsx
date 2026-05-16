@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Tag, Package, Users, AlertCircle, CheckCircle2, Circle, Layers } from "lucide-react";
+import { ArrowRight, Tag, Package, Users, AlertCircle, CheckCircle2, Circle, Layers, PenLine } from "lucide-react";
 
 export default async function CompanyOverviewPage() {
   const user = await getUser();
@@ -18,7 +18,7 @@ export default async function CompanyOverviewPage() {
   ] = await Promise.all([
     supabase.from("tags").select("id, status").eq("company_id", user.id),
     supabase.from("products").select("id").eq("company_id", user.id),
-    supabase.from("companies").select("brand_story, custom_header_text, ai_enabled, ai_persona_name, ai_persona_prompt, logo_url").eq("id", user.id).single(),
+    supabase.from("companies").select("brand_story, custom_header_text, ai_enabled, ai_persona_name, ai_persona_prompt, logo_url, signature_url").eq("id", user.id).single(),
     supabase.from("tag_batches").select("id", { count: "exact", head: true }).eq("company_id", user.id),
   ]);
 
@@ -32,6 +32,7 @@ export default async function CompanyOverviewPage() {
     ai_persona_name: string | null;
     ai_persona_prompt: string | null;
     logo_url: string | null;
+    signature_url: string | null;
   } | null;
 
   const { count: pendingClaimsCount } = tagIds.length
@@ -71,6 +72,12 @@ export default async function CompanyOverviewPage() {
       desc: "Give customers a voice to talk to after scanning",
       done: Boolean(company?.ai_enabled && company?.ai_persona_name && company?.ai_persona_prompt),
       href: "/dashboard/ai-persona",
+    },
+    {
+      label: "Upload your certificate signature",
+      desc: "Add a handwritten signature to every PDF certificate you issue",
+      done: Boolean(company?.signature_url),
+      href: "/dashboard/customization",
     },
   ];
 
@@ -249,9 +256,10 @@ export default async function CompanyOverviewPage() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
-            { title: "Request tag batch",          desc: "Order NFC tags for your next collection",                                                              href: "/dashboard/batches/request", icon: Layers },
-            { title: "Register a product",         desc: "Link a product record to an unassigned tag",                                                          href: "/dashboard/products/new",    icon: Package },
-            { title: "Review ownership claims",    desc: `${pendingClaimsCount ?? 0} pending claim${(pendingClaimsCount ?? 0) !== 1 ? "s" : ""} awaiting your approval`, href: "/dashboard/ownership", icon: Users },
+            { title: "Request tag batch",          desc: "Order NFC tags for your next collection",                                                                   href: "/dashboard/batches/request", icon: Layers },
+            { title: "Register a product",         desc: "Link a product record to an unassigned tag",                                                               href: "/dashboard/products/new",    icon: Package },
+            { title: "Review ownership claims",    desc: `${pendingClaimsCount ?? 0} pending claim${(pendingClaimsCount ?? 0) !== 1 ? "s" : ""} awaiting your approval`, href: "/dashboard/ownership",    icon: Users },
+            { title: "Upload certificate signature", desc: "Add your signature to branded PDF certificates",                                                          href: "/dashboard/customization",   icon: PenLine },
           ].map((action) => (
             <Link
               key={action.href}

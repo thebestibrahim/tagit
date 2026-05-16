@@ -21,11 +21,11 @@ export async function PATCH(
   if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
   const body = await request.json().catch(() => ({}));
-  const { name, retail_price, industry_fields, photos } = body;
+  const { name, retail_price, currency, industry_fields, photos } = body;
 
   const { error } = await supabase
     .from("products")
-    .update({ name, retail_price: retail_price ?? null, industry_fields, photos: photos ?? [] } as never)
+    .update({ name, retail_price: retail_price ?? null, currency: currency ?? "NGN", industry_fields, photos: photos ?? [] } as never)
     .eq("id", id);
 
   if (error) { console.error(error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }

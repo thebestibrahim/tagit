@@ -130,6 +130,7 @@ export interface Database {
           to_name: string;
           to_email: string;
           sale_price: number | null;
+          currency: string;
           status: TransferStatus;
           acceptance_token: string | null;
           created_at: string;

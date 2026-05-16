@@ -20,6 +20,8 @@ export async function POST(request: Request) {
     brand_story,
     custom_header_text,
     social_links,
+    logo_url,
+    signature_url,
   } = body;
 
   const admin = createAdminClient(
@@ -28,20 +30,25 @@ export async function POST(request: Request) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
+  // Build update payload — only include keys that were explicitly sent in the request body
+  const update: Record<string, unknown> = {
+    brand_primary_color,
+    brand_secondary_color,
+    brand_accent_color,
+    brand_text_color,
+    brand_font,
+    brand_template,
+    cert_template,
+    brand_story,
+    custom_header_text,
+    social_links,
+  };
+  if ("logo_url" in body) update.logo_url = logo_url;
+  if ("signature_url" in body) update.signature_url = signature_url;
+
   const { error } = await admin
     .from("companies")
-    .update({
-      brand_primary_color,
-      brand_secondary_color,
-      brand_accent_color,
-      brand_text_color,
-      brand_font,
-      brand_template,
-      cert_template,
-      brand_story,
-      custom_header_text,
-      social_links,
-    } as never)
+    .update(update as never)
     .eq("id", user.id);
 
   if (error) { console.error(error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }

@@ -30,6 +30,7 @@ export type CertificateData = {
   productName: string;
   companyName: string;
   companyLogoDataUrl: string | null;
+  companySignatureDataUrl: string | null;
   brandPrimaryColor: string;
   brandAccentColor: string;
   issuedAt: Date;
@@ -384,6 +385,21 @@ function ClassicCertificate({ data, qr }: { data: CertificateData; qr: string })
             VERIFIED
           </Text>
         </View>
+
+        {/* Signature area */}
+        <View style={{ alignSelf: "center", alignItems: "center", marginTop: 18 }}>
+          {data.companySignatureDataUrl ? (
+            <Image src={data.companySignatureDataUrl} style={{ width: 130, height: 42, objectFit: "contain" }} />
+          ) : (
+            <Text style={{ fontFamily: "Times-Italic", fontSize: 10, color: SLATE }}>
+              Authorized by {data.companyName}
+            </Text>
+          )}
+          <View style={{ width: 130, height: 0.5, backgroundColor: STONE, marginTop: 5 }} />
+          <Text style={{ fontFamily: "Helvetica", fontSize: 6, color: MIST, letterSpacing: 1, marginTop: 3 }}>
+            AUTHORIZED SIGNATURE
+          </Text>
+        </View>
       </View>
 
       {/* Footer */}
@@ -648,6 +664,14 @@ function MinimalCertificate({ data, qr }: { data: CertificateData; qr: string })
           }}
         >
           <View>
+            {/* Signature */}
+            {data.companySignatureDataUrl ? (
+              <Image src={data.companySignatureDataUrl} style={{ width: 90, height: 28, objectFit: "contain", marginBottom: 4 }} />
+            ) : (
+              <Text style={{ fontFamily: "Times-Italic", fontSize: 8, color: SLATE, marginBottom: 4 }}>
+                Authorized by {data.companyName}
+              </Text>
+            )}
             <Text
               style={{
                 fontFamily: "Helvetica-Bold",
@@ -902,6 +926,18 @@ function HeritageCertificate({ data, qr }: { data: CertificateData; qr: string }
             Transferred from {data.fromOwnerName}
           </Text>
         )}
+
+        {/* Signature area */}
+        <View style={{ alignItems: "center", marginBottom: 14 }}>
+          {data.companySignatureDataUrl ? (
+            <Image src={data.companySignatureDataUrl} style={{ width: 120, height: 38, objectFit: "contain" }} />
+          ) : (
+            <Text style={{ fontFamily: "Times-Italic", fontSize: 10, color: SLATE }}>
+              {data.companyName}
+            </Text>
+          )}
+          <View style={{ width: 110, height: 0.5, backgroundColor: accentColor, marginTop: 5 }} />
+        </View>
 
         {/* Heritage seal */}
         <View

@@ -25,7 +25,7 @@ export async function POST(
 
   const { data: companyData } = await authClient
     .from("companies")
-    .select("id, name, status, logo_url, brand_primary_color, brand_accent_color, cert_template")
+    .select("id, name, status, logo_url, signature_url, brand_primary_color, brand_accent_color, cert_template")
     .eq("id", user.id)
     .single();
 
@@ -34,6 +34,7 @@ export async function POST(
     name: string;
     status: string;
     logo_url: string | null;
+    signature_url: string | null;
     brand_primary_color: string;
     brand_accent_color: string;
     cert_template: string | null;
@@ -143,7 +144,10 @@ export async function POST(
       const certId = (certRecord as { id: string } | null)?.id ?? "";
       const verifyUrl = `${APP_URL}/certificate/${certId}`;
 
-      const logoDataUrl = await fetchLogoDataUrl(company.logo_url);
+      const [logoDataUrl, signatureDataUrl] = await Promise.all([
+        fetchLogoDataUrl(company.logo_url),
+        fetchLogoDataUrl(company.signature_url),
+      ]);
 
       const pdfBuffer = await generateCertificatePdf({
         certNumber,
@@ -154,6 +158,7 @@ export async function POST(
         productName: product.name,
         companyName: company.name,
         companyLogoDataUrl: logoDataUrl,
+        companySignatureDataUrl: signatureDataUrl,
         brandPrimaryColor: company.brand_primary_color,
         brandAccentColor: company.brand_accent_color,
         issuedAt: new Date(),
