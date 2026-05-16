@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SignaturePanel } from "./SignaturePanel";
 
 type Company = {
   name: string;
@@ -272,9 +273,7 @@ export default function CustomizationForm({ company }: { company: Company }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Signature
-  const [signatureUploading, setSignatureUploading] = useState(false);
   const [signaturePreview, setSignaturePreview] = useState<string | null>(company.signature_url);
-  const signatureInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setFormState] = useState({
     brand_primary_color:   company.brand_primary_color   || "#0A0A0B",
@@ -320,16 +319,14 @@ export default function CustomizationForm({ company }: { company: Company }) {
 
   // ── Signature handlers ───────────────────────────────────────────────────
 
-  async function handleSignatureUpload(file: File) {
-    setSignatureUploading(true);
+  async function saveSignature(file: File) {
     const fd = new FormData();
     fd.append("file", file);
     const res = await fetch("/api/company/signature", { method: "POST", body: fd });
     const json = await res.json();
-    setSignatureUploading(false);
     if (!res.ok) { toast.error(json.error ?? "Signature upload failed."); return; }
     setSignaturePreview(json.signature_url);
-    toast.success("Signature uploaded.");
+    toast.success("Signature saved.");
   }
 
   async function handleRemoveSignature() {
@@ -639,73 +636,22 @@ export default function CustomizationForm({ company }: { company: Company }) {
                 </div>
               </section>
 
-              {/* Signature upload */}
+              {/* Signature */}
               <section className="rounded-2xl p-6" style={{ backgroundColor: "var(--color-pearl)", border: "1px solid var(--color-cream)" }}>
                 <div className="flex items-center gap-2 mb-1">
                   <PenLine size={14} style={{ color: "var(--color-gold)" }} />
                   <h2 className="font-semibold" style={{ fontSize: "var(--text-body)", color: "var(--color-charcoal)" }}>Certificate signature</h2>
                 </div>
                 <p className="mb-5" style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>
-                  Upload a PNG of your handwritten signature. It appears on every certificate your brand issues.
-                  If left blank, &ldquo;Authorized by {company.name}&rdquo; is shown instead.
+                  Draw or upload your signature — it appears on every certificate your brand issues.
+                  If left blank, &ldquo;Authorized by {company.name}&rdquo; is shown in italic.
                 </p>
-
-                {/* Signature preview box */}
-                <div
-                  style={{
-                    backgroundColor: "#fff",
-                    border: "1px solid var(--color-stone)",
-                    borderRadius: 10,
-                    padding: "20px 24px",
-                    marginBottom: 16,
-                    minHeight: 80,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {signaturePreview ? (
-                    <div style={{ position: "relative", display: "inline-block" }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={signaturePreview} alt="Signature" style={{ maxHeight: 60, maxWidth: "100%", objectFit: "contain" }} />
-                      <button
-                        type="button"
-                        onClick={handleRemoveSignature}
-                        style={{ position: "absolute", top: -8, right: -8, width: 20, height: 20, borderRadius: "50%", backgroundColor: "var(--color-alert)", border: "2px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-                      >
-                        <X size={10} color="#fff" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div style={{ textAlign: "center" }}>
-                      <p style={{ fontFamily: "Georgia,serif", fontStyle: "italic", fontSize: 18, color: "var(--color-mist)", marginBottom: 4 }}>
-                        Authorized by {company.name}
-                      </p>
-                      <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>Default — upload your signature to replace this</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <input
-                    ref={signatureInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    style={{ display: "none" }}
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleSignatureUpload(f); }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => signatureInputRef.current?.click()}
-                    disabled={signatureUploading}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium"
-                    style={{ fontSize: "var(--text-body-sm)", backgroundColor: "var(--color-linen)", color: "var(--color-graphite)", border: "1px solid var(--color-cream)", cursor: signatureUploading ? "not-allowed" : "pointer" }}
-                  >
-                    {signatureUploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
-                    {signatureUploading ? "Uploading…" : signaturePreview ? "Replace signature" : "Upload signature"}
-                  </button>
-                  <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>PNG or JPG · transparent background recommended · max 2 MB</p>
-                </div>
+                <SignaturePanel
+                  companyName={company.name}
+                  preview={signaturePreview}
+                  onSave={saveSignature}
+                  onRemove={handleRemoveSignature}
+                />
               </section>
 
               {/* What's on the certificate */}
