@@ -464,8 +464,9 @@ function ProductSection({
       {photo && (
         <div
           style={{
+            position: "relative",
             width: "100%",
-            aspectRatio: "4/5",
+            height: 300,
             backgroundColor: "#F0EDE8",
             overflow: "hidden",
           }}
