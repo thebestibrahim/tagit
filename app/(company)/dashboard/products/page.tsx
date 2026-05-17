@@ -156,22 +156,10 @@ export default async function ProductsPage({
                       <td className="px-5 py-4">
                         <Link
                           href={`/dashboard/products/${product.id}`}
-                          style={{ textDecoration: "none" }}
+                          className="font-medium hover:underline"
+                          style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)", textDecoration: "none", display: "block" }}
                         >
-                          <p
-                            className="font-medium"
-                            style={{
-                              color: "var(--color-charcoal)",
-                              fontSize: "var(--text-body-sm)",
-                              textDecoration: "underline",
-                              textDecorationColor: "transparent",
-                              transition: "text-decoration-color 0.15s",
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.textDecorationColor = "var(--color-charcoal)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.textDecorationColor = "transparent")}
-                          >
-                            {product.name}
-                          </p>
+                          {product.name}
                         </Link>
                       </td>
                       <td className="px-5 py-4">
