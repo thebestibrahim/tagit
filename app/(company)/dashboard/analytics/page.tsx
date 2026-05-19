@@ -6,6 +6,7 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { format, subDays } from "date-fns";
 import { BarChart2, Eye, Package, Award, TrendingUp } from "lucide-react";
+import ScanChart from "./ScanChart";
 export default async function AnalyticsPage() {
   const supabase = await createClient();
   const user = await getUser();
@@ -64,6 +65,9 @@ export default async function AnalyticsPage() {
 
   const ownedTags = tags.filter((t) => t.status === "owned").length;
   const totalTags = tags.length;
+  const deployedTags = tags.filter((t) =>
+    ["embedded", "activated", "unowned", "claim_pending", "owned", "transfer_pending"].includes(t.status)
+  ).length;
 
   // ── 14-day chart: one count query per day ──
   const chartDays = await Promise.all(
@@ -157,7 +161,7 @@ export default async function AnalyticsPage() {
       value: totalTags.toLocaleString(),
       icon: Package,
       delta: null,
-      sub: `${tags.filter((t) => ["embedded", "activated"].includes(t.status)).length} active`,
+      sub: `${deployedTags} deployed`,
     },
   ];
 
@@ -240,30 +244,7 @@ export default async function AnalyticsPage() {
               <p style={{ fontSize: "var(--text-body-sm)" }}>No scans yet in this period</p>
             </div>
           ) : (
-            <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", height: "120px" }}>
-              {chartDays.map((day) => (
-                <div
-                  key={day.label}
-                  style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", height: "100%" }}
-                >
-                  <div style={{ flex: 1, width: "100%", display: "flex", alignItems: "flex-end" }}>
-                    <div
-                      style={{
-                        width: "100%",
-                        height: `${Math.max((day.count / chartMax) * 100, day.count > 0 ? 8 : 2)}%`,
-                        backgroundColor: day.count > 0 ? "var(--color-gold)" : "var(--color-linen)",
-                        borderRadius: "3px 3px 0 0",
-                        transition: "height 0.3s ease",
-                        minHeight: "2px",
-                      }}
-                    />
-                  </div>
-                  <span style={{ fontSize: "9px", color: "var(--color-mist)", whiteSpace: "nowrap" }}>
-                    {day.label.split(" ")[1]}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <ScanChart days={chartDays} max={chartMax} />
           )}
           <div
             className="mt-2 flex justify-between"
