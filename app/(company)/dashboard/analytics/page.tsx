@@ -49,14 +49,15 @@ export default async function AnalyticsPage() {
       : null;
 
   // ── Unique items scanned (last 30 days) ──
-  // Fetch only tag_id column — much smaller payload, still subject to 1000 cap
-  // but unique item count is bounded by number of tags not number of scans
+  // Fetch tag_id column only; range bumped to 10 000 so counts are accurate up to
+  // that volume. For higher-volume accounts a DB aggregate function would be needed.
   const { data: recentScans } = tagIds.length
     ? await supabase
         .from("scan_logs")
         .select("tag_id")
         .in("tag_id", tagIds)
         .gte("created_at", thirtyDaysAgo)
+        .range(0, 9999)
     : { data: [] as { tag_id: string }[] };
 
   const uniqueItemsScanned = new Set((recentScans ?? []).map((s) => s.tag_id)).size;
@@ -69,9 +70,9 @@ export default async function AnalyticsPage() {
     Array.from({ length: 14 }, async (_, i) => {
       const d = subDays(now, 13 - i);
       const dayStart = new Date(d);
-      dayStart.setHours(0, 0, 0, 0);
+      dayStart.setUTCHours(0, 0, 0, 0);
       const dayEnd = new Date(d);
-      dayEnd.setHours(23, 59, 59, 999);
+      dayEnd.setUTCHours(23, 59, 59, 999);
 
       const label = format(d, "MMM d");
 
@@ -88,6 +89,7 @@ export default async function AnalyticsPage() {
     })
   );
   const chartMax = Math.max(...chartDays.map((d) => d.count), 1);
+  const chartTotal = chartDays.reduce((sum, d) => sum + d.count, 0);
 
   // ── Top 5 most scanned products (last 30 days) ──
   // Derive counts from the recentScans data already fetched above — no extra queries
@@ -109,16 +111,19 @@ export default async function AnalyticsPage() {
         .select("tag_id, name, photos")
         .in("tag_id", top5.map((t) => t.tag_id));
 
-      topProducts = top5.map(({ tag_id, count: scans }) => {
-        const p = (productsData ?? []).find(
-          (x: { tag_id: string; name: string; photos: string[] }) => x.tag_id === tag_id
-        ) as { tag_id: string; name: string; photos: string[] } | undefined;
-        return {
-          name: p?.name ?? "Unknown product",
-          photo: p?.photos?.[0] ?? null,
-          scans,
-        };
-      });
+      topProducts = top5
+        .map(({ tag_id, count: scans }) => {
+          const p = (productsData ?? []).find(
+            (x: { tag_id: string; name: string; photos: string[] }) => x.tag_id === tag_id
+          ) as { tag_id: string; name: string; photos: string[] } | undefined;
+          if (!p) return null;
+          return {
+            name: p.name,
+            photo: p.photos?.[0] ?? null,
+            scans,
+          };
+        })
+        .filter(Boolean) as { name: string; photo: string | null; scans: number }[];
     }
   }
 
@@ -230,7 +235,7 @@ export default async function AnalyticsPage() {
               Scan activity — last 14 days
             </h2>
           </div>
-          {(totalScans ?? 0) === 0 ? (
+          {chartTotal === 0 ? (
             <div className="py-10 text-center" style={{ color: "var(--color-mist)" }}>
               <p style={{ fontSize: "var(--text-body-sm)" }}>No scans yet in this period</p>
             </div>

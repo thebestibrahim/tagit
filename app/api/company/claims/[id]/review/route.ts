@@ -174,7 +174,7 @@ export async function POST(
           productName: product.name,
           companyName: company.name,
           tagUrl,
-        }).catch(() => {}),
+        }).catch((err) => console.error("[claims/review] email failed:", err)),
         // Certificate email with PDF
         pdfBuffer
           ? sendCertificateEmail(claim.claimant_email, {
@@ -185,7 +185,7 @@ export async function POST(
               certType: "ownership",
               tagUrl,
               pdfBuffer,
-            }).catch(() => {})
+            }).catch((err) => console.error("[claims/review] email failed:", err))
           : Promise.resolve(),
       ]);
     }
@@ -208,7 +208,7 @@ export async function POST(
       claimantName: claim.claimant_name,
       productName: product.name,
       reason: rejection_reason,
-    }).catch(() => {});
+    }).catch((err) => console.error("[claims/review] email failed:", err));
   }
 
   return NextResponse.json({ success: true });

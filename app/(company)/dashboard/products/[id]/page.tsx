@@ -4,7 +4,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
-import { ChevronLeft, Pencil, Tag, User, ArrowRightLeft, Award, Package, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { ChevronLeft, Pencil, Tag, User, ArrowRightLeft, Award, Package, CheckCircle2 } from "lucide-react";
 import type { CompanyStatus } from "@/types/database";
 import { INDUSTRY_FIELDS, groupFields } from "@/lib/industry-fields";
 import CopyLinkButton from "@/components/ui/CopyLinkButton";

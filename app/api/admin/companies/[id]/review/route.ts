@@ -52,7 +52,7 @@ export async function POST(
       await sendCompanyApprovedEmail(company.email, {
         companyName: company.name,
         dashboardUrl: `${APP_URL}/dashboard`,
-      }).catch(() => {});
+      }).catch((err) => console.error("[company/review] approved email failed:", err));
     }
   } else {
     const { error } = await admin
@@ -66,7 +66,7 @@ export async function POST(
       await sendCompanyRejectedEmail(company.email, {
         companyName: company.name,
         reason: reason ?? undefined,
-      }).catch(() => {});
+      }).catch((err) => console.error("[company/review] rejected email failed:", err));
     }
   }
 

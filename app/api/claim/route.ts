@@ -142,7 +142,7 @@ export async function POST(request: Request) {
       claimantName: claimant_name,
       claimantEmail: claimant_email,
       claimUrl,
-    }).catch(() => {});
+    }).catch((err) => console.error("[claim] notification email failed:", err));
   }
 
   return NextResponse.json({ success: true });

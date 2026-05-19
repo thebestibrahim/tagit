@@ -190,13 +190,13 @@ export async function POST(request: Request) {
         productName: product.name,
         tagUrl,
         role: "recipient",
-      }).catch(() => {}),
+      }).catch((err) => console.error("[transfer/accept] recipient email failed:", err)),
       sendTransferCompleteEmail(currentOwner.owner_email, {
         name: currentOwner.owner_name,
         productName: product.name,
         tagUrl,
         role: "sender",
-      }).catch(() => {}),
+      }).catch((err) => console.error("[transfer/accept] sender email failed:", err)),
       // Certificate email with PDF to new owner
       pdfBuffer
         ? sendCertificateEmail(transfer.to_email, {
@@ -207,7 +207,7 @@ export async function POST(request: Request) {
             certType: "transfer",
             tagUrl,
             pdfBuffer,
-          }).catch(() => {})
+          }).catch((err) => console.error("[transfer/accept] certificate email failed:", err))
         : Promise.resolve(),
     ]);
   } else if (product) {
@@ -218,13 +218,13 @@ export async function POST(request: Request) {
         productName: product.name,
         tagUrl,
         role: "recipient",
-      }).catch(() => {}),
+      }).catch((err) => console.error("[transfer/accept] recipient email failed:", err)),
       sendTransferCompleteEmail(currentOwner.owner_email, {
         name: currentOwner.owner_name,
         productName: product.name,
         tagUrl,
         role: "sender",
-      }).catch(() => {}),
+      }).catch((err) => console.error("[transfer/accept] sender email failed:", err)),
     ]);
   }
 
