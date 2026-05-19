@@ -96,38 +96,45 @@ export default async function AnalyticsPage() {
   const chartTotal = chartDays.reduce((sum, d) => sum + d.count, 0);
 
   // ── Top 5 most scanned products (last 30 days) ──
-  // Derive counts from the recentScans data already fetched above — no extra queries
+  // Use recentScans only to find which tags were scanned (distinct tag_ids).
+  // Then get the true per-tag count with head:true — immune to any row-limit cap.
   let topProducts: { name: string; photo: string | null; scans: number }[] = [];
   if (tagIds.length > 0) {
-    const tagCountMap: Record<string, number> = {};
-    for (const s of (recentScans ?? [])) {
-      tagCountMap[s.tag_id] = (tagCountMap[s.tag_id] ?? 0) + 1;
-    }
+    const scannedTagIds = [...new Set((recentScans ?? []).map((s) => s.tag_id))];
 
-    const top5 = Object.entries(tagCountMap)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([tag_id, count]) => ({ tag_id, count }));
-
-    if (top5.length > 0) {
-      const { data: productsData } = await supabase
-        .from("products")
-        .select("tag_id, name, photos")
-        .in("tag_id", top5.map((t) => t.tag_id));
-
-      topProducts = top5
-        .map(({ tag_id, count: scans }) => {
-          const p = (productsData ?? []).find(
-            (x: { tag_id: string; name: string; photos: string[] }) => x.tag_id === tag_id
-          ) as { tag_id: string; name: string; photos: string[] } | undefined;
-          if (!p) return null;
-          return {
-            name: p.name,
-            photo: p.photos?.[0] ?? null,
-            scans,
-          };
+    if (scannedTagIds.length > 0) {
+      const tagCounts = await Promise.all(
+        scannedTagIds.map(async (tag_id) => {
+          const { count } = await supabase
+            .from("scan_logs")
+            .select("*", { count: "exact", head: true })
+            .eq("tag_id", tag_id)
+            .gte("created_at", thirtyDaysAgo);
+          return { tag_id, count: count ?? 0 };
         })
-        .filter(Boolean) as { name: string; photo: string | null; scans: number }[];
+      );
+
+      const top5 = tagCounts
+        .filter((t) => t.count > 0)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      if (top5.length > 0) {
+        const { data: productsData } = await supabase
+          .from("products")
+          .select("tag_id, name, photos")
+          .in("tag_id", top5.map((t) => t.tag_id));
+
+        topProducts = top5
+          .map(({ tag_id, count: scans }) => {
+            const p = (productsData ?? []).find(
+              (x: { tag_id: string; name: string; photos: string[] }) => x.tag_id === tag_id
+            ) as { tag_id: string; name: string; photos: string[] } | undefined;
+            if (!p) return null;
+            return { name: p.name, photo: p.photos?.[0] ?? null, scans };
+          })
+          .filter(Boolean) as { name: string; photo: string | null; scans: number }[];
+      }
     }
   }
 
