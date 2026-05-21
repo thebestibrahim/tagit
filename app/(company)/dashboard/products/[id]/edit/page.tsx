@@ -49,12 +49,12 @@ export default async function EditProductPage({
   return (
     <div className="p-8 max-w-3xl mx-auto">
       <Link
-        href="/dashboard/products"
+        href={`/dashboard/products/${id}`}
         className="inline-flex items-center gap-1.5 mb-8"
         style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)", textDecoration: "none" }}
       >
         <ChevronLeft size={14} />
-        All products
+        Back to product
       </Link>
 
       <div className="page-header mb-8">

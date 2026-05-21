@@ -7,6 +7,7 @@ import { Plus, Package } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
 import CopyLinkButton from "@/components/ui/CopyLinkButton";
+import ClickableRow from "./ClickableRow";
 
 const STATUS_FILTERS = ["all", "owned", "claim_pending", "embedded", "unowned", "flagged"];
 
@@ -146,12 +147,10 @@ export default async function ProductsPage({
                     : null;
 
                   return (
-                    <tr
+                    <ClickableRow
                       key={product.id}
-                      style={{
-                        backgroundColor: "var(--color-pearl)",
-                        borderBottom: i < filtered.length - 1 ? "1px solid var(--color-cream)" : "none",
-                      }}
+                      href={`/dashboard/products/${product.id}`}
+                      borderBottom={i < filtered.length - 1 ? "1px solid var(--color-cream)" : "none"}
                     >
                       <td className="px-5 py-4">
                         <Link
@@ -200,7 +199,7 @@ export default async function ProductsPage({
                           </Link>
                         </div>
                       </td>
-                    </tr>
+                    </ClickableRow>
                   );
                 })}
               </tbody>

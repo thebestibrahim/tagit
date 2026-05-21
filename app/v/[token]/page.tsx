@@ -636,6 +636,7 @@ function ProductSection({
                     color: "#4A4A4F",
                     lineHeight: 1.78,
                     letterSpacing: "-0.003em",
+                    whiteSpace: "pre-wrap",
                   }}
                 >
                   {String(product.industry_fields[f.key])}

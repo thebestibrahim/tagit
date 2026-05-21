@@ -259,10 +259,22 @@ export default function EditProductForm({
         </div>
       ))}
 
-      <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-body-sm" style={{ backgroundColor: loading ? "var(--color-stone)" : "var(--color-onyx)", color: "var(--color-pearl)", border: "none", cursor: loading ? "not-allowed" : "pointer" }}>
-        {loading && <Loader2 size={14} className="animate-spin" />}
-        {loading ? "Saving…" : "Save changes"}
-      </button>
+      <div className="flex items-center gap-3">
+        <button type="submit" disabled={loading} className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-body-sm" style={{ backgroundColor: loading ? "var(--color-stone)" : "var(--color-onyx)", color: "var(--color-pearl)", border: "none", cursor: loading ? "not-allowed" : "pointer" }}>
+          {loading && <Loader2 size={14} className="animate-spin" />}
+          {loading ? "Saving…" : "Save changes"}
+        </button>
+        {!loading && (
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="px-6 py-3 rounded-lg font-medium text-body-sm"
+            style={{ backgroundColor: "transparent", color: "var(--color-slate)", border: "1px solid var(--color-stone)", cursor: "pointer" }}
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   );
 }

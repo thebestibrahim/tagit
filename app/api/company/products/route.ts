@@ -8,7 +8,7 @@ export async function POST(request: Request) {
 
   if (!user) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
-  const { tag_id, company_id, name, industry_fields, retail_price, currency } = await request.json();
+  const { tag_id, company_id, name, industry_fields, retail_price, currency, photos } = await request.json();
 
   if (company_id !== user.id) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     industry_fields: industry_fields ?? {},
     retail_price: retail_price ?? null,
     currency: currency ?? "NGN",
-    photos: [],
+    photos: photos ?? [],
     ai_persona_config: {},
   });
 
