@@ -40,12 +40,14 @@ export async function POST(request: Request) {
   const code = randomInt(100000, 1000000).toString();
   const code_hash = await hash(code, 10);
 
+  const expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   const { error } = await admin.from("otp_codes").insert({
     email,
     code_hash,
     purpose,
     attempts: 0,
     is_used: false,
+    expires_at,
   } as never);
 
   if (error) {
