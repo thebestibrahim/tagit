@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { rateLimit, getIp } from "@/lib/rate-limit";
+import { rateLimitAsync, getIp } from "@/lib/rate-limit";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,7 +10,7 @@ const admin = createClient(
 
 export async function POST(request: Request) {
   const ip = getIp(request);
-  if (!rateLimit(`tts:${ip}`, 20, 60_000)) {
+  if (!await rateLimitAsync(`tts:${ip}`, 20, 60_000)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 

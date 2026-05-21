@@ -3,6 +3,7 @@ const required = [
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
   "TAGIT_HMAC_SECRET",
+  "RESEND_API_KEY",
 ] as const;
 
 const missing = required.filter((key) => !process.env[key]);
@@ -19,6 +20,12 @@ export const env = {
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
   hmacSecret: process.env.TAGIT_HMAC_SECRET!,
+  resendApiKey: process.env.RESEND_API_KEY!,
+  resendFromEmail: process.env.RESEND_FROM_EMAIL ?? "noreply@tagit.co",
+  appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   groqApiKey: process.env.GROQ_API_KEY,
   elevenLabsApiKey: process.env.ELEVENLABS_API_KEY,
+  upstashRedisUrl: process.env.UPSTASH_REDIS_REST_URL,
+  upstashRedisToken: process.env.UPSTASH_REDIS_REST_TOKEN,
+  sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 } as const;

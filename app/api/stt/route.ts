@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { toFile } from "groq-sdk";
-import { rateLimit, getIp } from "@/lib/rate-limit";
+import { rateLimitAsync, getIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const ip = getIp(request);
-  if (!rateLimit(`stt:${ip}`, 20, 60_000)) {
+  if (!await rateLimitAsync(`stt:${ip}`, 20, 60_000)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
