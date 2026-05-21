@@ -1,14 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { hash } from "bcryptjs";
 import { randomInt } from "crypto";
 import { NextResponse } from "next/server";
 import { sendOtpEmail } from "@/lib/email";
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+const admin = createAdminClient();
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
@@ -48,7 +44,7 @@ export async function POST(request: Request) {
     attempts: 0,
     is_used: false,
     expires_at,
-  } as never);
+  });
 
   if (error) {
     return NextResponse.json({ error: "Failed to create OTP" }, { status: 500 });

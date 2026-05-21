@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 import type { Industry } from "@/types/database";
@@ -29,11 +29,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
     }
 
-    const admin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    const admin = createAdminClient();
 
     const { data: userData, error: authError } = await admin.auth.admin.createUser({
       email,
@@ -57,7 +53,7 @@ export async function POST(request: Request) {
       email: email.toLowerCase().trim(),
       industry,
       status: "pending",
-    } as never);
+    });
 
     if (dbError) {
       await admin.auth.admin.deleteUser(userId);

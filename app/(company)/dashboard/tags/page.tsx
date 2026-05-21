@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { TagStatus } from "@/types/database";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -146,7 +147,7 @@ export default async function CompanyTagsPage({
     .range(from, to);
 
   if (statusFilter && statusFilter !== "all") {
-    query = query.eq("status", statusFilter);
+    query = query.eq("status", statusFilter as TagStatus);
   }
   if (q) {
     query = query.ilike("short_id", `%${q}%`);

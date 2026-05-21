@@ -1,12 +1,9 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
-const admin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+const admin = createAdminClient();
 
 export async function PATCH(request: Request) {
   const authClient = await createServerClient();
@@ -19,17 +16,17 @@ export async function PATCH(request: Request) {
   if (name !== undefined) {
     const { error } = await admin
       .from("companies")
-      .update({ name: name.trim() } as never)
+      .update({ name: name.trim() })
       .eq("id", user.id);
-    if (error) { console.error(error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+    if (error) { log.error("company/settings", "Update failed", error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
   }
 
   if (logo_url !== undefined) {
     const { error } = await admin
       .from("companies")
-      .update({ logo_url } as never)
+      .update({ logo_url })
       .eq("id", user.id);
-    if (error) { console.error(error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+    if (error) { log.error("company/settings", "Update failed", error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
   }
 
   return NextResponse.json({ success: true });

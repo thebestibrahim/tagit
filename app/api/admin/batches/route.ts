@@ -1,8 +1,10 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { nanoid, customAlphabet } from "nanoid";
 import { createHmac } from "crypto";
+import type { TagStatus, Industry } from "@/types/database";
 
 const shortId = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
 
@@ -30,11 +32,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Batch size must be between 1 and 10,000." }, { status: 400 });
   }
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const admin = createAdminClient();
 
   const { data: batchData, error: batchError } = await admin
     .from("tag_batches")
@@ -45,8 +43,8 @@ export async function POST(request: Request) {
       notes: notes ?? null,
       batch_name: batch_name?.trim() || null,
       created_by: user.id,
-      status: "pending",
-    } as never)
+      status: "pending" as const,
+    })
     .select("id")
     .single();
 
@@ -64,7 +62,7 @@ export async function POST(request: Request) {
       company_id,
       industry,
       batch_id: batchId,
-      status: "created",
+      status: "created" as TagStatus,
       hmac_signature: generateHmac(token),
     };
   });
@@ -73,17 +71,17 @@ export async function POST(request: Request) {
   const chunkSize = 500;
   for (let i = 0; i < tags.length; i += chunkSize) {
     const chunk = tags.slice(i, i + chunkSize);
-    const { error } = await admin.from("tags").insert(chunk as never);
+    const { error } = await admin.from("tags").insert(chunk);
     if (error) {
       await admin.from("tag_batches").delete().eq("id", batchId);
-      console.error(error);
+      log.error("admin/batches", "Tag insert failed", error);
       return NextResponse.json({ error: "Tag generation failed" }, { status: 500 });
     }
   }
 
   await admin
     .from("tag_batches")
-    .update({ status: "generated" } as never)
+    .update({ status: "generated" as const })
     .eq("id", batchId);
 
   return NextResponse.json({ success: true, batch_id: batchId, count: batch_size });

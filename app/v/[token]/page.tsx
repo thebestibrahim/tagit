@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createHmac, timingSafeEqual } from "crypto";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
@@ -12,11 +12,7 @@ import TransferForm from "./TransferForm";
 import VoiceWidget from "./VoiceWidget";
 import CollapsibleSection from "./CollapsibleSection";
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+const admin = createAdminClient();
 
 function validateHmac(token: string, signature: string) {
   try {
@@ -37,7 +33,7 @@ async function logScan(tagId: string, result: string, headerStore: Awaited<Retur
     ip_address: ip,
     user_agent: userAgent,
     scan_result: result,
-  } as never).then(() => {});
+  }).then(() => {});
 }
 
 type OwnershipRecord = {

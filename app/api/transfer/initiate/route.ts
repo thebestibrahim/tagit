@@ -1,14 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { randomInt } from "crypto";
 import { NextResponse } from "next/server";
 import { sendOtpEmail } from "@/lib/email";
 import { hash } from "bcryptjs";
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+const admin = createAdminClient();
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
@@ -77,7 +73,7 @@ export async function POST(request: Request) {
       sale_price: sale_price ?? null,
       status: "otp_pending",
       acceptance_token,
-    } as never)
+    })
     .select("id")
     .single();
 
@@ -97,7 +93,7 @@ export async function POST(request: Request) {
     attempts: 0,
     is_used: false,
     expires_at,
-  } as never);
+  });
 
   try {
     await sendOtpEmail(owner_email, code, "transfer");

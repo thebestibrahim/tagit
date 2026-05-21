@@ -1,13 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import { compare } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { sendTransferAcceptanceEmail, APP_URL } from "@/lib/email";
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+const admin = createAdminClient();
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
@@ -54,13 +51,13 @@ export async function POST(request: Request) {
   if (!valid) {
     await admin
       .from("otp_codes")
-      .update({ attempts: otp.attempts + 1 } as never)
+      .update({ attempts: otp.attempts + 1 })
       .eq("id", otp.id);
     return NextResponse.json({ error: "Incorrect code." }, { status: 400 });
   }
 
   // Mark OTP used
-  await admin.from("otp_codes").update({ is_used: true } as never).eq("id", otp.id);
+  await admin.from("otp_codes").update({ is_used: true }).eq("id", otp.id);
 
   // Now fetch and validate the transfer
   const { data: transferData } = await admin
@@ -87,13 +84,13 @@ export async function POST(request: Request) {
   // Update transfer to awaiting_acceptance
   await admin
     .from("transfer_requests")
-    .update({ status: "awaiting_acceptance" } as never)
+    .update({ status: "awaiting_acceptance" })
     .eq("id", transfer_id);
 
   // Update tag to transfer_pending
   await admin
     .from("tags")
-    .update({ status: "transfer_pending" } as never)
+    .update({ status: "transfer_pending" })
     .eq("id", transfer.tag_id);
 
   // Get current owner info and product name for acceptance email
@@ -121,7 +118,7 @@ export async function POST(request: Request) {
     emailSent = true;
   } catch (err) {
     emailError = err instanceof Error ? err.message : "Email delivery failed";
-    console.error("[transfer/confirm] acceptance email failed:", emailError);
+    log.error("transfer/confirm", "Acceptance email failed", emailError);
   }
 
   return NextResponse.json({ success: true, acceptanceUrl, emailSent, emailError });

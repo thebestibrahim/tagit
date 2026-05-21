@@ -1,4 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { sendTransferCompleteEmail, sendCertificateEmail, APP_URL } from "@/lib/email";
 import {
@@ -7,11 +8,7 @@ import {
   fetchLogoDataUrl,
 } from "@/lib/certificate";
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+const admin = createAdminClient();
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
@@ -54,7 +51,7 @@ export async function POST(request: Request) {
   if (new Date(transfer.expires_at) < new Date(now)) {
     await admin
       .from("transfer_requests")
-      .update({ status: "expired" } as never)
+      .update({ status: "expired" })
       .eq("id", transfer.id);
     return NextResponse.json({ error: "Transfer has expired" }, { status: 410 });
   }
@@ -80,7 +77,7 @@ export async function POST(request: Request) {
   // End old ownership
   await admin
     .from("ownership_records")
-    .update({ is_current: false, ended_at: completedAt } as never)
+    .update({ is_current: false, ended_at: completedAt })
     .eq("id", currentOwner.id);
 
   // Create new ownership record — capture ID
@@ -94,7 +91,7 @@ export async function POST(request: Request) {
       acquired_from_id: currentOwner.id,
       sale_price: transfer.sale_price,
       is_current: true,
-    } as never)
+    })
     .select("id")
     .single();
 
@@ -105,9 +102,9 @@ export async function POST(request: Request) {
   const newOwner = newOwnerData as { id: string };
 
   await Promise.all([
-    admin.from("tags").update({ status: "owned" } as never).eq("id", transfer.tag_id),
+    admin.from("tags").update({ status: "owned" }).eq("id", transfer.tag_id),
     admin.from("transfer_requests")
-      .update({ status: "completed", completed_at: completedAt } as never)
+      .update({ status: "completed", completed_at: completedAt })
       .eq("id", transfer.id),
   ]);
 
@@ -153,7 +150,7 @@ export async function POST(request: Request) {
         template,
         issued_to_name: transfer.to_name,
         issued_to_email: transfer.to_email,
-      } as never)
+      })
       .select("id")
       .single();
 
@@ -190,13 +187,13 @@ export async function POST(request: Request) {
         productName: product.name,
         tagUrl,
         role: "recipient",
-      }).catch((err) => console.error("[transfer/accept] recipient email failed:", err)),
+      }).catch((err) => log.error("transfer/accept", "Recipient email failed", err)),
       sendTransferCompleteEmail(currentOwner.owner_email, {
         name: currentOwner.owner_name,
         productName: product.name,
         tagUrl,
         role: "sender",
-      }).catch((err) => console.error("[transfer/accept] sender email failed:", err)),
+      }).catch((err) => log.error("transfer/accept", "Sender email failed", err)),
       // Certificate email with PDF to new owner
       pdfBuffer
         ? sendCertificateEmail(transfer.to_email, {
@@ -207,7 +204,7 @@ export async function POST(request: Request) {
             certType: "transfer",
             tagUrl,
             pdfBuffer,
-          }).catch((err) => console.error("[transfer/accept] certificate email failed:", err))
+          }).catch((err) => log.error("transfer/accept", "Certificate email failed", err))
         : Promise.resolve(),
     ]);
   } else if (product) {
@@ -218,13 +215,13 @@ export async function POST(request: Request) {
         productName: product.name,
         tagUrl,
         role: "recipient",
-      }).catch((err) => console.error("[transfer/accept] recipient email failed:", err)),
+      }).catch((err) => log.error("transfer/accept", "Recipient email failed", err)),
       sendTransferCompleteEmail(currentOwner.owner_email, {
         name: currentOwner.owner_name,
         productName: product.name,
         tagUrl,
         role: "sender",
-      }).catch((err) => console.error("[transfer/accept] sender email failed:", err)),
+      }).catch((err) => log.error("transfer/accept", "Sender email failed", err)),
     ]);
   }
 

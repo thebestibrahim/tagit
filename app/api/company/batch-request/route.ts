@@ -1,5 +1,6 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
 const ALLOWED_INDUSTRIES = new Set(["fashion", "arts", "collectibles", "jewellery", "electronics", "other"]);
@@ -22,11 +23,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Quantity must be between ${MIN_QTY} and ${MAX_QTY}` }, { status: 400 });
   }
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const admin = createAdminClient();
 
   const { error } = await admin.from("tag_batches").insert({
     company_id: user.id,
@@ -36,9 +33,9 @@ export async function POST(request: Request) {
     notes: notes?.trim() || null,
     batch_name: batch_name?.trim() || null,
     created_by: user.id,
-  } as never);
+  });
 
-  if (error) { console.error(error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+  if (error) { log.error("company/batch-request", "Insert failed", error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
 
   return NextResponse.json({ success: true });
 }

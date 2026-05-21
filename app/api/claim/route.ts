@@ -1,14 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import { compare } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { sendClaimNotificationEmail, APP_URL } from "@/lib/email";
 import { headers } from "next/headers";
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+const admin = createAdminClient();
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
@@ -52,12 +49,12 @@ export async function POST(request: Request) {
 
   const otpValid = await compare(otp_code, otp.code_hash);
   if (!otpValid) {
-    await admin.from("otp_codes").update({ attempts: otp.attempts + 1 } as never).eq("id", otp.id);
+    await admin.from("otp_codes").update({ attempts: otp.attempts + 1 }).eq("id", otp.id);
     return NextResponse.json({ error: "Incorrect code." }, { status: 400 });
   }
 
   // Mark OTP used immediately
-  await admin.from("otp_codes").update({ is_used: true } as never).eq("id", otp.id);
+  await admin.from("otp_codes").update({ is_used: true }).eq("id", otp.id);
 
   // Verify tag is in a claimable state
   const { data: tagData } = await admin
@@ -113,7 +110,7 @@ export async function POST(request: Request) {
       claim_ip: ip,
       claim_location: claim_location ?? null,
       status: "pending",
-    } as never)
+    })
     .select("id")
     .single();
 
@@ -122,7 +119,7 @@ export async function POST(request: Request) {
   }
 
   // Update tag status
-  await admin.from("tags").update({ status: "claim_pending" } as never).eq("id", tag_id);
+  await admin.from("tags").update({ status: "claim_pending" }).eq("id", tag_id);
 
   // Fetch product name and company email for notification
   const [{ data: productData }, { data: companyData }] = await Promise.all([
@@ -142,7 +139,7 @@ export async function POST(request: Request) {
       claimantName: claimant_name,
       claimantEmail: claimant_email,
       claimUrl,
-    }).catch((err) => console.error("[claim] notification email failed:", err));
+    }).catch((err) => log.error("claim", "Notification email failed", err));
   }
 
   return NextResponse.json({ success: true });

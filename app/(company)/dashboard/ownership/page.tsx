@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { ClaimStatus } from "@/types/database";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -54,7 +55,7 @@ export default async function OwnershipPage({
     .range(from, to);
 
   if (statusFilter && statusFilter !== "all") {
-    query = query.eq("status", statusFilter);
+    query = query.eq("status", statusFilter as ClaimStatus);
   }
   if (q) {
     query = query.or(`claimant_name.ilike.%${q}%,claimant_email.ilike.%${q}%`);

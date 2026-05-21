@@ -46,7 +46,7 @@ export default async function AdminTagsPage({
     .range(offset, offset + pageSize - 1);
 
   if (filterStatus && filterStatus !== "all") {
-    query = query.eq("status", filterStatus);
+    query = query.eq("status", filterStatus as TagStatus);
   }
 
   const { data, count } = await query;

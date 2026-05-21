@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { log } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
 export async function PATCH(
@@ -25,9 +26,9 @@ export async function PATCH(
 
   const { error } = await supabase
     .from("products")
-    .update({ name, retail_price: retail_price ?? null, currency: currency ?? "NGN", industry_fields, photos: photos ?? [] } as never)
+    .update({ name, retail_price: retail_price ?? null, currency: currency ?? "NGN", industry_fields, photos: photos ?? [] })
     .eq("id", id);
 
-  if (error) { console.error(error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+  if (error) { log.error("company/products", "Update failed", error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
   return NextResponse.json({ success: true });
 }

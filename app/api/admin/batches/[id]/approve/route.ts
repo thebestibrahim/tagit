@@ -1,8 +1,10 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { nanoid, customAlphabet } from "nanoid";
 import { createHmac } from "crypto";
+import type { TagStatus } from "@/types/database";
 
 const shortId = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
 
@@ -24,11 +26,7 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const admin = createAdminClient();
 
   const { data: batchData, error: fetchError } = await admin
     .from("tag_batches")
@@ -56,23 +54,23 @@ export async function POST(
       company_id: batch.company_id,
       industry: batch.industry,
       batch_id: batchId,
-      status: "created",
+      status: "created" as TagStatus,
       hmac_signature: generateHmac(token),
     };
   });
 
   const chunkSize = 500;
   for (let i = 0; i < tags.length; i += chunkSize) {
-    const { error } = await admin.from("tags").insert(tags.slice(i, i + chunkSize) as never);
+    const { error } = await admin.from("tags").insert(tags.slice(i, i + chunkSize));
     if (error) {
-      console.error(error);
+      log.error("admin/batches/approve", "Tag insert failed", error);
       return NextResponse.json({ error: "Tag generation failed" }, { status: 500 });
     }
   }
 
   const { error: updateError } = await admin
     .from("tag_batches")
-    .update({ status: "generated" } as never)
+    .update({ status: "generated" })
     .eq("id", batchId);
 
   if (updateError) {

@@ -1,5 +1,7 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -24,14 +26,10 @@ export async function POST(request: Request) {
     signature_url,
   } = body;
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const admin = createAdminClient();
 
   // Build update payload — only include keys that were explicitly sent in the request body
-  const update: Record<string, unknown> = {
+  const update: Database["public"]["Tables"]["companies"]["Update"] = {
     brand_primary_color,
     brand_secondary_color,
     brand_accent_color,
@@ -48,10 +46,10 @@ export async function POST(request: Request) {
 
   const { error } = await admin
     .from("companies")
-    .update(update as never)
+    .update(update)
     .eq("id", user.id);
 
-  if (error) { console.error(error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+  if (error) { log.error("company/customization", "Update failed", error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
 
   return NextResponse.json({ success: true });
 }

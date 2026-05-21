@@ -1,5 +1,6 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { sendClaimApprovedEmail, sendClaimRejectedEmail, sendCertificateEmail, APP_URL } from "@/lib/email";
 import {
@@ -8,11 +9,7 @@ import {
   fetchLogoDataUrl,
 } from "@/lib/certificate";
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+const admin = createAdminClient();
 
 export async function POST(
   request: Request,
@@ -101,7 +98,7 @@ export async function POST(
         owner_email: claim.claimant_email,
         acquisition_type: "origin",
         is_current: true,
-      } as never)
+      })
       .select("id")
       .single();
 
@@ -112,12 +109,12 @@ export async function POST(
     const ownerRecord = ownerRecordData as { id: string };
 
     await Promise.all([
-      admin.from("tags").update({ status: "owned", activated_at: now } as never).eq("id", claim.tag_id),
+      admin.from("tags").update({ status: "owned", activated_at: now }).eq("id", claim.tag_id),
       admin.from("ownership_claims").update({
         status: "approved",
         reviewed_by: user.id,
         reviewed_at: now,
-      } as never).eq("id", id),
+      }).eq("id", id),
     ]);
 
     const tagUrl = `${APP_URL}/v/${tag.token}`;
@@ -137,7 +134,7 @@ export async function POST(
           template,
           issued_to_name: claim.claimant_name,
           issued_to_email: claim.claimant_email,
-        } as never)
+        })
         .select("id")
         .single();
 
@@ -174,7 +171,7 @@ export async function POST(
           productName: product.name,
           companyName: company.name,
           tagUrl,
-        }).catch((err) => console.error("[claims/review] email failed:", err)),
+        }).catch((err) => log.error("company/claims/review", "Email failed", err)),
         // Certificate email with PDF
         pdfBuffer
           ? sendCertificateEmail(claim.claimant_email, {
@@ -185,7 +182,7 @@ export async function POST(
               certType: "ownership",
               tagUrl,
               pdfBuffer,
-            }).catch((err) => console.error("[claims/review] email failed:", err))
+            }).catch((err) => log.error("company/claims/review", "Email failed", err))
           : Promise.resolve(),
       ]);
     }
@@ -199,16 +196,16 @@ export async function POST(
     reviewed_by: user.id,
     reviewed_at: now,
     rejection_reason: rejection_reason ?? null,
-  } as never).eq("id", id);
+  }).eq("id", id);
 
-  await admin.from("tags").update({ status: "embedded" } as never).eq("id", claim.tag_id);
+  await admin.from("tags").update({ status: "embedded" }).eq("id", claim.tag_id);
 
   if (product) {
     await sendClaimRejectedEmail(claim.claimant_email, {
       claimantName: claim.claimant_name,
       productName: product.name,
       reason: rejection_reason,
-    }).catch((err) => console.error("[claims/review] email failed:", err));
+    }).catch((err) => log.error("company/claims/review", "Email failed", err));
   }
 
   return NextResponse.json({ success: true });

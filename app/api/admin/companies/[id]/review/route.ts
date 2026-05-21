@@ -1,4 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/logger";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { sendCompanyApprovedEmail, sendCompanyRejectedEmail, APP_URL } from "@/lib/email";
@@ -22,11 +23,7 @@ export async function POST(
     return NextResponse.json({ error: "Invalid action." }, { status: 400 });
   }
 
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const admin = createAdminClient();
 
   // Fetch company for email
   const { data: companyData } = await admin
@@ -43,30 +40,30 @@ export async function POST(
         status: "approved",
         approved_at: new Date().toISOString(),
         approved_by: user.id,
-      } as never)
+      })
       .eq("id", id);
 
-    if (error) { console.error(error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+    if (error) { log.error("admin/companies/review", "Approve update failed", error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
 
     if (company) {
       await sendCompanyApprovedEmail(company.email, {
         companyName: company.name,
         dashboardUrl: `${APP_URL}/dashboard`,
-      }).catch((err) => console.error("[company/review] approved email failed:", err));
+      }).catch((err) => log.error("admin/companies/review", "Approved email failed", err));
     }
   } else {
     const { error } = await admin
       .from("companies")
-      .update({ status: "rejected" } as never)
+      .update({ status: "rejected" })
       .eq("id", id);
 
-    if (error) { console.error(error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+    if (error) { log.error("admin/companies/review", "Reject update failed", error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
 
     if (company) {
       await sendCompanyRejectedEmail(company.email, {
         companyName: company.name,
         reason: reason ?? undefined,
-      }).catch((err) => console.error("[company/review] rejected email failed:", err));
+      }).catch((err) => log.error("admin/companies/review", "Rejected email failed", err));
     }
   }
 

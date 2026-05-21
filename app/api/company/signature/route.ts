@@ -1,5 +1,5 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
 const MAX_SIZE = 2 * 1024 * 1024;
@@ -23,11 +23,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "File too large (max 2 MB)" }, { status: 413 });
   }
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const admin = createAdminClient();
 
   const ext = file.name.split(".").pop() ?? "png";
   const path = `${user.id}/signature.${ext}`;
@@ -46,7 +42,7 @@ export async function POST(request: Request) {
 
   const { error: dbError } = await admin
     .from("companies")
-    .update({ signature_url } as never)
+    .update({ signature_url })
     .eq("id", user.id);
 
   if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });

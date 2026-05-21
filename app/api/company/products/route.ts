@@ -1,4 +1,4 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -18,11 +18,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Tag and product name are required." }, { status: 400 });
   }
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const admin = createAdminClient();
 
   // Verify the tag belongs to this company and is unlinked
   const { data: tag } = await admin
@@ -50,13 +46,13 @@ export async function POST(request: Request) {
     currency: currency ?? "NGN",
     photos: [],
     ai_persona_config: {},
-  } as never);
+  });
 
   if (productError) {
     return NextResponse.json({ error: productError.message }, { status: 500 });
   }
 
-  await admin.from("tags").update({ status: "embedded" } as never).eq("id", tag_id);
+  await admin.from("tags").update({ status: "embedded" }).eq("id", tag_id);
 
   return NextResponse.json({ success: true });
 }

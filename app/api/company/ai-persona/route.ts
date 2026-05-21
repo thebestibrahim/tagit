@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { log } from "@/lib/logger";
+import type { Database } from "@/types/database";
 import { NextResponse } from "next/server";
 
 export async function PATCH(request: Request) {
@@ -9,7 +11,7 @@ export async function PATCH(request: Request) {
   const body = await request.json().catch(() => ({}));
   const { ai_enabled, ai_persona_name, ai_persona_prompt, ai_persona_voice_id, elevenlabs_api_key } = body;
 
-  const update: Record<string, unknown> = {
+  const update: Database["public"]["Tables"]["companies"]["Update"] = {
     ai_enabled: Boolean(ai_enabled),
     ai_persona_name: ai_persona_name || null,
     ai_persona_prompt: ai_persona_prompt || null,
@@ -21,9 +23,9 @@ export async function PATCH(request: Request) {
 
   const { error } = await supabase
     .from("companies")
-    .update(update as never)
+    .update(update)
     .eq("id", user.id);
 
-  if (error) { console.error(error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+  if (error) { log.error("company/ai-persona", "Update failed", error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
   return NextResponse.json({ success: true });
 }

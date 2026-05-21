@@ -1,12 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { compare } from "bcryptjs";
 import { NextResponse } from "next/server";
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+const admin = createAdminClient();
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
@@ -59,7 +55,7 @@ export async function POST(request: Request) {
   if (!valid) {
     await admin
       .from("otp_codes")
-      .update({ attempts: otp.attempts + 1 } as never)
+      .update({ attempts: otp.attempts + 1 })
       .eq("id", otp.id);
 
     return NextResponse.json({ error: "Incorrect code." }, { status: 400 });
@@ -67,7 +63,7 @@ export async function POST(request: Request) {
 
   await admin
     .from("otp_codes")
-    .update({ is_used: true } as never)
+    .update({ is_used: true })
     .eq("id", otp.id);
 
   return NextResponse.json({ success: true });
