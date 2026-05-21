@@ -21,7 +21,7 @@ type Cert = {
 };
 
 type Product = { name: string; industry_fields: Record<string, string> };
-type Tag = { short_id: string; company_id: string };
+type Tag = { short_id: string; company_id: string; token: string };
 type Company = {
   name: string;
   logo_url: string | null;
@@ -48,7 +48,7 @@ export default async function CertificatePage({
 
   const [{ data: productData }, { data: tagData }] = await Promise.all([
     admin.from("products").select("name, industry_fields").eq("tag_id", cert.tag_id).single(),
-    admin.from("tags").select("short_id, company_id").eq("id", cert.tag_id).single(),
+    admin.from("tags").select("short_id, company_id, token").eq("id", cert.tag_id).single(),
   ]);
 
   if (!productData || !tagData) notFound();
@@ -431,7 +431,7 @@ export default async function CertificatePage({
               </p>
             </div>
             <a
-              href={`/v/${cert.tag_id}`}
+              href={`/v/${tag.token}`}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
