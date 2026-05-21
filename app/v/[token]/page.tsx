@@ -262,7 +262,7 @@ export default async function ScanPage({
         </div>
       </header>
 
-      <div style={{ maxWidth: 480, margin: "0 auto", paddingBottom: 96 }}>
+      <div style={{ maxWidth: 480, margin: "0 auto", paddingTop: 24, paddingBottom: 96 }}>
         {/* Status edge cases */}
         {["created", "written", "shipped"].includes(tag.status) && <NotRegisteredYet />}
         {tag.status === "flagged" && <FlaggedItem />}
@@ -456,23 +456,27 @@ function ProductSection({
 
   return (
     <>
-      {/* Full-bleed product photo */}
+      {/* Product photo */}
       {photo && (
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            height: 300,
-            backgroundColor: "#F0EDE8",
-            overflow: "hidden",
-          }}
-        >
-          <Image
-            src={photo}
-            alt={product.name}
-            fill
-            style={{ objectFit: "cover" }}
-          />
+        <div style={{ padding: "0 24px" }}>
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              height: 340,
+              backgroundColor: "#F5F2EC",
+              borderRadius: 16,
+              overflow: "hidden",
+              border: "1px solid #EDE8DF",
+            }}
+          >
+            <Image
+              src={photo}
+              alt={product.name}
+              fill
+              style={{ objectFit: "contain", padding: "16px" }}
+            />
+          </div>
         </div>
       )}
 
