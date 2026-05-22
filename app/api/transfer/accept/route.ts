@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
   const { data: currentOwnerData } = await admin
     .from("ownership_records")
-    .select("id, owner_name, owner_email")
+    .select("id, owner_name, owner_email, created_at")
     .eq("id", transfer.from_owner_id)
     .single();
 
@@ -66,6 +66,7 @@ export async function POST(request: Request) {
     id: string;
     owner_name: string;
     owner_email: string;
+    created_at: string;
   } | null;
 
   if (!currentOwner) {
@@ -180,6 +181,46 @@ export async function POST(request: Request) {
       template,
     }).catch(() => null);
 
+    // Generate provenance cert for previous owner
+    const provCertNumber = generateCertNumber();
+    const { data: provCertRecord } = await admin
+      .from("certificates")
+      .insert({
+        cert_number: provCertNumber,
+        ownership_record_id: currentOwner.id,
+        tag_id: transfer.tag_id,
+        cert_type: "provenance",
+        template,
+        issued_to_name: currentOwner.owner_name,
+        issued_to_email: currentOwner.owner_email,
+      })
+      .select("id")
+      .single();
+
+    const provCertId = (provCertRecord as { id: string } | null)?.id ?? "";
+    const provVerifyUrl = `${APP_URL}/certificate/${provCertId}`;
+
+    const provPdfBuffer = await generateCertificatePdf({
+      certNumber: provCertNumber,
+      certId: provCertId,
+      certType: "provenance",
+      ownerName: currentOwner.owner_name,
+      ownerEmail: currentOwner.owner_email,
+      productName: product.name,
+      companyName: company.name,
+      companyLogoDataUrl: logoDataUrl,
+      companySignatureDataUrl: signatureDataUrl,
+      brandPrimaryColor: company.brand_primary_color,
+      brandAccentColor: company.brand_accent_color,
+      issuedAt: new Date(),
+      tagShortId: tag.short_id,
+      verifyUrl: provVerifyUrl,
+      transferredToName: transfer.to_name,
+      ownedFrom: new Date(currentOwner.created_at),
+      ownedUntil: new Date(completedAt),
+      template,
+    }).catch(() => null);
+
     await Promise.all([
       // Transfer complete emails (sender + recipient)
       sendTransferCompleteEmail(transfer.to_email, {
@@ -194,7 +235,7 @@ export async function POST(request: Request) {
         tagUrl,
         role: "sender",
       }).catch((err) => log.error("transfer/accept", "Sender email failed", err)),
-      // Certificate email with PDF to new owner
+      // Transfer cert to new owner
       pdfBuffer
         ? sendCertificateEmail(transfer.to_email, {
             ownerName: transfer.to_name,
@@ -205,6 +246,18 @@ export async function POST(request: Request) {
             tagUrl,
             pdfBuffer,
           }).catch((err) => log.error("transfer/accept", "Certificate email failed", err))
+        : Promise.resolve(),
+      // Provenance cert to previous owner
+      provPdfBuffer
+        ? sendCertificateEmail(currentOwner.owner_email, {
+            ownerName: currentOwner.owner_name,
+            productName: product.name,
+            companyName: company.name,
+            certNumber: provCertNumber,
+            certType: "provenance",
+            tagUrl,
+            pdfBuffer: provPdfBuffer,
+          }).catch((err) => log.error("transfer/accept", "Provenance cert email failed", err))
         : Promise.resolve(),
     ]);
   } else if (product) {

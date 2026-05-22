@@ -24,7 +24,7 @@ export function generateCertNumber(): string {
 export type CertificateData = {
   certNumber: string;
   certId: string;
-  certType: "ownership" | "transfer";
+  certType: "ownership" | "transfer" | "provenance";
   ownerName: string;
   ownerEmail: string;
   productName: string;
@@ -37,6 +37,9 @@ export type CertificateData = {
   tagShortId: string;
   verifyUrl: string;
   fromOwnerName?: string;
+  transferredToName?: string;
+  ownedFrom?: Date;
+  ownedUntil?: Date;
   template: "classic" | "minimal" | "heritage";
 };
 
@@ -78,7 +81,8 @@ const STONE = "#E8E2D5";
 
 function ClassicCertificate({ data, qr }: { data: CertificateData; qr: string }) {
   const accentColor = data.brandAccentColor || GOLD;
-  const typeLabel = data.certType === "ownership" ? "Original Owner" : "Transfer of Ownership";
+  const isProvenance = data.certType === "provenance";
+  const typeLabel = data.certType === "ownership" ? "Original Owner" : data.certType === "transfer" ? "Transfer of Ownership" : "Provenance Record";
 
   return (
     <Page size="A4" style={{ backgroundColor: PEARL, flexDirection: "column" }}>
@@ -101,7 +105,7 @@ function ClassicCertificate({ data, qr }: { data: CertificateData; qr: string })
             letterSpacing: 3,
           }}
         >
-          CERTIFICATE OF AUTHENTICITY
+          {isProvenance ? "PROVENANCE RECORD" : "CERTIFICATE OF AUTHENTICITY"}
         </Text>
         <Text
           style={{
@@ -199,6 +203,8 @@ function ClassicCertificate({ data, qr }: { data: CertificateData; qr: string })
         >
           {data.certType === "transfer"
             ? "has received ownership of"
+            : isProvenance
+            ? "was the verified owner of"
             : "is the verified original owner of"}
         </Text>
         <Text
@@ -291,6 +297,27 @@ function ClassicCertificate({ data, qr }: { data: CertificateData; qr: string })
             </View>
           </View>
 
+          {isProvenance && data.ownedFrom && data.ownedUntil && (
+            <View style={{ flexDirection: "row", marginBottom: 14 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: "Helvetica", fontSize: 7, color: MIST, letterSpacing: 1.5, marginBottom: 4 }}>
+                  OWNED FROM
+                </Text>
+                <Text style={{ fontFamily: "Helvetica", fontSize: 10, color: ONYX }}>
+                  {format(data.ownedFrom, "dd MMM yyyy")}
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: "Helvetica", fontSize: 7, color: MIST, letterSpacing: 1.5, marginBottom: 4 }}>
+                  TRANSFERRED ON
+                </Text>
+                <Text style={{ fontFamily: "Helvetica", fontSize: 10, color: ONYX }}>
+                  {format(data.ownedUntil, "dd MMM yyyy")}
+                </Text>
+              </View>
+            </View>
+          )}
+
           <View
             style={{
               height: 1,
@@ -324,25 +351,21 @@ function ClassicCertificate({ data, qr }: { data: CertificateData; qr: string })
             </View>
             {data.certType === "transfer" && data.fromOwnerName && (
               <View style={{ flex: 2 }}>
-                <Text
-                  style={{
-                    fontFamily: "Helvetica",
-                    fontSize: 7,
-                    color: MIST,
-                    letterSpacing: 1.5,
-                    marginBottom: 4,
-                  }}
-                >
+                <Text style={{ fontFamily: "Helvetica", fontSize: 7, color: MIST, letterSpacing: 1.5, marginBottom: 4 }}>
                   TRANSFERRED FROM
                 </Text>
-                <Text
-                  style={{
-                    fontFamily: "Helvetica",
-                    fontSize: 10,
-                    color: "#4A4A4F",
-                  }}
-                >
+                <Text style={{ fontFamily: "Helvetica", fontSize: 10, color: "#4A4A4F" }}>
                   {data.fromOwnerName}
+                </Text>
+              </View>
+            )}
+            {isProvenance && data.transferredToName && (
+              <View style={{ flex: 2 }}>
+                <Text style={{ fontFamily: "Helvetica", fontSize: 7, color: MIST, letterSpacing: 1.5, marginBottom: 4 }}>
+                  TRANSFERRED TO
+                </Text>
+                <Text style={{ fontFamily: "Helvetica", fontSize: 10, color: "#4A4A4F" }}>
+                  {data.transferredToName}
                 </Text>
               </View>
             )}
@@ -449,7 +472,8 @@ function ClassicCertificate({ data, qr }: { data: CertificateData; qr: string })
 function MinimalCertificate({ data, qr }: { data: CertificateData; qr: string }) {
   const accentColor = data.brandAccentColor || GOLD;
   const primaryColor = data.brandPrimaryColor || ONYX;
-  const typeLabel = data.certType === "ownership" ? "Original Owner" : "Transfer of Ownership";
+  const isProvenance = data.certType === "provenance";
+  const typeLabel = data.certType === "ownership" ? "Original Owner" : data.certType === "transfer" ? "Transfer of Ownership" : "Provenance Record";
 
   return (
     <Page size="A4" style={{ backgroundColor: "#FFFFFF", flexDirection: "row" }}>
@@ -501,7 +525,7 @@ function MinimalCertificate({ data, qr }: { data: CertificateData; qr: string })
                 marginBottom: 3,
               }}
             >
-              CERTIFICATE OF AUTHENTICITY
+              {isProvenance ? "PROVENANCE RECORD" : "CERTIFICATE OF AUTHENTICITY"}
             </Text>
             <Text
               style={{
@@ -568,7 +592,7 @@ function MinimalCertificate({ data, qr }: { data: CertificateData; qr: string })
             marginBottom: 6,
           }}
         >
-          ISSUED TO
+          {isProvenance ? "PREVIOUS OWNER" : "ISSUED TO"}
         </Text>
         <Text
           style={{
@@ -625,26 +649,46 @@ function MinimalCertificate({ data, qr }: { data: CertificateData; qr: string })
 
         {data.certType === "transfer" && data.fromOwnerName && (
           <View style={{ marginTop: 12 }}>
-            <Text
-              style={{
-                fontFamily: "Helvetica",
-                fontSize: 7,
-                color: MIST,
-                letterSpacing: 1.2,
-                marginBottom: 4,
-              }}
-            >
+            <Text style={{ fontFamily: "Helvetica", fontSize: 7, color: MIST, letterSpacing: 1.2, marginBottom: 4 }}>
               TRANSFERRED FROM
             </Text>
-            <Text
-              style={{
-                fontFamily: "Helvetica-Bold",
-                fontSize: 9,
-                color: ONYX,
-              }}
-            >
+            <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9, color: ONYX }}>
               {data.fromOwnerName}
             </Text>
+          </View>
+        )}
+        {isProvenance && (
+          <View style={{ flexDirection: "row", marginTop: 12, gap: 0 }}>
+            {data.ownedFrom && (
+              <View style={{ flex: 1, paddingRight: 16 }}>
+                <Text style={{ fontFamily: "Helvetica", fontSize: 7, color: MIST, letterSpacing: 1.2, marginBottom: 4 }}>
+                  OWNED FROM
+                </Text>
+                <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9, color: ONYX }}>
+                  {format(data.ownedFrom, "dd MMM yyyy")}
+                </Text>
+              </View>
+            )}
+            {data.ownedUntil && (
+              <View style={{ flex: 1, paddingRight: 16 }}>
+                <Text style={{ fontFamily: "Helvetica", fontSize: 7, color: MIST, letterSpacing: 1.2, marginBottom: 4 }}>
+                  TRANSFERRED ON
+                </Text>
+                <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9, color: ONYX }}>
+                  {format(data.ownedUntil, "dd MMM yyyy")}
+                </Text>
+              </View>
+            )}
+            {data.transferredToName && (
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: "Helvetica", fontSize: 7, color: MIST, letterSpacing: 1.2, marginBottom: 4 }}>
+                  TRANSFERRED TO
+                </Text>
+                <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9, color: ONYX }}>
+                  {data.transferredToName}
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -707,7 +751,8 @@ function MinimalCertificate({ data, qr }: { data: CertificateData; qr: string })
 function HeritageCertificate({ data, qr }: { data: CertificateData; qr: string }) {
   const primaryColor = data.brandPrimaryColor || ONYX;
   const accentColor = data.brandAccentColor || GOLD;
-  const typeLabel = data.certType === "ownership" ? "Original Owner" : "Transfer of Ownership";
+  const isProvenance = data.certType === "provenance";
+  const typeLabel = data.certType === "ownership" ? "Original Owner" : data.certType === "transfer" ? "Transfer of Ownership" : "Provenance Record";
 
   return (
     <Page size="A4" style={{ backgroundColor: PEARL, flexDirection: "column" }}>
@@ -801,7 +846,7 @@ function HeritageCertificate({ data, qr }: { data: CertificateData; qr: string }
             marginBottom: 6,
           }}
         >
-          CERTIFICATE OF AUTHENTIC OWNERSHIP
+          {isProvenance ? "PROVENANCE RECORD" : "CERTIFICATE OF AUTHENTIC OWNERSHIP"}
         </Text>
 
         {/* Double rule */}
@@ -846,6 +891,8 @@ function HeritageCertificate({ data, qr }: { data: CertificateData; qr: string }
         >
           {data.certType === "transfer"
             ? "has received verified ownership of the item known as"
+            : isProvenance
+            ? "was the verified owner of the item known as"
             : "is the rightful and verified original owner of the item known as"}
         </Text>
 
@@ -914,17 +961,43 @@ function HeritageCertificate({ data, qr }: { data: CertificateData; qr: string }
         </View>
 
         {data.certType === "transfer" && data.fromOwnerName && (
-          <Text
-            style={{
-              fontFamily: "Times-Italic",
-              fontSize: 10,
-              color: SLATE,
-              textAlign: "center",
-              marginBottom: 16,
-            }}
-          >
+          <Text style={{ fontFamily: "Times-Italic", fontSize: 10, color: SLATE, textAlign: "center", marginBottom: 16 }}>
             Transferred from {data.fromOwnerName}
           </Text>
+        )}
+        {isProvenance && (
+          <View style={{ flexDirection: "row", marginBottom: 16, gap: 0 }}>
+            {data.ownedFrom && (
+              <View style={{ flex: 1, alignItems: "center" }}>
+                <Text style={{ fontFamily: "Helvetica", fontSize: 7, color: MIST, letterSpacing: 1, marginBottom: 4, textAlign: "center" }}>
+                  OWNED FROM
+                </Text>
+                <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9, color: ONYX, textAlign: "center" }}>
+                  {format(data.ownedFrom, "dd MMMM yyyy")}
+                </Text>
+              </View>
+            )}
+            {data.ownedUntil && (
+              <View style={{ flex: 1, alignItems: "center" }}>
+                <Text style={{ fontFamily: "Helvetica", fontSize: 7, color: MIST, letterSpacing: 1, marginBottom: 4, textAlign: "center" }}>
+                  TRANSFERRED ON
+                </Text>
+                <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9, color: ONYX, textAlign: "center" }}>
+                  {format(data.ownedUntil, "dd MMMM yyyy")}
+                </Text>
+              </View>
+            )}
+            {data.transferredToName && (
+              <View style={{ flex: 1, alignItems: "center" }}>
+                <Text style={{ fontFamily: "Helvetica", fontSize: 7, color: MIST, letterSpacing: 1, marginBottom: 4, textAlign: "center" }}>
+                  TRANSFERRED TO
+                </Text>
+                <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9, color: ONYX, textAlign: "center" }}>
+                  {data.transferredToName}
+                </Text>
+              </View>
+            )}
+          </View>
         )}
 
         {/* Signature area */}
@@ -1030,9 +1103,9 @@ function HeritageCertificate({ data, qr }: { data: CertificateData; qr: string }
 function CertificateDocument({ data, qr }: { data: CertificateData; qr: string }) {
   return (
     <Document
-      title={`Certificate of Authenticity — ${data.productName}`}
+      title={data.certType === "provenance" ? `Provenance Record — ${data.productName}` : `Certificate of Authenticity — ${data.productName}`}
       author="Tagit"
-      subject={`${data.certType === "ownership" ? "Ownership" : "Transfer"} Certificate`}
+      subject={data.certType === "ownership" ? "Ownership Certificate" : data.certType === "transfer" ? "Transfer Certificate" : "Provenance Record"}
       keywords="certificate authenticity luxury tagit"
     >
       {data.template === "heritage" ? (

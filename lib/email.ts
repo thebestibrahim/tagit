@@ -255,30 +255,34 @@ export async function sendCertificateEmail(
     productName: string;
     companyName: string;
     certNumber: string;
-    certType: "ownership" | "transfer";
+    certType: "ownership" | "transfer" | "provenance";
     tagUrl: string;
     pdfBuffer: Buffer;
   }
 ) {
+  const isProvenance = opts.certType === "provenance";
   const isTransfer = opts.certType === "transfer";
-  const subject = isTransfer
+
+  const subject = isProvenance
+    ? `Your provenance record — ${opts.productName}`
+    : isTransfer
     ? `Your Certificate of Transfer — ${opts.productName}`
     : `Your Certificate of Authenticity — ${opts.productName}`;
 
   const html = base(`
-    ${heading(isTransfer ? "Certificate of Transfer" : "Certificate of Authenticity")}
-    ${para(
-      `Congratulations, ${opts.ownerName}. Your ownership of <strong>${opts.productName}</strong> by ${opts.companyName} has been recorded on Tagit.`
-    )}
-    ${para(
-      "Your certificate of authenticity is attached to this email as a PDF. It is your legal proof of ownership — keep it safe."
-    )}
+    ${heading(isProvenance ? "Provenance Record" : isTransfer ? "Certificate of Transfer" : "Certificate of Authenticity")}
+    ${isProvenance
+      ? `${para(`${opts.ownerName}, the ownership of <strong>${opts.productName}</strong> has been successfully transferred.`)}
+         ${para("Your provenance record is attached — it permanently confirms your previous ownership and is part of the item's immutable history on the Tagit Ownership Ledger.")}`
+      : `${para(`Congratulations, ${opts.ownerName}. Your ownership of <strong>${opts.productName}</strong> by ${opts.companyName} has been recorded on Tagit.`)}
+         ${para("Your certificate is attached to this email as a PDF. It is your legal proof of ownership — keep it safe.")}`
+    }
     <table style="width:100%;border-collapse:collapse;margin:16px 0">
       ${keyVal("Certificate no.", opts.certNumber)}
       ${keyVal("Item", opts.productName)}
       ${keyVal("Brand", opts.companyName)}
     </table>
-    <div style="margin:24px 0">${button("View your item", opts.tagUrl)}</div>
+    ${!isProvenance ? `<div style="margin:24px 0">${button("View your item", opts.tagUrl)}</div>` : ""}
     ${para('<span style="color:#9E9EA3;font-size:13px">Scan the QR code on your certificate to verify authenticity at any time.</span>')}
   `);
 

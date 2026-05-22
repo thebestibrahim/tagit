@@ -184,7 +184,7 @@ export interface Database {
           cert_number: string;
           ownership_record_id: string | null;
           tag_id: string;
-          cert_type: "ownership" | "transfer";
+          cert_type: "ownership" | "transfer" | "provenance";
           template: "classic" | "minimal" | "heritage";
           issued_to_name: string;
           issued_to_email: string;
