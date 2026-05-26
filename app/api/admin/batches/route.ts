@@ -4,7 +4,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { nanoid, customAlphabet } from "nanoid";
 import { createHmac } from "crypto";
-import type { TagStatus, Industry } from "@/types/database";
+import type { TagStatus } from "@/types/database";
 
 const shortId = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
 
