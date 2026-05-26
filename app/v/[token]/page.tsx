@@ -90,30 +90,41 @@ export default async function ScanPage({
     ? validateHmac(tag.token, tag.hmac_signature)
     : false;
 
-  await logScan(tag.id, hmacValid ? "valid" : "unverified", headerStore);
+  // Fire scan log without blocking page render
+  logScan(tag.id, hmacValid ? "valid" : "unverified", headerStore);
 
-  const { data: productData } = await admin
-    .from("products")
-    .select("id, name, industry_fields, retail_price, currency, photos")
-    .eq("tag_id", tag.id)
-    .single();
+  // Split company into two queries — stable columns first, then migration-dependent columns.
+  // This way a missing DB column (migration not yet run) never breaks the scan page.
+  const [
+    { data: productData },
+    { data: companyBase },
+    { data: companyExt },
+    { data: ownershipData },
+  ] = await Promise.all([
+    admin
+      .from("products")
+      .select("id, name, industry_fields, retail_price, currency, photos")
+      .eq("tag_id", tag.id)
+      .single(),
+    admin
+      .from("companies")
+      .select("id, name, logo_url, brand_primary_color, brand_secondary_color, brand_accent_color, brand_font, brand_story, custom_header_text, social_links, ai_enabled, ai_persona_name")
+      .eq("id", tag.company_id)
+      .single(),
+    admin
+      .from("companies")
+      .select("brand_text_color, brand_template")
+      .eq("id", tag.company_id)
+      .single()
+      .then((r) => ({ data: r.error ? null : r.data })),
+    admin
+      .from("ownership_records")
+      .select("id, owner_name, owner_email, acquisition_type, acquired_at, sale_price, currency, is_current")
+      .eq("tag_id", tag.id)
+      .order("acquired_at", { ascending: true }),
+  ]);
 
   const product = productData as Product | null;
-
-  // Split into two queries — stable columns first, then migration-dependent columns.
-  // This way a missing DB column (migration not yet run) never breaks the scan page.
-  const { data: companyBase } = await admin
-    .from("companies")
-    .select("id, name, logo_url, brand_primary_color, brand_secondary_color, brand_accent_color, brand_font, brand_story, custom_header_text, social_links, ai_enabled, ai_persona_name")
-    .eq("id", tag.company_id)
-    .single();
-
-  const { data: companyExt } = await admin
-    .from("companies")
-    .select("brand_text_color, brand_template")
-    .eq("id", tag.company_id)
-    .single()
-    .then((r) => ({ data: r.error ? null : r.data }));
 
   const companyData = companyBase
     ? {
@@ -139,12 +150,6 @@ export default async function ScanPage({
     ai_enabled: boolean;
     ai_persona_name: string | null;
   } | null;
-
-  const { data: ownershipData } = await admin
-    .from("ownership_records")
-    .select("id, owner_name, owner_email, acquisition_type, acquired_at, sale_price, currency, is_current")
-    .eq("tag_id", tag.id)
-    .order("acquired_at", { ascending: true });
 
   const ownershipRecords = (ownershipData ?? []) as OwnershipRecord[];
   const currentOwner = ownershipRecords.find((r) => r.is_current) ?? null;

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Instrument_Serif, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import "@/lib/env";
 import { Toaster } from "@/components/ui/sonner";
 
 const instrumentSerif = Instrument_Serif({

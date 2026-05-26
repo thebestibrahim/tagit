@@ -59,22 +59,32 @@ export default async function ClaimDetailPage({
   const tag = tagData as { id: string; short_id: string; status: string; company_id: string } | null;
   if (!tag || tag.company_id !== company.id) notFound();
 
-  // Fetch product (with id for linking)
-  const { data: productData } = await supabase
-    .from("products")
-    .select("id, name, retail_price, currency")
-    .eq("tag_id", claim.tag_id)
-    .single();
+  const [
+    { data: productData },
+    { data: ownershipData },
+    { data: certData },
+  ] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id, name, retail_price, currency")
+      .eq("tag_id", claim.tag_id)
+      .single(),
+    supabase
+      .from("ownership_records")
+      .select("id, owner_name, owner_email, acquisition_type, acquired_at, sale_price, currency")
+      .eq("tag_id", claim.tag_id)
+      .eq("is_current", true)
+      .maybeSingle(),
+    supabase
+      .from("certificates")
+      .select("id, cert_number, cert_type, template, issued_to_name, issued_at")
+      .eq("tag_id", claim.tag_id)
+      .order("issued_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   const product = productData as { id: string; name: string; retail_price: number | null; currency: string } | null;
-
-  // Fetch current ownership record (created when claim was approved)
-  const { data: ownershipData } = await supabase
-    .from("ownership_records")
-    .select("id, owner_name, owner_email, acquisition_type, acquired_at, sale_price, currency")
-    .eq("tag_id", claim.tag_id)
-    .eq("is_current", true)
-    .maybeSingle();
 
   const ownership = ownershipData as {
     id: string;
@@ -85,15 +95,6 @@ export default async function ClaimDetailPage({
     sale_price: number | null;
     currency: string;
   } | null;
-
-  // Fetch certificate linked to this tag
-  const { data: certData } = await supabase
-    .from("certificates")
-    .select("id, cert_number, cert_type, template, issued_to_name, issued_at")
-    .eq("tag_id", claim.tag_id)
-    .order("issued_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
 
   const cert = certData as {
     id: string;
