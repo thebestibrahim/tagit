@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, ImagePlus, X } from "lucide-react";
+import { Loader2, ImagePlus, X, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
@@ -28,7 +28,8 @@ export default function ProductForm({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [selectedTag, setSelectedTag] = useState("");
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [tagSearch, setTagSearch] = useState("");
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState<typeof CURRENCIES[number]>("NGN");
@@ -38,6 +39,29 @@ export default function ProductForm({
 
   const industryFields = INDUSTRY_FIELDS[industry] ?? [];
   const grouped = groupFields(industryFields);
+
+  const availableTags = useMemo(
+    () => tags.filter((t) => !selectedTagIds.includes(t.id)),
+    [tags, selectedTagIds]
+  );
+  const filteredTags = useMemo(
+    () =>
+      tagSearch
+        ? availableTags.filter((t) =>
+            t.short_id.toLowerCase().includes(tagSearch.toLowerCase())
+          )
+        : availableTags,
+    [availableTags, tagSearch]
+  );
+
+  function addTag(id: string) {
+    setSelectedTagIds((prev) => [...prev, id]);
+    setTagSearch("");
+  }
+
+  function removeTag(id: string) {
+    setSelectedTagIds((prev) => prev.filter((i) => i !== id));
+  }
 
   function setField(key: string, value: string) {
     setFields((f) => ({ ...f, [key]: value }));
@@ -79,7 +103,7 @@ export default function ProductForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedTag) { toast.error("Select a tag to link this product."); return; }
+    if (selectedTagIds.length === 0) { toast.error("Select at least one tag to link this product."); return; }
     setLoading(true);
 
     let photoUrls: string[] = [];
@@ -95,7 +119,7 @@ export default function ProductForm({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        tag_id: selectedTag,
+        tag_ids: selectedTagIds,
         company_id: companyId,
         name: name.trim(),
         industry_fields: fields,
@@ -178,42 +202,146 @@ export default function ProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Link to tag */}
+      {/* Link NFC tags — multi-select with search */}
       <div className="card-raised rounded-xl p-6">
         <h2 className="text-body font-semibold mb-1" style={{ color: "var(--color-charcoal)" }}>
-          Link NFC tag
+          Link NFC tags
         </h2>
         <p className="text-body-sm mb-4" style={{ color: "var(--color-slate)" }}>
-          Each product must be linked to an unassigned tag.
+          Select one or more unassigned tags to link to this product.
         </p>
+
         {tags.length === 0 ? (
           <p style={{ color: "var(--color-alert)", fontSize: "var(--text-body-sm)" }}>
             No unassigned tags available. Ask your Tagit admin to generate a batch.
           </p>
         ) : (
-          <div className="space-y-1.5">
-            <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>Select tag</Label>
-            <select
-              value={selectedTag}
-              onChange={(e) => setSelectedTag(e.target.value)}
-              required
-              style={{
-                width: "100%",
-                border: "1px solid var(--color-stone)",
-                borderRadius: "var(--radius-sm)",
-                padding: "10px 12px",
-                fontSize: "var(--text-body-sm)",
-                color: selectedTag ? "var(--color-onyx)" : "var(--color-mist)",
-                backgroundColor: "var(--color-pearl)",
-                fontFamily: selectedTag ? "var(--font-jetbrains-mono)" : "inherit",
-                outline: "none",
-              }}
-            >
-              <option value="" disabled>Choose an unassigned tag…</option>
-              {tags.map((t) => (
-                <option key={t.id} value={t.id}>{t.short_id}</option>
-              ))}
-            </select>
+          <div>
+            {/* Selected tag pills */}
+            {selectedTagIds.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "12px" }}>
+                {selectedTagIds.map((id) => {
+                  const t = tags.find((x) => x.id === id);
+                  return (
+                    <span
+                      key={id}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        padding: "4px 10px 4px 12px",
+                        backgroundColor: "var(--color-onyx)",
+                        color: "var(--color-pearl)",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        fontFamily: "var(--font-jetbrains-mono)",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {t?.short_id}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(id)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "rgba(250,250,248,0.55)",
+                          display: "flex",
+                          alignItems: "center",
+                          padding: 0,
+                          lineHeight: 1,
+                        }}
+                      >
+                        <X size={11} />
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Search input */}
+            <div style={{ position: "relative" }}>
+              <Search
+                size={14}
+                style={{
+                  position: "absolute",
+                  left: "12px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "var(--color-mist)",
+                  pointerEvents: "none",
+                }}
+              />
+              <input
+                type="text"
+                value={tagSearch}
+                onChange={(e) => setTagSearch(e.target.value)}
+                placeholder="Search tags…"
+                style={{
+                  width: "100%",
+                  border: "1px solid var(--color-stone)",
+                  borderRadius: "var(--radius-sm)",
+                  padding: "9px 12px 9px 34px",
+                  fontSize: "var(--text-body-sm)",
+                  color: "var(--color-onyx)",
+                  backgroundColor: "var(--color-pearl)",
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            {/* Tag list */}
+            {filteredTags.length > 0 ? (
+              <div
+                style={{
+                  marginTop: "6px",
+                  maxHeight: "180px",
+                  overflowY: "auto",
+                  border: "1px solid var(--color-stone)",
+                  borderRadius: "var(--radius-sm)",
+                  backgroundColor: "var(--color-pearl)",
+                }}
+              >
+                {filteredTags.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => addTag(t.id)}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "9px 14px",
+                      fontSize: "13px",
+                      fontFamily: "var(--font-jetbrains-mono)",
+                      letterSpacing: "0.04em",
+                      color: "var(--color-graphite)",
+                      backgroundColor: "transparent",
+                      border: "none",
+                      borderBottom: "1px solid var(--color-cream)",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "var(--color-smoke)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                  >
+                    {t.short_id}
+                  </button>
+                ))}
+              </div>
+            ) : tagSearch && availableTags.length > 0 ? (
+              <p style={{ marginTop: "8px", fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
+                No tags match &ldquo;{tagSearch}&rdquo;
+              </p>
+            ) : availableTags.length === 0 && selectedTagIds.length < tags.length ? null : null}
+
+            {selectedTagIds.length === 0 && (
+              <p style={{ marginTop: "8px", fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
+                No tags selected — choose at least one from the list above.
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -388,13 +516,13 @@ export default function ProductForm({
 
       <button
         type="submit"
-        disabled={loading || tags.length === 0}
+        disabled={loading || selectedTagIds.length === 0}
         className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-body-sm"
         style={{
-          backgroundColor: loading || tags.length === 0 ? "var(--color-stone)" : "var(--color-onyx)",
+          backgroundColor: loading || selectedTagIds.length === 0 ? "var(--color-stone)" : "var(--color-onyx)",
           color: "var(--color-pearl)",
           border: "none",
-          cursor: loading || tags.length === 0 ? "not-allowed" : "pointer",
+          cursor: loading || selectedTagIds.length === 0 ? "not-allowed" : "pointer",
         }}
       >
         {loading && <Loader2 size={14} className="animate-spin" />}

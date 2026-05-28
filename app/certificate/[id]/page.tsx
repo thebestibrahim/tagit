@@ -47,18 +47,21 @@ export default async function CertificatePage({
   if (!certData) notFound();
   const cert = certData as Cert;
 
-  const [{ data: productData }, { data: tagData }, { data: ownerRecordData }] = await Promise.all([
-    admin.from("products").select("name, industry_fields").eq("tag_id", cert.tag_id).single(),
-    admin.from("tags").select("short_id, company_id, token").eq("id", cert.tag_id).single(),
+  const [{ data: tagData }, { data: ownerRecordData }] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any).from("tags").select("short_id, company_id, token, products(name, industry_fields)").eq("id", cert.tag_id).single(),
     cert.ownership_record_id
       ? admin.from("ownership_records").select("is_current, ended_at").eq("id", cert.ownership_record_id).single()
       : Promise.resolve({ data: null }),
   ]);
 
-  if (!productData || !tagData) notFound();
+  const tagRow = tagData as (Tag & { products: Product | null }) | null;
+  if (!tagRow) notFound();
 
-  const product = productData as Product;
-  const tag = tagData as Tag;
+  const product = tagRow.products;
+  if (!product) notFound();
+
+  const tag: Tag = { short_id: tagRow.short_id, company_id: tagRow.company_id, token: tagRow.token };
   const ownerRecord = ownerRecordData as OwnerRecord | null;
 
   const { data: companyData } = await admin

@@ -8,51 +8,58 @@ export async function POST(request: Request) {
 
   if (!user) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
-  const { tag_id, company_id, name, industry_fields, retail_price, currency, photos } = await request.json();
+  const { tag_ids, company_id, name, industry_fields, retail_price, currency, photos } = await request.json();
 
   if (company_id !== user.id) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  if (!tag_id || !name) {
-    return NextResponse.json({ error: "Tag and product name are required." }, { status: 400 });
+  if (!Array.isArray(tag_ids) || tag_ids.length === 0 || !name) {
+    return NextResponse.json({ error: "At least one tag and a product name are required." }, { status: 400 });
   }
 
   const admin = createAdminClient();
 
-  // Verify the tag belongs to this company and is unlinked
-  const { data: tag } = await admin
+  // Verify all tags belong to this company and are unlinked
+  const { data: tagsData } = await admin
     .from("tags")
     .select("id, status, company_id")
-    .eq("id", tag_id)
+    .in("id", tag_ids);
+
+  const tagRows = (tagsData ?? []) as { id: string; status: string; company_id: string }[];
+
+  for (const tagId of tag_ids as string[]) {
+    const tag = tagRows.find((t) => t.id === tagId);
+    if (!tag || tag.company_id !== company_id) {
+      return NextResponse.json({ error: `Tag not found.` }, { status: 404 });
+    }
+    if (tag.status !== "created") {
+      return NextResponse.json({ error: `Tag ${tagId} is already assigned to a product.` }, { status: 409 });
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: insertedProduct, error: productError } = await (admin.from("products") as any)
+    .insert({
+      company_id,
+      name,
+      industry_fields: industry_fields ?? {},
+      retail_price: retail_price ?? null,
+      currency: currency ?? "NGN",
+      photos: photos ?? [],
+      ai_persona_config: {},
+    })
+    .select("id")
     .single();
 
-  const tagRow = tag as { id: string; status: string; company_id: string } | null;
-
-  if (!tagRow || tagRow.company_id !== company_id) {
-    return NextResponse.json({ error: "Tag not found." }, { status: 404 });
+  if (productError || !insertedProduct) {
+    return NextResponse.json({ error: (productError as { message?: string } | null)?.message ?? "Failed to create product." }, { status: 500 });
   }
 
-  if (tagRow.status !== "created") {
-    return NextResponse.json({ error: "Tag is already assigned to a product." }, { status: 409 });
-  }
-
-  const { error: productError } = await admin.from("products").insert({
-    tag_id,
-    company_id,
-    name,
-    industry_fields: industry_fields ?? {},
-    retail_price: retail_price ?? null,
-    currency: currency ?? "NGN",
-    photos: photos ?? [],
-    ai_persona_config: {},
-  });
-
-  if (productError) {
-    return NextResponse.json({ error: productError.message }, { status: 500 });
-  }
-
-  await admin.from("tags").update({ status: "embedded" }).eq("id", tag_id);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (admin.from("tags") as any)
+    .update({ product_id: (insertedProduct as { id: string }).id, status: "embedded" })
+    .in("id", tag_ids);
 
   return NextResponse.json({ success: true });
 }

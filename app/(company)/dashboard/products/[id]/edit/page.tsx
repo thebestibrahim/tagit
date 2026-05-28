@@ -26,12 +26,19 @@ export default async function EditProductPage({
   const company = companyData as { id: string; industry: string; status: CompanyStatus } | null;
   if (!company || company.status !== "approved") redirect("/auth/unauthorized");
 
-  const { data: productData } = await supabase
-    .from("products")
-    .select("id, name, retail_price, currency, industry_fields, photos, tag_id, tags(short_id)")
-    .eq("id", id)
-    .eq("company_id", user.id)
-    .single();
+  const [{ data: productData }, { data: linkedTagsData }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id, name, retail_price, currency, industry_fields, photos")
+      .eq("id", id)
+      .eq("company_id", user.id)
+      .single(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from("tags")
+      .select("id, short_id")
+      .eq("product_id", id),
+  ]);
 
   if (!productData) notFound();
 
@@ -42,9 +49,9 @@ export default async function EditProductPage({
     currency: string;
     industry_fields: Record<string, string>;
     photos: string[];
-    tag_id: string;
-    tags: { short_id: string } | null;
   };
+
+  const linkedTags = (linkedTagsData ?? []) as { id: string; short_id: string }[];
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
@@ -64,9 +71,9 @@ export default async function EditProductPage({
         <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
           {product.name}
         </h1>
-        {product.tags && (
+        {linkedTags.length > 0 && (
           <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)", fontFamily: "var(--font-mono)" }}>
-            Tag {product.tags.short_id}
+            {linkedTags.length === 1 ? `Tag ${linkedTags[0].short_id}` : `Tags: ${linkedTags.map((t) => t.short_id).join(", ")}`}
           </p>
         )}
       </div>

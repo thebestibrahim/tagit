@@ -121,13 +121,15 @@ export async function POST(request: Request) {
   // Update tag status
   await admin.from("tags").update({ status: "claim_pending" }).eq("id", tag_id);
 
-  // Fetch product name and company email for notification
-  const [{ data: productData }, { data: companyData }] = await Promise.all([
-    admin.from("products").select("name").eq("tag_id", tag_id).single(),
+  // Fetch product name (via tags.product_id FK) and company email for notification
+  const [{ data: tagProductData }, { data: companyData }] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any).from("tags").select("products(name)").eq("id", tag_id).single(),
     admin.from("companies").select("email, name").eq("id", tag.company_id).single(),
   ]);
 
-  const product = productData as { name: string } | null;
+  const rawProd = (tagProductData as { products: unknown } | null)?.products;
+  const product = (Array.isArray(rawProd) ? rawProd[0] : rawProd) as { name: string } | null;
   const company = companyData as { email: string; name: string } | null;
 
   if (product && company) {

@@ -64,9 +64,10 @@ export default async function ScanPage({
   const { token } = await params;
   const headerStore = await headers();
 
-  const { data: tagData } = await admin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: tagData } = await (admin as any)
     .from("tags")
-    .select("id, token, short_id, status, company_id, industry, hmac_signature")
+    .select("id, token, short_id, status, company_id, industry, hmac_signature, product_id")
     .eq("token", token)
     .single();
 
@@ -80,6 +81,7 @@ export default async function ScanPage({
     company_id: string;
     industry: string;
     hmac_signature: string;
+    product_id: string | null;
   };
 
   // HMAC is used for the "Verified Authentic" badge only — it is NOT a page gate.
@@ -101,11 +103,13 @@ export default async function ScanPage({
     { data: companyExt },
     { data: ownershipData },
   ] = await Promise.all([
-    admin
-      .from("products")
-      .select("id, name, industry_fields, retail_price, currency, photos")
-      .eq("tag_id", tag.id)
-      .single(),
+    tag.product_id
+      ? admin
+          .from("products")
+          .select("id, name, industry_fields, retail_price, currency, photos")
+          .eq("id", tag.product_id)
+          .single()
+      : Promise.resolve({ data: null }),
     admin
       .from("companies")
       .select("id, name, logo_url, brand_primary_color, brand_secondary_color, brand_accent_color, brand_font, brand_story, custom_header_text, social_links, ai_enabled, ai_persona_name")

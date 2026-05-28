@@ -94,13 +94,13 @@ export async function POST(request: Request) {
     .eq("id", transfer.tag_id);
 
   // Get current owner info and product name for acceptance email
-  const [{ data: ownerData }, { data: productData }] = await Promise.all([
+  const [{ data: ownerData }, { data: tagProductData }] = await Promise.all([
     admin.from("ownership_records").select("owner_name").eq("id", transfer.from_owner_id).single(),
-    admin.from("products").select("name, companies(name)").eq("tag_id", transfer.tag_id).single(),
+    admin.from("tags").select("product_id, products(name, companies(name))").eq("id", transfer.tag_id).single(),
   ]);
 
   const owner = ownerData as { owner_name: string } | null;
-  const product = productData as { name: string; companies: { name: string } } | null;
+  const product = (tagProductData as { product_id: string | null; products: { name: string; companies: { name: string } } | null } | null)?.products ?? null;
 
   const acceptanceUrl = `${APP_URL}/v/transfer/${transfer.acceptance_token}`;
 

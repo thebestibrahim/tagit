@@ -120,18 +120,20 @@ export default async function AnalyticsPage() {
         .slice(0, 5);
 
       if (top5.length > 0) {
-        const { data: productsData } = await supabase
-          .from("products")
-          .select("tag_id, name, photos")
-          .in("tag_id", top5.map((t) => t.tag_id));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: tagProductData } = await (supabase as any)
+          .from("tags")
+          .select("id, products(name, photos)")
+          .in("id", top5.map((t) => t.tag_id));
 
         topProducts = top5
           .map(({ tag_id, count: scans }) => {
-            const p = (productsData ?? []).find(
-              (x: { tag_id: string; name: string; photos: string[] }) => x.tag_id === tag_id
-            ) as { tag_id: string; name: string; photos: string[] } | undefined;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const row = ((tagProductData ?? []) as any[]).find((x: { id: string }) => x.id === tag_id);
+            const raw = row?.products;
+            const p = Array.isArray(raw) ? raw[0] : raw;
             if (!p) return null;
-            return { name: p.name, photo: p.photos?.[0] ?? null, scans };
+            return { name: p.name as string, photo: (p.photos as string[])?.[0] ?? null, scans };
           })
           .filter(Boolean) as { name: string; photo: string | null; scans: number }[];
       }

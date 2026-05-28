@@ -40,13 +40,15 @@ export default async function TransferAcceptPage({
 
   const expired = new Date(transfer.expires_at) < new Date();
 
-  // Fetch product and current owner
-  const [{ data: productData }, { data: ownerData }] = await Promise.all([
-    admin.from("products").select("name, companies(name, brand_primary_color, brand_accent_color, logo_url)").eq("tag_id", transfer.tag_id).single(),
+  // Fetch product (via tags.product_id FK) and current owner
+  const [{ data: tagProductData }, { data: ownerData }] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any).from("tags").select("products(name, companies(name, brand_primary_color, brand_accent_color, logo_url))").eq("id", transfer.tag_id).single(),
     admin.from("ownership_records").select("owner_name").eq("id", transfer.from_owner_id).single(),
   ]);
 
-  const product = productData as {
+  const rawProd = (tagProductData as { products: unknown } | null)?.products;
+  const product = (Array.isArray(rawProd) ? rawProd[0] : rawProd) as {
     name: string;
     companies: { name: string; brand_primary_color: string; brand_accent_color: string; logo_url: string | null };
   } | null;

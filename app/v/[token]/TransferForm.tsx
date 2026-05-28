@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, CheckCircle2, ArrowRightLeft } from "lucide-react";
+import { Loader2, CheckCircle2, ArrowRightLeft, MailWarning } from "lucide-react";
 
 type Step = "closed" | "form" | "otp" | "success";
 
@@ -27,8 +27,9 @@ export default function TransferForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [transferId, setTransferId] = useState("");
+  const [otpEmailSent, setOtpEmailSent] = useState(false);
   const [acceptanceUrl, setAcceptanceUrl] = useState("");
-  const [emailSent, setEmailSent] = useState(false);
+  const [acceptanceEmailSent, setAcceptanceEmailSent] = useState(false);
   const [copied, setCopied] = useState(false);
 
   async function handleInitiate(e: React.FormEvent) {
@@ -62,7 +63,39 @@ export default function TransferForm({
     }
 
     setTransferId(data.transfer_id);
+    setOtpEmailSent(data.emailSent ?? false);
     setStep("otp");
+    setLoading(false);
+  }
+
+  async function handleResendOtp() {
+    setError("");
+    setLoading(true);
+
+    const res = await fetch("/api/transfer/initiate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tag_id: tagId,
+        owner_email: ownerEmail,
+        recipient_name: recipientName,
+        recipient_email: recipientEmail,
+        sale_price: salePrice ? parseFloat(salePrice) : null,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Failed to resend code");
+      setLoading(false);
+      return;
+    }
+
+    setTransferId(data.transfer_id);
+    setOtpEmailSent(data.emailSent ?? false);
+    if (data.emailSent) {
+      setError("");
+    }
     setLoading(false);
   }
 
@@ -71,7 +104,6 @@ export default function TransferForm({
     setError("");
     setLoading(true);
 
-    // OTP verification and transfer confirmation happen atomically server-side
     const confirmRes = await fetch("/api/transfer/confirm", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -86,7 +118,7 @@ export default function TransferForm({
     }
 
     setAcceptanceUrl(confirmData.acceptanceUrl ?? "");
-    setEmailSent(confirmData.emailSent ?? false);
+    setAcceptanceEmailSent(confirmData.emailSent ?? false);
     setStep("success");
     setLoading(false);
   }
@@ -158,7 +190,7 @@ export default function TransferForm({
           </p>
         </div>
 
-        {emailSent ? (
+        {acceptanceEmailSent ? (
           <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#2D6A4F", lineHeight: 1.55 }}>
             An acceptance email has been sent to <strong>{recipientEmail}</strong>.
             The transfer completes once they click the link.
@@ -171,7 +203,7 @@ export default function TransferForm({
           </p>
         )}
 
-        {!emailSent && acceptanceUrl && (
+        {!acceptanceEmailSent && acceptanceUrl && (
           <div
             style={{
               backgroundColor: "rgba(255,255,255,0.6)",
@@ -326,6 +358,49 @@ export default function TransferForm({
 
       {step === "otp" && (
         <form onSubmit={handleVerifyOtp} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* Email delivery warning */}
+          {!otpEmailSent && (
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                alignItems: "flex-start",
+                padding: "12px 14px",
+                backgroundColor: "#FEF3C7",
+                borderRadius: "8px",
+                border: "1px solid #FCD34D",
+              }}
+            >
+              <MailWarning size={16} color="#B45309" style={{ flexShrink: 0, marginTop: "1px" }} />
+              <div>
+                <p style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: "600", color: "#92400E" }}>
+                  Email delivery issue
+                </p>
+                <p style={{ margin: "0 0 8px", fontSize: "12px", color: "#92400E", lineHeight: 1.5 }}>
+                  We couldn&apos;t send the code to <strong>{ownerEmail}</strong>. Check your spam folder,
+                  or tap <em>Resend code</em> to try again.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={loading}
+                  style={{
+                    padding: "5px 12px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    color: "#92400E",
+                    backgroundColor: "rgba(255,255,255,0.7)",
+                    border: "1px solid #FCD34D",
+                    borderRadius: "6px",
+                    cursor: loading ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {loading ? "Sending…" : "Resend code"}
+                </button>
+              </div>
+            </div>
+          )}
+
           <div>
             <label style={labelStyle}>Verification code</label>
             <input

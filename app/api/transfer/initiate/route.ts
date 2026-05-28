@@ -95,12 +95,14 @@ export async function POST(request: Request) {
     expires_at,
   });
 
+  let emailSent = false;
   try {
     await sendOtpEmail(owner_email, code, "transfer");
+    emailSent = true;
   } catch {
-    return NextResponse.json({ error: "Failed to send verification email" }, { status: 500 });
+    // OTP is stored — don't block the flow; UI will surface the warning
   }
 
   const transfer = transferData as { id: string };
-  return NextResponse.json({ success: true, transfer_id: transfer.id });
+  return NextResponse.json({ success: true, transfer_id: transfer.id, emailSent });
 }

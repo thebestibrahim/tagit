@@ -26,16 +26,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Message too long (max 500 characters)" }, { status: 400 });
   }
 
-  // Fetch tag → company + product in parallel
-  const [{ data: tagData }, { data: productData }] = await Promise.all([
-    admin.from("tags").select("id, industry, company_id").eq("id", tag_id).single(),
-    admin.from("products").select("name, industry_fields, retail_price, currency").eq("tag_id", tag_id).single(),
-  ]);
+  // Fetch tag + joined product in a single query
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: tagData } = await (admin as any)
+    .from("tags")
+    .select("id, industry, company_id, products(name, industry_fields, retail_price, currency)")
+    .eq("id", tag_id)
+    .single();
 
   if (!tagData) return NextResponse.json({ error: "Tag not found" }, { status: 404 });
 
   const tag = tagData as { id: string; industry: string; company_id: string };
-  const product = productData as { name: string; industry_fields: Record<string, string>; retail_price: number | null; currency: string } | null;
+  const rawProduct = (tagData as { products: unknown }).products;
+  const product = (Array.isArray(rawProduct) ? rawProduct[0] : rawProduct) as { name: string; industry_fields: Record<string, string>; retail_price: number | null; currency: string } | null;
 
   const { data: companyData } = await admin
     .from("companies")

@@ -122,13 +122,20 @@ export default async function ProductDetailPage({
   const company = companyData as { id: string; industry: string; status: CompanyStatus; name: string } | null;
   if (!company || company.status !== "approved") redirect("/auth/unauthorized");
 
-  // Product + tag (single query)
-  const { data: productData } = await supabase
-    .from("products")
-    .select("id, name, retail_price, currency, industry_fields, photos, created_at, tag_id, tags(id, short_id, token, status, created_at, activated_at)")
-    .eq("id", id)
-    .eq("company_id", user.id)
-    .single();
+  // Product + linked tags in parallel
+  const [{ data: productData }, { data: linkedTagsData }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id, name, retail_price, currency, industry_fields, photos, created_at")
+      .eq("id", id)
+      .eq("company_id", user.id)
+      .single(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from("tags")
+      .select("id, short_id, token, status, created_at, activated_at")
+      .eq("product_id", id),
+  ]);
 
   if (!productData) notFound();
 
@@ -140,36 +147,45 @@ export default async function ProductDetailPage({
     industry_fields: Record<string, string>;
     photos: string[];
     created_at: string;
-    tag_id: string;
-    tags: { id: string; short_id: string; token: string; status: string; created_at: string; activated_at: string | null } | null;
   };
 
-  // All history data fetched in parallel — all RLS-permitted for this company
-  const tagId = product.tags?.id ?? product.tag_id;
+  type TagRecord = { id: string; short_id: string; token: string; status: string; created_at: string; activated_at: string | null };
+  const productTags = (linkedTagsData ?? []) as TagRecord[];
+  const productTagIds = productTags.map((t) => t.id);
+  const primaryTag = productTags[0] ?? null;
 
+  // All history data fetched in parallel — scoped to all tags on this product
   const [ownershipRes, claimsRes, transfersRes, certsRes] = await Promise.all([
-    supabase
-      .from("ownership_records")
-      .select("id, owner_name, owner_email, acquisition_type, acquired_at, sale_price, currency, is_current, ended_at")
-      .eq("tag_id", tagId)
-      .order("acquired_at", { ascending: true }),
-    supabase
-      .from("ownership_claims")
-      .select("id, claimant_name, claimant_email, status, created_at, expires_at, reviewed_at, rejection_reason")
-      .eq("tag_id", tagId)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("transfer_requests")
-      .select("id, to_name, to_email, sale_price, currency, status, created_at, expires_at, completed_at")
-      .eq("tag_id", tagId)
-      .order("created_at", { ascending: true }),
-    Promise.resolve(
-      supabase
-        .from("certificates")
-        .select("id, cert_number, cert_type, issued_to_name, issued_at")
-        .eq("tag_id", tagId)
-        .order("issued_at", { ascending: true })
-    ).catch(() => ({ data: [] as Certificate[] })),
+    productTagIds.length
+      ? supabase
+          .from("ownership_records")
+          .select("id, owner_name, owner_email, acquisition_type, acquired_at, sale_price, currency, is_current, ended_at")
+          .in("tag_id", productTagIds)
+          .order("acquired_at", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    productTagIds.length
+      ? supabase
+          .from("ownership_claims")
+          .select("id, claimant_name, claimant_email, status, created_at, expires_at, reviewed_at, rejection_reason")
+          .in("tag_id", productTagIds)
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    productTagIds.length
+      ? supabase
+          .from("transfer_requests")
+          .select("id, to_name, to_email, sale_price, currency, status, created_at, expires_at, completed_at")
+          .in("tag_id", productTagIds)
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    productTagIds.length
+      ? Promise.resolve(
+          supabase
+            .from("certificates")
+            .select("id, cert_number, cert_type, issued_to_name, issued_at")
+            .in("tag_id", productTagIds)
+            .order("issued_at", { ascending: true })
+        ).catch(() => ({ data: [] as Certificate[] }))
+      : Promise.resolve({ data: [] as Certificate[] }),
   ]);
 
   const ownershipRecords = (ownershipRes.data ?? []) as OwnershipRecord[];
@@ -178,8 +194,7 @@ export default async function ProductDetailPage({
   const certificates = ((certsRes as { data: Certificate[] | null }).data ?? []) as Certificate[];
 
   const currentOwner = ownershipRecords.find((r) => r.is_current) ?? null;
-  const tag = product.tags;
-  const scanUrl = tag?.token ? `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${tag.token}` : null;
+  const scanUrl = primaryTag?.token ? `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${primaryTag.token}` : null;
 
   const industryFields = INDUSTRY_FIELDS[company.industry] ?? [];
   const grouped = groupFields(industryFields);
@@ -206,19 +221,25 @@ export default async function ProductDetailPage({
     icon: <Package size={14} />,
     iconBg: "var(--color-onyx)",
     title: "Product registered",
-    meta: [`Tag ${tag?.short_id ?? "—"} linked`],
+    meta: [
+      productTags.length > 0
+        ? `${productTags.length} tag${productTags.length !== 1 ? "s" : ""} linked: ${productTags.map((t) => t.short_id).join(", ")}`
+        : "No tags linked",
+    ],
   });
 
-  // Tag activated
-  if (tag?.activated_at) {
-    timeline.push({
-      date: tag.activated_at,
-      kind: "activated",
-      icon: <Tag size={14} />,
-      iconBg: "#1D4ED8",
-      title: "Tag first scanned",
-      meta: ["NFC tag activated by consumer"],
-    });
+  // Tag activations (one entry per tag that has been scanned)
+  for (const t of productTags) {
+    if (t.activated_at) {
+      timeline.push({
+        date: t.activated_at,
+        kind: "activated",
+        icon: <Tag size={14} />,
+        iconBg: "#1D4ED8",
+        title: productTags.length > 1 ? `Tag ${t.short_id} first scanned` : "Tag first scanned",
+        meta: ["NFC tag activated by consumer"],
+      });
+    }
   }
 
   // Ownership claims
@@ -293,7 +314,7 @@ export default async function ProductDetailPage({
   // Sort oldest → newest
   timeline.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const tagBadge = tagStatusBadge(tag?.status ?? "");
+  const tagBadge = tagStatusBadge(primaryTag?.status ?? "");
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -328,20 +349,35 @@ export default async function ProductDetailPage({
               {product.name}
             </h1>
           </div>
-          <span
-            className="px-2.5 py-1 rounded-full text-micro font-medium capitalize shrink-0"
-            style={{ backgroundColor: tagBadge.bg, color: tagBadge.color }}
-          >
-            {tag?.status?.replace(/_/g, " ") ?? "—"}
-          </span>
+          {primaryTag && (
+            <span
+              className="px-2.5 py-1 rounded-full text-micro font-medium capitalize shrink-0"
+              style={{ backgroundColor: tagBadge.bg, color: tagBadge.color }}
+            >
+              {primaryTag.status.replace(/_/g, " ")}
+            </span>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-5 sm:grid-cols-3">
           <div>
-            <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>Tag ID</p>
-            <p style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-graphite)", letterSpacing: "0.05em" }}>
-              {tag?.short_id ?? "—"}
+            <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>
+              {productTags.length !== 1 ? "Tags" : "Tag ID"}
             </p>
+            {productTags.length === 0 ? (
+              <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>—</p>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                {productTags.map((t) => (
+                  <span
+                    key={t.id}
+                    style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-graphite)", letterSpacing: "0.05em" }}
+                  >
+                    {t.short_id}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>Retail price</p>
@@ -362,10 +398,10 @@ export default async function ProductDetailPage({
               <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>{currentOwner.owner_email}</p>
             </div>
           )}
-          {tag?.activated_at && (
+          {primaryTag?.activated_at && (
             <div>
               <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>First scanned</p>
-              <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>{fmtDate(tag.activated_at)}</p>
+              <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>{fmtDate(primaryTag.activated_at)}</p>
             </div>
           )}
           {scanUrl && (

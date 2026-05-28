@@ -109,14 +109,15 @@ export async function POST(request: Request) {
       .eq("id", transfer.id),
   ]);
 
-  // Fetch product, tag, and company branding in parallel
-  const [{ data: productData }, { data: tagData }] = await Promise.all([
-    admin.from("products").select("name").eq("tag_id", transfer.tag_id).single(),
-    admin.from("tags").select("token, short_id, company_id").eq("id", transfer.tag_id).single(),
-  ]);
+  // Fetch tag (with joined product name) and company branding in parallel
+  const { data: tagData } = await admin
+    .from("tags")
+    .select("token, short_id, company_id, product_id, products(name)")
+    .eq("id", transfer.tag_id)
+    .single();
 
-  const product = productData as { name: string } | null;
-  const tag = tagData as { token: string; short_id: string; company_id: string } | null;
+  const tag = tagData as { token: string; short_id: string; company_id: string; product_id: string | null; products: { name: string } | null } | null;
+  const product = tag?.products ?? null;
   const tagUrl = `${APP_URL}/v/${tag?.token ?? transfer.tag_id}`;
 
   // Fetch company branding

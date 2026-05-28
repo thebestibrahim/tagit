@@ -51,14 +51,21 @@ export default async function CertificatesPage() {
 
   const certs = (certsData ?? []) as Cert[];
 
-  // Fetch product names by tag_id
-  const { data: productsData } = await admin
-    .from("products")
-    .select("tag_id, name")
-    .in("tag_id", tagIds);
+  // Fetch product names by joining tags → products (via tags.product_id FK added in migration)
+  const certTagIds = [...new Set(certs.map((c) => c.tag_id))];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: tagProductData } = certTagIds.length
+    ? await (admin as any).from("tags").select("id, products(name)").in("id", certTagIds)
+    : { data: [] };
 
   const productMap = Object.fromEntries(
-    (productsData ?? []).map((p: { tag_id: string; name: string }) => [p.tag_id, p.name])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((tagProductData ?? []) as any[]).map(
+      (t: { id: string; products: { name: string } | { name: string }[] | null }) => {
+        const name = Array.isArray(t.products) ? (t.products[0]?.name ?? "—") : (t.products?.name ?? "—");
+        return [t.id, name];
+      }
+    )
   );
 
   // Fetch ownership record statuses
