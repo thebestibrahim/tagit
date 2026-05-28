@@ -1,7 +1,8 @@
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+const rawFrom = process.env.RESEND_FROM_EMAIL || "info@tagitlux.com";
+const FROM = rawFrom.includes("<") ? rawFrom : `Tagit <${rawFrom}>`;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 function base(content: string) {
