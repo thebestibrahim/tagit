@@ -88,7 +88,7 @@ function CertPreviewClassic({ primary, accent, logoUrl, companyName }: { primary
         <div style={{ width: 50, height: 0.5, backgroundColor: "#E8E2D5", marginTop: 2 }} />
       </div>
       <div style={{ borderTop: "1px solid #E8E2D5", padding: "4px 8px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontSize: 3, color: "#9E9EA3" }}>tagit.co/certificate/...</span>
+        <span style={{ fontSize: 3, color: "#9E9EA3" }}>tagitlux.com/certificate/...</span>
         <div style={{ width: 14, height: 14, backgroundColor: "#0A0A0B", borderRadius: 2 }} />
       </div>
     </div>

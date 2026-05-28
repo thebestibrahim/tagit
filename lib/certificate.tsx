@@ -457,7 +457,7 @@ function ClassicCertificate({ data, qr }: { data: CertificateData; qr: string })
             }}
           >
             This document is cryptographically recorded on the Tagit Ownership Ledger.{"\n"}
-            Verify at: tagit.co/certificate/{data.certId}
+            Verify at: tagitlux.com/certificate/{data.certId}
           </Text>
         </View>
         <Image src={qr} style={{ width: 60, height: 60 }} />
@@ -735,7 +735,7 @@ function MinimalCertificate({ data, qr }: { data: CertificateData; qr: string })
               }}
             >
               Recorded on the Tagit Ownership Ledger.{"\n"}
-              tagit.co/certificate/{data.certId}
+              tagitlux.com/certificate/{data.certId}
             </Text>
           </View>
           <Image src={qr} style={{ width: 56, height: 56 }} />
@@ -1081,7 +1081,7 @@ function HeritageCertificate({ data, qr }: { data: CertificateData; qr: string }
               lineHeight: 1.5,
             }}
           >
-            {data.certNumber}  |  tagit.co/certificate/{data.certId}
+            {data.certNumber}  |  tagitlux.com/certificate/{data.certId}
           </Text>
         </View>
         <Image

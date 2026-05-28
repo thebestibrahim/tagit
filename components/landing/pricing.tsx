@@ -152,7 +152,7 @@ export default function Pricing() {
                   Apply for access
                 </Link>
                 <a
-                  href="mailto:hello@tagit.co"
+                  href="mailto:info@tagitlux.com"
                   style={{
                     display: "block",
                     textAlign: "center",

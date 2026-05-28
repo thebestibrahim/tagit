@@ -98,7 +98,7 @@ export default function CtaSection() {
                 </Link>
               </MagneticButton>
               <a
-                href="mailto:hello@tagit.co"
+                href="mailto:info@tagitlux.com"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
