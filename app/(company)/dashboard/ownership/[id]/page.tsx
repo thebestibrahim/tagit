@@ -60,14 +60,15 @@ export default async function ClaimDetailPage({
   if (!tag || tag.company_id !== company.id) notFound();
 
   const [
-    { data: productData },
+    { data: tagProductData },
     { data: ownershipData },
     { data: certData },
   ] = await Promise.all([
-    supabase
-      .from("products")
-      .select("id, name, retail_price, currency")
-      .eq("tag_id", claim.tag_id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from("tags")
+      .select("products(id, name, retail_price, currency)")
+      .eq("id", claim.tag_id)
       .single(),
     supabase
       .from("ownership_records")
@@ -84,7 +85,8 @@ export default async function ClaimDetailPage({
       .maybeSingle(),
   ]);
 
-  const product = productData as { id: string; name: string; retail_price: number | null; currency: string } | null;
+  const rawProd = (tagProductData as { products: unknown } | null)?.products;
+  const product = (Array.isArray(rawProd) ? rawProd[0] : rawProd) as { id: string; name: string; retail_price: number | null; currency: string } | null;
 
   const ownership = ownershipData as {
     id: string;

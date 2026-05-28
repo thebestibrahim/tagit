@@ -17,7 +17,7 @@ type Product = {
   retail_price: number | null;
   currency: string;
   created_at: string;
-  tags: { short_id: string; status: string; token: string } | null;
+  tags: { short_id: string; status: string; token: string }[];
 };
 
 const PER_PAGE = 15;
@@ -52,7 +52,7 @@ export default async function ProductsPage({
   const totalPages = Math.ceil((count ?? 0) / PER_PAGE);
 
   const filtered = statusFilter && statusFilter !== "all"
-    ? products.filter((p) => p.tags?.status === statusFilter)
+    ? products.filter((p) => p.tags[0]?.status === statusFilter)
     : products;
 
   function buildHref(overrides: Record<string, string | undefined>) {
@@ -141,9 +141,9 @@ export default async function ProductsPage({
               </thead>
               <tbody>
                 {filtered.map((product, i) => {
-                  const badge = tagStatusColor(product.tags?.status ?? "");
-                  const scanUrl = product.tags?.token
-                    ? `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${product.tags.token}`
+                  const badge = tagStatusColor(product.tags[0]?.status ?? "");
+                  const scanUrl = product.tags[0]?.token
+                    ? `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${product.tags[0].token}`
                     : null;
 
                   return (
@@ -163,7 +163,7 @@ export default async function ProductsPage({
                       </td>
                       <td className="px-5 py-4">
                         <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-graphite)", letterSpacing: "0.05em" }}>
-                          {product.tags?.short_id ?? "—"}
+                          {product.tags[0]?.short_id ?? "—"}
                         </span>
                       </td>
                       <td className="px-5 py-4">
@@ -171,7 +171,7 @@ export default async function ProductsPage({
                           className="px-2 py-0.5 rounded-full text-micro font-medium capitalize"
                           style={{ backgroundColor: badge.bg, color: badge.color }}
                         >
-                          {product.tags?.status?.replace(/_/g, " ") ?? "—"}
+                          {product.tags[0]?.status?.replace(/_/g, " ") ?? "—"}
                         </span>
                       </td>
                       <td className="px-5 py-4">

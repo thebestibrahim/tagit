@@ -80,13 +80,15 @@ export async function POST(
 
   const now = new Date().toISOString();
 
-  const { data: productData } = await admin
-    .from("products")
-    .select("name")
-    .eq("tag_id", claim.tag_id)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: tagProductData } = await (admin as any)
+    .from("tags")
+    .select("products(name)")
+    .eq("id", claim.tag_id)
     .single();
 
-  const product = productData as { name: string } | null;
+  const rawProd = (tagProductData as { products: unknown } | null)?.products;
+  const product = (Array.isArray(rawProd) ? rawProd[0] : rawProd) as { name: string } | null;
 
   if (action === "approve") {
     // Create ownership record — capture returned ID

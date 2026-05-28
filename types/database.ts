@@ -1,247 +1,806 @@
-export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
-export type TagStatus =
-  | "created" | "written" | "shipped" | "embedded"
-  | "activated" | "unowned" | "claim_pending"
-  | "owned" | "transfer_pending" | "flagged" | "suspended";
-
-export type CompanyStatus = "pending" | "approved" | "rejected" | "suspended";
-export type Industry = "fashion" | "arts" | "collectibles" | "restaurants" | "hotels";
-export type ClaimStatus = "pending" | "approved" | "rejected" | "expired";
-export type TransferStatus =
-  | "otp_pending" | "otp_verified" | "awaiting_acceptance"
-  | "completed" | "expired" | "cancelled";
-export type AcquisitionType = "origin" | "transfer";
-
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      companies: {
-        Row: {
-          id: string;
-          name: string;
-          email: string;
-          industry: Industry;
-          status: CompanyStatus;
-          logo_url: string | null;
-          brand_primary_color: string;
-          brand_secondary_color: string;
-          brand_accent_color: string;
-          brand_text_color: string;
-          brand_font: string;
-          brand_template: "classic" | "minimal" | "editorial";
-          brand_story: string | null;
-          custom_header_text: string | null;
-          social_links: Json;
-          cert_template: "classic" | "minimal" | "heritage";
-          signature_url: string | null;
-          ai_enabled: boolean;
-          ai_persona_name: string | null;
-          ai_persona_prompt: string | null;
-          ai_persona_voice_id: string | null;
-          elevenlabs_api_key: string | null;
-          created_at: string;
-          approved_at: string | null;
-          approved_by: string | null;
-        };
-        Insert: Partial<Database["public"]["Tables"]["companies"]["Row"]> & {
-          name: string;
-          email: string;
-          industry: Industry;
-        };
-        Update: Partial<Database["public"]["Tables"]["companies"]["Row"]>;
-        Relationships: [];
-      };
-      tags: {
-        Row: {
-          id: string;
-          token: string;
-          short_id: string;
-          company_id: string;
-          industry: string;
-          batch_id: string | null;
-          status: TagStatus;
-          hmac_signature: string;
-          created_at: string;
-          activated_at: string | null;
-        };
-        Insert: Omit<Database["public"]["Tables"]["tags"]["Row"], "id" | "created_at" | "activated_at"> & { activated_at?: string | null };
-        Update: Partial<Database["public"]["Tables"]["tags"]["Row"]>;
-        Relationships: [];
-      };
-      tag_batches: {
-        Row: {
-          id: string;
-          company_id: string;
-          industry: Industry;
-          batch_size: number;
-          batch_name: string | null;
-          status: "pending" | "generated" | "written" | "shipped";
-          notes: string | null;
-          created_by: string | null;
-          created_at: string;
-          shipped_at: string | null;
-        };
-        Insert: Omit<Database["public"]["Tables"]["tag_batches"]["Row"], "id" | "created_at" | "shipped_at"> & { shipped_at?: string | null };
-        Update: Partial<Database["public"]["Tables"]["tag_batches"]["Row"]>;
-        Relationships: [];
-      };
-      products: {
-        Row: {
-          id: string;
-          tag_id: string;
-          company_id: string;
-          name: string;
-          industry_fields: Json;
-          photos: string[];
-          ai_persona_config: Json;
-          retail_price: number | null;
-          currency: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<Database["public"]["Tables"]["products"]["Row"], "id" | "created_at" | "updated_at">;
-        Update: Partial<Database["public"]["Tables"]["products"]["Row"]>;
-        Relationships: [];
-      };
-      ownership_records: {
-        Row: {
-          id: string;
-          tag_id: string;
-          owner_name: string;
-          owner_email: string;
-          backup_email: string | null;
-          acquisition_type: AcquisitionType;
-          acquired_from_id: string | null;
-          acquired_at: string;
-          sale_price: number | null;
-          currency: string;
-          is_current: boolean;
-          ended_at: string | null;
-        };
-        Insert: Omit<Database["public"]["Tables"]["ownership_records"]["Row"], "id" | "acquired_at" | "backup_email" | "acquired_from_id" | "sale_price" | "currency" | "ended_at"> & { backup_email?: string | null; acquired_from_id?: string | null; sale_price?: number | null; currency?: string; ended_at?: string | null };
-        Update: Partial<Database["public"]["Tables"]["ownership_records"]["Row"]>;
-        Relationships: [];
-      };
-      ownership_claims: {
-        Row: {
-          id: string;
-          tag_id: string;
-          claimant_name: string;
-          claimant_email: string;
-          claim_ip: string | null;
-          claim_location: string | null;
-          status: ClaimStatus;
-          reviewed_by: string | null;
-          reviewed_at: string | null;
-          rejection_reason: string | null;
-          created_at: string;
-          expires_at: string;
-        };
-        Insert: Omit<Database["public"]["Tables"]["ownership_claims"]["Row"], "id" | "created_at" | "expires_at" | "reviewed_by" | "reviewed_at" | "rejection_reason"> & { reviewed_by?: string | null; reviewed_at?: string | null; rejection_reason?: string | null };
-        Update: Partial<Database["public"]["Tables"]["ownership_claims"]["Row"]>;
-        Relationships: [];
-      };
-      transfer_requests: {
-        Row: {
-          id: string;
-          tag_id: string;
-          from_owner_id: string;
-          to_name: string;
-          to_email: string;
-          sale_price: number | null;
-          currency: string;
-          status: TransferStatus;
-          acceptance_token: string | null;
-          created_at: string;
-          expires_at: string;
-          completed_at: string | null;
-        };
-        Insert: Omit<Database["public"]["Tables"]["transfer_requests"]["Row"], "id" | "created_at" | "expires_at" | "currency" | "completed_at"> & { currency?: string; completed_at?: string | null };
-        Update: Partial<Database["public"]["Tables"]["transfer_requests"]["Row"]>;
-        Relationships: [];
-      };
-      otp_codes: {
-        Row: {
-          id: string;
-          email: string;
-          code_hash: string;
-          purpose: string;
-          attempts: number;
-          is_used: boolean;
-          created_at: string;
-          expires_at: string;
-        };
-        Insert: Omit<Database["public"]["Tables"]["otp_codes"]["Row"], "id" | "created_at"> & {
-          expires_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["otp_codes"]["Row"]>;
-        Relationships: [];
-      };
-      certificates: {
-        Row: {
-          id: string;
-          cert_number: string;
-          ownership_record_id: string | null;
-          tag_id: string;
-          cert_type: "ownership" | "transfer" | "provenance";
-          template: "classic" | "minimal" | "heritage";
-          issued_to_name: string;
-          issued_to_email: string;
-          issued_at: string;
-        };
-        Insert: Omit<Database["public"]["Tables"]["certificates"]["Row"], "id" | "issued_at">;
-        Update: Partial<Database["public"]["Tables"]["certificates"]["Row"]>;
-        Relationships: [];
-      };
-      scan_logs: {
-        Row: {
-          id: string;
-          tag_id: string;
-          ip_address: string | null;
-          user_agent: string | null;
-          geo_location: Json | null;
-          session_id: string | null;
-          scan_result: string;
-          created_at: string;
-        };
-        Insert: Omit<Database["public"]["Tables"]["scan_logs"]["Row"], "id" | "created_at" | "geo_location" | "session_id"> & { geo_location?: Json | null; session_id?: string | null };
-        Update: Partial<Database["public"]["Tables"]["scan_logs"]["Row"]>;
-        Relationships: [];
-      };
       audit_log: {
         Row: {
-          id: string;
-          table_name: string;
-          record_id: string;
-          action: string;
-          field_changed: string | null;
-          old_value: Json | null;
-          new_value: Json | null;
-          changed_by: string | null;
-          changed_by_role: string | null;
-          ip_address: string | null;
-          created_at: string;
-        };
-        Insert: Omit<Database["public"]["Tables"]["audit_log"]["Row"], "id" | "created_at">;
-        Update: Partial<Database["public"]["Tables"]["audit_log"]["Row"]>;
-        Relationships: [];
-      };
+          action: string
+          changed_by: string | null
+          changed_by_role: string | null
+          created_at: string | null
+          field_changed: string | null
+          id: string
+          ip_address: string | null
+          new_value: Json | null
+          old_value: Json | null
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          changed_by?: string | null
+          changed_by_role?: string | null
+          created_at?: string | null
+          field_changed?: string | null
+          id?: string
+          ip_address?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          changed_by?: string | null
+          changed_by_role?: string | null
+          created_at?: string | null
+          field_changed?: string | null
+          id?: string
+          ip_address?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
+      certificates: {
+        Row: {
+          cert_number: string
+          cert_type: string
+          id: string
+          issued_at: string | null
+          issued_to_email: string
+          issued_to_name: string
+          ownership_record_id: string | null
+          tag_id: string
+          template: string
+        }
+        Insert: {
+          cert_number: string
+          cert_type: string
+          id?: string
+          issued_at?: string | null
+          issued_to_email: string
+          issued_to_name: string
+          ownership_record_id?: string | null
+          tag_id: string
+          template?: string
+        }
+        Update: {
+          cert_number?: string
+          cert_type?: string
+          id?: string
+          issued_at?: string | null
+          issued_to_email?: string
+          issued_to_name?: string
+          ownership_record_id?: string | null
+          tag_id?: string
+          template?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_ownership_record_id_fkey"
+            columns: ["ownership_record_id"]
+            isOneToOne: false
+            referencedRelation: "ownership_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          ai_enabled: boolean
+          ai_persona_name: string | null
+          ai_persona_prompt: string | null
+          ai_persona_voice_id: string | null
+          approved_at: string | null
+          approved_by: string | null
+          brand_accent_color: string | null
+          brand_font: string | null
+          brand_primary_color: string | null
+          brand_secondary_color: string | null
+          brand_story: string | null
+          brand_template: string | null
+          brand_text_color: string | null
+          cert_template: string | null
+          created_at: string | null
+          custom_header_text: string | null
+          elevenlabs_api_key: string | null
+          email: string
+          id: string
+          industry: string
+          logo_url: string | null
+          name: string
+          signature_url: string | null
+          social_links: Json | null
+          status: string
+        }
+        Insert: {
+          ai_enabled?: boolean
+          ai_persona_name?: string | null
+          ai_persona_prompt?: string | null
+          ai_persona_voice_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          brand_accent_color?: string | null
+          brand_font?: string | null
+          brand_primary_color?: string | null
+          brand_secondary_color?: string | null
+          brand_story?: string | null
+          brand_template?: string | null
+          brand_text_color?: string | null
+          cert_template?: string | null
+          created_at?: string | null
+          custom_header_text?: string | null
+          elevenlabs_api_key?: string | null
+          email: string
+          id?: string
+          industry: string
+          logo_url?: string | null
+          name: string
+          signature_url?: string | null
+          social_links?: Json | null
+          status?: string
+        }
+        Update: {
+          ai_enabled?: boolean
+          ai_persona_name?: string | null
+          ai_persona_prompt?: string | null
+          ai_persona_voice_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          brand_accent_color?: string | null
+          brand_font?: string | null
+          brand_primary_color?: string | null
+          brand_secondary_color?: string | null
+          brand_story?: string | null
+          brand_template?: string | null
+          brand_text_color?: string | null
+          cert_template?: string | null
+          created_at?: string | null
+          custom_header_text?: string | null
+          elevenlabs_api_key?: string | null
+          email?: string
+          id?: string
+          industry?: string
+          logo_url?: string | null
+          name?: string
+          signature_url?: string | null
+          social_links?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
       industry_waitlist: {
         Row: {
-          id: string;
-          company_id: string | null;
-          industry: "restaurants" | "hotels";
-          notes: string | null;
-          created_at: string;
-        };
-        Insert: Omit<Database["public"]["Tables"]["industry_waitlist"]["Row"], "id" | "created_at">;
-        Update: Partial<Database["public"]["Tables"]["industry_waitlist"]["Row"]>;
-        Relationships: [];
-      };
-    };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
-  };
+          company_id: string | null
+          created_at: string | null
+          id: string
+          industry: string
+          notes: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          industry: string
+          notes?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          industry?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "industry_waitlist_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      otp_codes: {
+        Row: {
+          attempts: number | null
+          code_hash: string
+          created_at: string | null
+          email: string
+          expires_at: string | null
+          id: string
+          is_used: boolean | null
+          purpose: string
+        }
+        Insert: {
+          attempts?: number | null
+          code_hash: string
+          created_at?: string | null
+          email: string
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          purpose: string
+        }
+        Update: {
+          attempts?: number | null
+          code_hash?: string
+          created_at?: string | null
+          email?: string
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          purpose?: string
+        }
+        Relationships: []
+      }
+      ownership_claims: {
+        Row: {
+          claim_ip: string | null
+          claim_location: string | null
+          claimant_email: string
+          claimant_name: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tag_id: string
+        }
+        Insert: {
+          claim_ip?: string | null
+          claim_location?: string | null
+          claimant_email: string
+          claimant_name: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tag_id: string
+        }
+        Update: {
+          claim_ip?: string | null
+          claim_location?: string | null
+          claimant_email?: string
+          claimant_name?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ownership_claims_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ownership_records: {
+        Row: {
+          acquired_at: string | null
+          acquired_from_id: string | null
+          acquisition_type: string
+          backup_email: string | null
+          currency: string | null
+          ended_at: string | null
+          id: string
+          is_current: boolean | null
+          owner_email: string
+          owner_name: string
+          sale_price: number | null
+          tag_id: string
+        }
+        Insert: {
+          acquired_at?: string | null
+          acquired_from_id?: string | null
+          acquisition_type: string
+          backup_email?: string | null
+          currency?: string | null
+          ended_at?: string | null
+          id?: string
+          is_current?: boolean | null
+          owner_email: string
+          owner_name: string
+          sale_price?: number | null
+          tag_id: string
+        }
+        Update: {
+          acquired_at?: string | null
+          acquired_from_id?: string | null
+          acquisition_type?: string
+          backup_email?: string | null
+          currency?: string | null
+          ended_at?: string | null
+          id?: string
+          is_current?: boolean | null
+          owner_email?: string
+          owner_name?: string
+          sale_price?: number | null
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ownership_records_acquired_from_id_fkey"
+            columns: ["acquired_from_id"]
+            isOneToOne: false
+            referencedRelation: "ownership_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ownership_records_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          ai_persona_config: Json | null
+          company_id: string
+          created_at: string | null
+          currency: string | null
+          id: string
+          industry_fields: Json
+          name: string
+          photos: string[] | null
+          retail_price: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_persona_config?: Json | null
+          company_id: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          industry_fields?: Json
+          name: string
+          photos?: string[] | null
+          retail_price?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_persona_config?: Json | null
+          company_id?: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          industry_fields?: Json
+          name?: string
+          photos?: string[] | null
+          retail_price?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scan_logs: {
+        Row: {
+          created_at: string | null
+          geo_location: Json | null
+          id: string
+          ip_address: string | null
+          scan_result: string
+          session_id: string | null
+          tag_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          geo_location?: Json | null
+          id?: string
+          ip_address?: string | null
+          scan_result: string
+          session_id?: string | null
+          tag_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          geo_location?: Json | null
+          id?: string
+          ip_address?: string | null
+          scan_result?: string
+          session_id?: string | null
+          tag_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_logs_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tag_batches: {
+        Row: {
+          batch_name: string | null
+          batch_size: number
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          industry: string
+          notes: string | null
+          shipped_at: string | null
+          status: string
+        }
+        Insert: {
+          batch_name?: string | null
+          batch_size: number
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          industry: string
+          notes?: string | null
+          shipped_at?: string | null
+          status?: string
+        }
+        Update: {
+          batch_name?: string | null
+          batch_size?: number
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          industry?: string
+          notes?: string | null
+          shipped_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_batches_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tags: {
+        Row: {
+          activated_at: string | null
+          batch_id: string | null
+          company_id: string
+          created_at: string | null
+          hmac_signature: string
+          id: string
+          industry: string
+          product_id: string | null
+          short_id: string
+          status: string
+          token: string
+        }
+        Insert: {
+          activated_at?: string | null
+          batch_id?: string | null
+          company_id: string
+          created_at?: string | null
+          hmac_signature: string
+          id?: string
+          industry: string
+          product_id?: string | null
+          short_id: string
+          status?: string
+          token: string
+        }
+        Update: {
+          activated_at?: string | null
+          batch_id?: string | null
+          company_id?: string
+          created_at?: string | null
+          hmac_signature?: string
+          id?: string
+          industry?: string
+          product_id?: string | null
+          short_id?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tags_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tags_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transfer_requests: {
+        Row: {
+          acceptance_token: string | null
+          completed_at: string | null
+          created_at: string | null
+          currency: string | null
+          expires_at: string | null
+          from_owner_id: string
+          id: string
+          sale_price: number | null
+          status: string
+          tag_id: string
+          to_email: string
+          to_name: string
+        }
+        Insert: {
+          acceptance_token?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string | null
+          expires_at?: string | null
+          from_owner_id: string
+          id?: string
+          sale_price?: number | null
+          status?: string
+          tag_id: string
+          to_email: string
+          to_name: string
+        }
+        Update: {
+          acceptance_token?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string | null
+          expires_at?: string | null
+          from_owner_id?: string
+          id?: string
+          sale_price?: number | null
+          status?: string
+          tag_id?: string
+          to_email?: string
+          to_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfer_requests_from_owner_id_fkey"
+            columns: ["from_owner_id"]
+            isOneToOne: false
+            referencedRelation: "ownership_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {},
+  },
+} as const
+
+// ── App-level convenience types ───────────────────────────────────────────────
+export type CompanyStatus = "pending" | "approved" | "rejected" | "suspended";
+export type TagStatus =
+  | "created"
+  | "written"
+  | "shipped"
+  | "embedded"
+  | "activated"
+  | "unowned"
+  | "claim_pending"
+  | "owned"
+  | "transfer_pending"
+  | "flagged"
+  | "suspended";
+export type ClaimStatus = "pending" | "approved" | "rejected" | "expired";
+export type Industry = "fashion" | "arts" | "collectibles" | "restaurants" | "hotels";

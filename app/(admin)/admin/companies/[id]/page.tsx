@@ -63,7 +63,7 @@ export default async function CompanyDetailPage({
     currency: string;
     created_at: string;
     photos: string[];
-    tags: { short_id: string; status: string } | null;
+    tags: { short_id: string; status: string }[];
   }[];
 
   const s = STATUS_STYLES[company.status];
@@ -186,12 +186,12 @@ export default async function CompanyDetailPage({
                   </td>
                   <td className="px-5 py-3">
                     <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-graphite)", letterSpacing: "0.05em" }}>
-                      {p.tags?.short_id ?? "—"}
+                      {p.tags[0]?.short_id ?? "—"}
                     </span>
                   </td>
                   <td className="px-5 py-3">
-                    <span className="px-2 py-0.5 rounded-full text-micro font-medium capitalize" style={{ backgroundColor: p.tags?.status === "owned" ? "var(--color-verified-tint)" : "var(--color-soft-gold)", color: p.tags?.status === "owned" ? "var(--color-verified)" : "var(--color-deep-gold)" }}>
-                      {p.tags?.status?.replace(/_/g, " ") ?? "—"}
+                    <span className="px-2 py-0.5 rounded-full text-micro font-medium capitalize" style={{ backgroundColor: p.tags[0]?.status === "owned" ? "var(--color-verified-tint)" : "var(--color-soft-gold)", color: p.tags[0]?.status === "owned" ? "var(--color-verified)" : "var(--color-deep-gold)" }}>
+                      {p.tags[0]?.status?.replace(/_/g, " ") ?? "—"}
                     </span>
                   </td>
                   <td className="px-5 py-3" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
