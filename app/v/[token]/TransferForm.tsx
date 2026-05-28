@@ -171,7 +171,7 @@ export default function TransferForm({
           </p>
         )}
 
-        {acceptanceUrl && (
+        {!emailSent && acceptanceUrl && (
           <div
             style={{
               backgroundColor: "rgba(255,255,255,0.6)",
