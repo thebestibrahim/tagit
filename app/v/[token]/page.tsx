@@ -9,6 +9,7 @@ import Image from "next/image";
 import { INDUSTRY_FIELDS } from "@/lib/industry-fields";
 import ClaimForm from "./ClaimForm";
 import TransferForm from "./TransferForm";
+import CancelTransferForm from "./CancelTransferForm";
 import VoiceWidget from "./VoiceWidget";
 import CollapsibleSection from "./CollapsibleSection";
 
@@ -102,6 +103,7 @@ export default async function ScanPage({
     { data: companyBase },
     { data: companyExt },
     { data: ownershipData },
+    { data: activeTransferData },
   ] = await Promise.all([
     tag.product_id
       ? admin
@@ -126,6 +128,14 @@ export default async function ScanPage({
       .select("id, owner_name, owner_email, acquisition_type, acquired_at, sale_price, currency, is_current")
       .eq("tag_id", tag.id)
       .order("acquired_at", { ascending: true }),
+    tag.status === "transfer_pending"
+      ? admin
+          .from("transfer_requests")
+          .select("id, to_name, to_email")
+          .eq("tag_id", tag.id)
+          .eq("status", "awaiting_acceptance")
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   const product = productData as Product | null;
@@ -157,6 +167,7 @@ export default async function ScanPage({
 
   const ownershipRecords = (ownershipData ?? []) as OwnershipRecord[];
   const currentOwner = ownershipRecords.find((r) => r.is_current) ?? null;
+  const activeTransfer = activeTransferData as { id: string; to_name: string; to_email: string } | null;
 
   const primary = company?.brand_primary_color || "#0A0A0B";
   const accent = company?.brand_accent_color || "#B8945D";
@@ -290,6 +301,7 @@ export default async function ScanPage({
               tag={tag}
               product={product}
               currentOwner={currentOwner}
+              activeTransfer={activeTransfer}
               accent={accent}
               primary={primary}
             />
@@ -765,12 +777,14 @@ function ActionSection({
   tag,
   product,
   currentOwner,
+  activeTransfer,
   accent,
   primary,
 }: {
   tag: { id: string; status: string; short_id: string };
   product: { name: string };
   currentOwner: OwnershipRecord | null;
+  activeTransfer: { id: string; to_name: string; to_email: string } | null;
   accent: string;
   primary: string;
 }) {
@@ -901,6 +915,17 @@ function ActionSection({
   }
 
   if (tag.status === "transfer_pending") {
+    if (activeTransfer) {
+      return (
+        <CancelTransferForm
+          transferId={activeTransfer.id}
+          toName={activeTransfer.to_name}
+          toEmail={activeTransfer.to_email}
+          primary={primary}
+          accent={accent}
+        />
+      );
+    }
     return (
       <div style={{ margin: "16px 24px 0" }}>
         <div
@@ -916,14 +941,7 @@ function ActionSection({
         >
           <Clock size={16} color="#B85C00" style={{ marginTop: 2, flexShrink: 0 }} />
           <div>
-            <p
-              style={{
-                margin: "0 0 3px",
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#B85C00",
-              }}
-            >
+            <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 600, color: "#B85C00" }}>
               Transfer in progress
             </p>
             <p style={{ margin: 0, fontSize: 12, color: "#8B6F3F", lineHeight: 1.55 }}>
