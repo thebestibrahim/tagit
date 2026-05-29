@@ -294,6 +294,7 @@ export default async function ScanPage({
               industry={tag.industry}
               accent={accent}
               ownershipRecords={ownershipRecords}
+              template={company?.brand_template || "classic"}
             />
 
             <ActionSection
@@ -442,16 +443,53 @@ export default async function ScanPage({
   );
 }
 
+function ProvenanceCollapsible({ ownershipRecords, accent }: { ownershipRecords: OwnershipRecord[]; accent: string }) {
+  if (!ownershipRecords.length) return null;
+  return (
+    <CollapsibleSection title="Provenance" badge={String(ownershipRecords.length)} defaultOpen>
+      <div style={{ padding: "4px 24px 20px" }}>
+        {ownershipRecords.map((r, i) => (
+          <div key={r.id} style={{ display: "flex", gap: 14 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: r.is_current ? accent : "#D4D4D4", flexShrink: 0, marginTop: 4 }} />
+              {i < ownershipRecords.length - 1 && (
+                <div style={{ width: 1, flex: 1, backgroundColor: "#E8E2D5", margin: "4px 0" }} />
+              )}
+            </div>
+            <div style={{ paddingBottom: i < ownershipRecords.length - 1 ? 16 : 0 }}>
+              <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: r.is_current ? 600 : 500, color: r.is_current ? "#1F1F22" : "#6E6E73", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                {r.owner_name}
+                {r.is_current && (
+                  <span style={{ fontSize: 9, padding: "2px 7px", backgroundColor: "#DCEEE3", color: "#2D6A4F", borderRadius: 99, fontFamily: "'JetBrains Mono',monospace", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                    Current
+                  </span>
+                )}
+              </p>
+              <p style={{ margin: 0, fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", letterSpacing: "0.04em" }}>
+                {r.acquisition_type === "origin" ? "Brand origin" : "Transfer"} ·{" "}
+                {new Date(r.acquired_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                {r.sale_price ? ` · ${r.currency} ${r.sale_price.toLocaleString()}` : ""}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </CollapsibleSection>
+  );
+}
+
 function ProductSection({
   product,
   industry,
   accent,
   ownershipRecords,
+  template,
 }: {
   product: Product;
   industry: string;
   accent: string;
   ownershipRecords: OwnershipRecord[];
+  template: string;
 }) {
   const fields = INDUSTRY_FIELDS[industry] ?? [];
   const filledFields = fields.filter(
@@ -467,305 +505,172 @@ function ProductSection({
   const highlight = priorityKeys[industry] ?? [];
   const highlightFields = filledFields.filter((f) => highlight.includes(f.key)).slice(0, 6);
   const detailFields = filledFields.filter((f) => !highlight.includes(f.key) && f.type !== "textarea");
-  const storyFields = filledFields.filter(
-    (f) => f.type === "textarea" && product.industry_fields[f.key]
-  );
-
+  const storyFields = filledFields.filter((f) => f.type === "textarea" && product.industry_fields[f.key]);
   const photo = product.photos?.[0];
-  const hasCollapsible = detailFields.length > 0 || storyFields.length > 0 || ownershipRecords.length > 0;
+  const industryLabel = industry ? industry.charAt(0).toUpperCase() + industry.slice(1) : "Product";
 
+  // ── MINIMAL ───────────────────────────────────────────────────────────────
+  if (template === "minimal") {
+    return (
+      <>
+        {photo && (
+          <div style={{ padding: "0 24px" }}>
+            <div style={{ position: "relative", width: "100%", aspectRatio: "1/1", backgroundColor: "#F5F2EC", borderRadius: 16, overflow: "hidden", border: "1px solid #EDE8DF" }}>
+              <Image src={photo} alt={product.name} fill style={{ objectFit: "contain", padding: 20 }} />
+            </div>
+          </div>
+        )}
+        <div style={{ padding: "24px 24px 0" }}>
+          <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 34, fontWeight: 400, fontStyle: "italic", color: "#0A0A0B", letterSpacing: "-0.025em", lineHeight: 1.1, margin: "0 0 8px" }}>
+            {product.name}
+          </h1>
+          {product.retail_price && (
+            <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "#9E9EA3", letterSpacing: "0.06em", margin: "0 0 20px" }}>
+              {product.currency} {product.retail_price.toLocaleString()}
+            </p>
+          )}
+          {highlightFields.slice(0, 3).length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+              {highlightFields.slice(0, 3).map((f) => (
+                <div key={f.key} style={{ padding: "6px 12px", backgroundColor: "#F5F2EC", borderRadius: 99, border: "1px solid #EDE8DF" }}>
+                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", textTransform: "uppercase", letterSpacing: "0.06em" }}>{f.label} </span>
+                  <span style={{ fontSize: 12, color: "#1F1F22", fontWeight: 500 }}>{String(product.industry_fields[f.key])}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {ownershipRecords.length > 0 && (
+          <div style={{ margin: "20px 24px 0", backgroundColor: "#fff", borderRadius: 16, border: "1px solid #E8E2D5", overflow: "hidden" }}>
+            <ProvenanceCollapsible ownershipRecords={ownershipRecords} accent={accent} />
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // ── EDITORIAL ─────────────────────────────────────────────────────────────
+  if (template === "editorial") {
+    const firstStory = storyFields[0];
+    return (
+      <>
+        <div style={{ padding: "28px 24px 0" }}>
+          <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: accent, letterSpacing: "0.16em", textTransform: "uppercase", margin: "0 0 12px" }}>
+            {industryLabel}
+          </p>
+          <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 38, fontWeight: 400, fontStyle: "italic", color: "#0A0A0B", letterSpacing: "-0.03em", lineHeight: 1.05, margin: "0 0 20px" }}>
+            {product.name}
+          </h1>
+          {firstStory && (
+            <p style={{ fontSize: 15, color: "#4A4A4F", lineHeight: 1.78, letterSpacing: "-0.003em", margin: "0 0 24px", whiteSpace: "pre-wrap" }}>
+              {String(product.industry_fields[firstStory.key])}
+            </p>
+          )}
+          {photo && (
+            <div style={{ position: "relative", width: "100%", height: 280, backgroundColor: "#F5F2EC", borderRadius: 16, overflow: "hidden", border: "1px solid #EDE8DF", marginBottom: 24 }}>
+              <Image src={photo} alt={product.name} fill style={{ objectFit: "cover" }} />
+            </div>
+          )}
+          {highlightFields.length > 0 && (
+            <div style={{ borderTop: "1px solid #F0EDE8" }}>
+              {highlightFields.map((f) => (
+                <div key={f.key} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #F0EDE8", gap: 16 }}>
+                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", letterSpacing: "0.08em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>{f.label}</span>
+                  <span style={{ fontSize: 13, color: "#1F1F22", fontWeight: 500, textAlign: "right", lineHeight: 1.4 }}>{String(product.industry_fields[f.key])}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {product.retail_price && (
+            <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "#9E9EA3", letterSpacing: "0.06em", margin: "16px 0 0" }}>
+              {product.currency} {product.retail_price.toLocaleString()}
+            </p>
+          )}
+        </div>
+        {(detailFields.length > 0 || storyFields.length > 1 || ownershipRecords.length > 0) && (
+          <div style={{ margin: "24px 24px 0", backgroundColor: "#fff", borderRadius: 16, border: "1px solid #E8E2D5", overflow: "hidden" }}>
+            {detailFields.length > 0 && (
+              <CollapsibleSection title="Details" badge={String(detailFields.length)}>
+                <div style={{ padding: "4px 24px 20px" }}>
+                  {detailFields.map((f, i) => (
+                    <div key={f.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "9px 0", borderBottom: i < detailFields.length - 1 ? "1px solid #F5F2EC" : "none", gap: 12 }}>
+                      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>{f.label}</span>
+                      <span style={{ fontSize: 12, color: "#1F1F22", fontWeight: 500, textAlign: "right", lineHeight: 1.5 }}>{String(product.industry_fields[f.key])}</span>
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleSection>
+            )}
+            {storyFields.slice(1).map((f) => (
+              <CollapsibleSection key={f.key} title={f.label}>
+                <div style={{ padding: "4px 24px 20px" }}>
+                  <p style={{ margin: 0, fontSize: 14, color: "#4A4A4F", lineHeight: 1.78, letterSpacing: "-0.003em", whiteSpace: "pre-wrap" }}>{String(product.industry_fields[f.key])}</p>
+                </div>
+              </CollapsibleSection>
+            ))}
+            <ProvenanceCollapsible ownershipRecords={ownershipRecords} accent={accent} />
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // ── CLASSIC (default) ─────────────────────────────────────────────────────
+  const hasCollapsible = detailFields.length > 0 || storyFields.length > 0 || ownershipRecords.length > 0;
   return (
     <>
-      {/* Product photo */}
       {photo && (
         <div style={{ padding: "0 24px" }}>
-          <div
-            style={{
-              position: "relative",
-              width: "100%",
-              height: 340,
-              backgroundColor: "#F5F2EC",
-              borderRadius: 16,
-              overflow: "hidden",
-              border: "1px solid #EDE8DF",
-            }}
-          >
-            <Image
-              src={photo}
-              alt={product.name}
-              fill
-              style={{ objectFit: "contain", padding: "16px" }}
-            />
+          <div style={{ position: "relative", width: "100%", height: 340, backgroundColor: "#F5F2EC", borderRadius: 16, overflow: "hidden", border: "1px solid #EDE8DF" }}>
+            <Image src={photo} alt={product.name} fill style={{ objectFit: "contain", padding: "16px" }} />
           </div>
         </div>
       )}
-
-      {/* Product identity */}
       <div style={{ padding: "24px 24px 0" }}>
-        {/* Industry label */}
-        <p
-          style={{
-            fontFamily: "'JetBrains Mono',monospace",
-            fontSize: 9,
-            color: accent,
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            margin: "0 0 10px",
-          }}
-        >
-          {industry ? industry.charAt(0).toUpperCase() + industry.slice(1) : "Product"}
+        <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: accent, letterSpacing: "0.16em", textTransform: "uppercase", margin: "0 0 10px" }}>
+          {industryLabel}
         </p>
-
-        {/* Product name */}
-        <h1
-          style={{
-            fontFamily: "'Instrument Serif',Georgia,serif",
-            fontSize: 30,
-            fontWeight: 400,
-            fontStyle: "italic",
-            color: "#0A0A0B",
-            letterSpacing: "-0.025em",
-            lineHeight: 1.1,
-            margin: "0 0 10px",
-          }}
-        >
+        <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 30, fontWeight: 400, fontStyle: "italic", color: "#0A0A0B", letterSpacing: "-0.025em", lineHeight: 1.1, margin: "0 0 10px" }}>
           {product.name}
         </h1>
-
-        {/* Retail price */}
         {product.retail_price && (
-          <p
-            style={{
-              fontFamily: "'JetBrains Mono',monospace",
-              fontSize: 11,
-              color: "#9E9EA3",
-              letterSpacing: "0.06em",
-              margin: "0 0 20px",
-            }}
-          >
+          <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "#9E9EA3", letterSpacing: "0.06em", margin: "0 0 20px" }}>
             {product.currency} {product.retail_price.toLocaleString()}
           </p>
         )}
-
-        {/* Highlight key fields — always visible */}
         {highlightFields.length > 0 && (
           <div style={{ borderTop: "1px solid #F0EDE8" }}>
             {highlightFields.map((f) => (
-              <div
-                key={f.key}
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  padding: "10px 0",
-                  borderBottom: "1px solid #F0EDE8",
-                  gap: 16,
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: "'JetBrains Mono',monospace",
-                    fontSize: 9,
-                    color: "#9E9EA3",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    flexShrink: 0,
-                    paddingTop: 2,
-                  }}
-                >
-                  {f.label}
-                </span>
-                <span
-                  style={{
-                    fontSize: 13,
-                    color: "#1F1F22",
-                    fontWeight: 500,
-                    textAlign: "right",
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {String(product.industry_fields[f.key])}
-                </span>
+              <div key={f.key} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #F0EDE8", gap: 16 }}>
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", letterSpacing: "0.08em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>{f.label}</span>
+                <span style={{ fontSize: 13, color: "#1F1F22", fontWeight: 500, textAlign: "right", lineHeight: 1.4 }}>{String(product.industry_fields[f.key])}</span>
               </div>
             ))}
           </div>
         )}
       </div>
-
-      {/* Collapsible card — details, stories, provenance */}
       {hasCollapsible && (
-        <div
-          style={{
-            margin: "20px 24px 0",
-            backgroundColor: "#fff",
-            borderRadius: 16,
-            border: "1px solid #E8E2D5",
-            overflow: "hidden",
-          }}
-        >
-          {/* More details */}
+        <div style={{ margin: "20px 24px 0", backgroundColor: "#fff", borderRadius: 16, border: "1px solid #E8E2D5", overflow: "hidden" }}>
           {detailFields.length > 0 && (
             <CollapsibleSection title="Details" badge={String(detailFields.length)}>
               <div style={{ padding: "4px 24px 20px" }}>
                 {detailFields.map((f, i) => (
-                  <div
-                    key={f.key}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      padding: "9px 0",
-                      borderBottom: i < detailFields.length - 1 ? "1px solid #F5F2EC" : "none",
-                      gap: 12,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: "'JetBrains Mono',monospace",
-                        fontSize: 9,
-                        color: "#9E9EA3",
-                        letterSpacing: "0.06em",
-                        textTransform: "uppercase",
-                        flexShrink: 0,
-                        paddingTop: 2,
-                      }}
-                    >
-                      {f.label}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        color: "#1F1F22",
-                        fontWeight: 500,
-                        textAlign: "right",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {String(product.industry_fields[f.key])}
-                    </span>
+                  <div key={f.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "9px 0", borderBottom: i < detailFields.length - 1 ? "1px solid #F5F2EC" : "none", gap: 12 }}>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>{f.label}</span>
+                    <span style={{ fontSize: 12, color: "#1F1F22", fontWeight: 500, textAlign: "right", lineHeight: 1.5 }}>{String(product.industry_fields[f.key])}</span>
                   </div>
                 ))}
               </div>
             </CollapsibleSection>
           )}
-
-          {/* Story / textarea fields */}
           {storyFields.map((f) => (
             <CollapsibleSection key={f.key} title={f.label}>
               <div style={{ padding: "4px 24px 20px" }}>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 14,
-                    color: "#4A4A4F",
-                    lineHeight: 1.78,
-                    letterSpacing: "-0.003em",
-                    whiteSpace: "pre-wrap",
-                  }}
-                >
-                  {String(product.industry_fields[f.key])}
-                </p>
+                <p style={{ margin: 0, fontSize: 14, color: "#4A4A4F", lineHeight: 1.78, letterSpacing: "-0.003em", whiteSpace: "pre-wrap" }}>{String(product.industry_fields[f.key])}</p>
               </div>
             </CollapsibleSection>
           ))}
-
-          {/* Provenance — default open */}
-          {ownershipRecords.length > 0 && (
-            <CollapsibleSection
-              title="Provenance"
-              badge={String(ownershipRecords.length)}
-              defaultOpen
-            >
-              <div style={{ padding: "4px 24px 20px" }}>
-                {ownershipRecords.map((r, i) => (
-                  <div
-                    key={r.id}
-                    style={{ display: "flex", gap: 14 }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: "50%",
-                          backgroundColor: r.is_current ? accent : "#D4D4D4",
-                          flexShrink: 0,
-                          marginTop: 4,
-                        }}
-                      />
-                      {i < ownershipRecords.length - 1 && (
-                        <div
-                          style={{
-                            width: 1,
-                            flex: 1,
-                            backgroundColor: "#E8E2D5",
-                            margin: "4px 0",
-                          }}
-                        />
-                      )}
-                    </div>
-                    <div style={{ paddingBottom: i < ownershipRecords.length - 1 ? 16 : 0 }}>
-                      <p
-                        style={{
-                          margin: "0 0 3px",
-                          fontSize: 13,
-                          fontWeight: r.is_current ? 600 : 500,
-                          color: r.is_current ? "#1F1F22" : "#6E6E73",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        {r.owner_name}
-                        {r.is_current && (
-                          <span
-                            style={{
-                              fontSize: 9,
-                              padding: "2px 7px",
-                              backgroundColor: "#DCEEE3",
-                              color: "#2D6A4F",
-                              borderRadius: 99,
-                              fontFamily: "'JetBrains Mono',monospace",
-                              letterSpacing: "0.04em",
-                              textTransform: "uppercase",
-                            }}
-                          >
-                            Current
-                          </span>
-                        )}
-                      </p>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontFamily: "'JetBrains Mono',monospace",
-                          fontSize: 9,
-                          color: "#9E9EA3",
-                          letterSpacing: "0.04em",
-                        }}
-                      >
-                        {r.acquisition_type === "origin" ? "Brand origin" : "Transfer"} ·{" "}
-                        {new Date(r.acquired_at).toLocaleDateString("en-GB", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                        {r.sale_price
-                          ? ` · ${r.currency} ${r.sale_price.toLocaleString()}`
-                          : ""}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CollapsibleSection>
-          )}
+          <ProvenanceCollapsible ownershipRecords={ownershipRecords} accent={accent} />
         </div>
       )}
     </>
