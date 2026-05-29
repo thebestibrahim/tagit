@@ -31,7 +31,7 @@ const inputBase: React.CSSProperties = {
 export default function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "", industry: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", industry: "", contact_name: "", contact_phone: "" });
 
   function set(field: string, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -272,6 +272,23 @@ export default function RegisterForm() {
                   />
                 </div>
 
+                {/* Contact name */}
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
+                    Your full name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Amara Okonkwo"
+                    value={form.contact_name}
+                    onChange={(e) => set("contact_name", e.target.value)}
+                    required
+                    onFocus={focusInput}
+                    onBlur={blurInput}
+                    style={inputBase}
+                  />
+                </div>
+
                 {/* Email */}
                 <div>
                   <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
@@ -283,6 +300,22 @@ export default function RegisterForm() {
                     value={form.email}
                     onChange={(e) => set("email", e.target.value)}
                     required
+                    onFocus={focusInput}
+                    onBlur={blurInput}
+                    style={inputBase}
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
+                    Phone / WhatsApp <span style={{ color: "#C7C7CC", fontWeight: 400 }}>(optional)</span>
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="+234 800 000 0000"
+                    value={form.contact_phone}
+                    onChange={(e) => set("contact_phone", e.target.value)}
                     onFocus={focusInput}
                     onBlur={blurInput}
                     style={inputBase}

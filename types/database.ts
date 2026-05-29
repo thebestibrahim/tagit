@@ -148,6 +148,8 @@ export type Database = {
           brand_template: string | null
           brand_text_color: string | null
           cert_template: string | null
+          contact_name: string | null
+          contact_phone: string | null
           created_at: string | null
           custom_header_text: string | null
           elevenlabs_api_key: string | null
@@ -175,6 +177,8 @@ export type Database = {
           brand_template?: string | null
           brand_text_color?: string | null
           cert_template?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string | null
           custom_header_text?: string | null
           elevenlabs_api_key?: string | null
@@ -202,6 +206,8 @@ export type Database = {
           brand_template?: string | null
           brand_text_color?: string | null
           cert_template?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string | null
           custom_header_text?: string | null
           elevenlabs_api_key?: string | null

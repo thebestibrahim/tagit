@@ -57,7 +57,8 @@ function RequestAccessModal({ onClose }: Props) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "24px",
+        padding: "16px",
+        overflowY: "auto",
       }}
     >
       {/* Backdrop */}
@@ -82,6 +83,7 @@ function RequestAccessModal({ onClose }: Props) {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 16, scale: 0.98 }}
         transition={{ duration: 0.45, ease: EASE }}
+        className="tagit-modal-panel"
         style={{
           position: "relative",
           width: "100%",
@@ -91,6 +93,7 @@ function RequestAccessModal({ onClose }: Props) {
           border: "1px solid rgba(212,182,138,0.15)",
           overflow: "hidden",
           boxShadow: "0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)",
+          margin: "auto",
         }}
       >
         {/* Top gold glow */}
@@ -101,7 +104,7 @@ function RequestAccessModal({ onClose }: Props) {
           pointerEvents: "none",
         }} />
 
-        <div style={{ position: "relative", padding: "40px 40px 40px" }}>
+        <div className="tagit-modal-body" style={{ position: "relative", padding: "40px 40px 40px" }}>
           {/* Close */}
           <button
             onClick={onClose}

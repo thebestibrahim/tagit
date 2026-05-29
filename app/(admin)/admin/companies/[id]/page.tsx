@@ -15,6 +15,8 @@ type Company = {
   status: CompanyStatus;
   brand_story: string | null;
   logo_url: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
   created_at: string;
   approved_at: string | null;
 };
@@ -44,7 +46,7 @@ export default async function CompanyDetailPage({
 
   const [{ data }, { data: productsData }] = await Promise.all([
     supabase.from("companies")
-      .select("id, name, email, industry, status, brand_story, logo_url, created_at, approved_at")
+      .select("id, name, email, industry, status, brand_story, logo_url, contact_name, contact_phone, created_at, approved_at")
       .eq("id", id)
       .single(),
     supabase.from("products")
@@ -108,22 +110,25 @@ export default async function CompanyDetailPage({
         </h2>
         <dl className="space-y-3">
           {[
-            { label: "Industry",     value: INDUSTRY_LABELS[company.industry] },
-            { label: "Applied",      value: format(new Date(company.created_at), "MMMM d, yyyy 'at' HH:mm") },
-            { label: "Company ID",   value: company.id },
+            { label: "Contact name",  value: company.contact_name ?? "—" },
+            { label: "Contact phone", value: company.contact_phone ?? "—" },
+            { label: "Email",         value: company.email },
+            { label: "Industry",      value: INDUSTRY_LABELS[company.industry] },
+            { label: "Applied",       value: format(new Date(company.created_at), "MMMM d, yyyy 'at' HH:mm") },
+            { label: "Company ID",    value: company.id },
             ...(company.approved_at
               ? [{ label: "Approved", value: format(new Date(company.approved_at), "MMMM d, yyyy") }]
               : []),
           ].map(({ label, value }) => (
             <div key={label} className="flex gap-4">
               <dt
-                className="w-28 shrink-0 text-body-sm font-medium"
+                className="w-32 shrink-0 text-body-sm font-medium"
                 style={{ color: "var(--color-slate)" }}
               >
                 {label}
               </dt>
               <dd
-                className="text-body-sm font-mono"
+                className="text-body-sm"
                 style={{ color: "var(--color-charcoal)", fontFamily: label === "Company ID" ? "var(--font-jetbrains-mono)" : "inherit" }}
               >
                 {value}

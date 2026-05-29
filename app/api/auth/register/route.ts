@@ -15,9 +15,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { name, email, password, industry } = await request.json();
+    const { name, email, password, industry, contact_name, contact_phone } = await request.json();
 
-    if (!name || !email || !password || !industry) {
+    if (!name || !email || !password || !industry || !contact_name) {
       return NextResponse.json({ error: "All fields are required." }, { status: 400 });
     }
 
@@ -53,6 +53,8 @@ export async function POST(request: Request) {
       email: email.toLowerCase().trim(),
       industry,
       status: "pending",
+      contact_name: contact_name.trim(),
+      ...(contact_phone?.trim() ? { contact_phone: contact_phone.trim() } : {}),
     });
 
     if (dbError) {

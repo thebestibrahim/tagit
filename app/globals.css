@@ -380,6 +380,12 @@
   .footer-brand { grid-column: 1 / -1 !important; }
 }
 
+/* Request Access modal — mobile */
+@media (max-width: 520px) {
+  .tagit-modal-panel { border-radius: 16px !important; }
+  .tagit-modal-body { padding: 28px 20px 28px !important; }
+}
+
 @media (max-width: 480px) {
   .lp-section-padding { padding-top: 56px !important; padding-bottom: 56px !important; }
 
