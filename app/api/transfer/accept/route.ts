@@ -56,22 +56,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Transfer has expired" }, { status: 410 });
   }
 
-  const { data: currentOwnerData } = await admin
+  const { data: currentOwnerData, error: ownerError } = await admin
     .from("ownership_records")
-    .select("id, owner_name, owner_email, created_at")
+    .select("id, owner_name, owner_email, acquired_at")
     .eq("id", transfer.from_owner_id)
     .single();
+
+  if (ownerError || !currentOwnerData) {
+    log.error("transfer/accept", "Owner record lookup failed", {
+      from_owner_id: transfer.from_owner_id,
+      supabase_error: ownerError,
+    });
+    return NextResponse.json({ error: "Owner record not found", detail: ownerError?.message }, { status: 404 });
+  }
 
   const currentOwner = currentOwnerData as {
     id: string;
     owner_name: string;
     owner_email: string;
-    created_at: string;
-  } | null;
-
-  if (!currentOwner) {
-    return NextResponse.json({ error: "Owner record not found" }, { status: 404 });
-  }
+    acquired_at: string;
+  };
 
   const completedAt = new Date().toISOString();
 
@@ -217,7 +221,7 @@ export async function POST(request: Request) {
       tagShortId: tag.short_id,
       verifyUrl: provVerifyUrl,
       transferredToName: transfer.to_name,
-      ownedFrom: new Date(currentOwner.created_at),
+      ownedFrom: new Date(currentOwner.acquired_at),
       ownedUntil: new Date(completedAt),
       template,
     }).catch(() => null);
