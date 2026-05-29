@@ -4,32 +4,32 @@ import { motion } from "motion/react";
 const PILLARS = [
   {
     name: "Identity",
-    description: "A cryptographically signed NFC chip embedded into every piece at manufacturing. Tamper-evident. Unforgeable. Permanent.",
+    description: "A chip embedded in every piece at the moment of creation. Impossible to copy. Impossible to fake. Built to outlast the piece itself.",
     points: [
-      "HMAC signature validation",
-      "Session collision clone detection",
-      "Industry-grade NTAG chip technology",
-      "Designed for the lifespan of the piece",
+      "Every piece carries a mark only you can create",
+      "Fakes are caught the moment they're scanned",
+      "Embedded at the point of creation",
+      "Built to last the lifetime of the piece",
     ],
   },
   {
     name: "Ownership",
-    description: "A living ledger that records every owner, every transfer, every transaction. Both parties verify. Both parties are protected.",
+    description: "A living record of every owner, every transfer, every hand that carried your work forward. Both parties confirm. Both are protected.",
     points: [
-      "Two-party first ownership approval",
-      "Email-verified ownership transfer",
-      "Append-only audit trail",
-      "Permanent provenance for resale",
+      "Brand and buyer both confirm first ownership",
+      "Secure, confirmed transfers between owners",
+      "A history that can never be altered or deleted",
+      "Permanent proof of origin for resale",
     ],
   },
   {
     name: "Intelligence",
-    description: "For the first time, see where your craft travels. Who owns what. What pieces are worth in the resale market. Real visibility, finally.",
+    description: "For the first time, see where your craft travels. Who owns what. What pieces are worth. Real visibility into your work in the world.",
     points: [
-      "Geographic ownership mapping",
-      "Resale value tracking over time",
-      "Counterfeit attempt monitoring",
-      "Brand market intelligence reports",
+      "See where your pieces travel globally",
+      "Track what your work is worth over time",
+      "Know when someone tries to fake your pieces",
+      "Your own market data, finally yours",
     ],
   },
 ];

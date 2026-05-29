@@ -81,7 +81,7 @@ export default function OwnershipLedger() {
       {/* Footer */}
       <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgba(212,182,138,0.1)" }}>
         <p style={{ margin: 0, fontFamily: "var(--font-mono)", fontSize: 9, color: "#3A3A3F", letterSpacing: "0.06em" }}>
-          APPEND-ONLY · TAMPER-EVIDENT
+          PERMANENT · PROTECTED
         </p>
       </div>
     </motion.div>

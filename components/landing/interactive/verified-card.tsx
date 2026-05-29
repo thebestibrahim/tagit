@@ -101,7 +101,7 @@ export default function VerifiedCard() {
           </svg>
           <div>
             <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "#2D6A4F", letterSpacing: "0.04em" }}>VERIFIED AUTHENTIC</p>
-            <p style={{ margin: 0, fontSize: 10, color: "#4A8C6A", letterSpacing: "0.02em" }}>Cryptographic HMAC · passed</p>
+            <p style={{ margin: 0, fontSize: 10, color: "#4A8C6A", letterSpacing: "0.02em" }}>Independently verified · passed</p>
           </div>
         </motion.div>
       </motion.div>

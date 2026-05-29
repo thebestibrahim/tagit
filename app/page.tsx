@@ -1,7 +1,9 @@
 import LenisInit from "@/components/landing/interactive/lenis-init";
 import LandingNav from "@/components/landing/nav";
 import Hero from "@/components/landing/hero";
+import Marquee from "@/components/landing/marquee";
 import Stats from "@/components/landing/stats";
+import LuxuryGallery from "@/components/landing/luxury-gallery";
 import Problem from "@/components/landing/problem";
 import Pillars from "@/components/landing/pillars";
 import HowItWorks from "@/components/landing/how-it-works";
@@ -19,7 +21,9 @@ export default function LandingPage() {
       <LandingNav />
       <main>
         <Hero />
+        <Marquee />
         <Stats />
+        <LuxuryGallery />
         <Problem />
         <Pillars />
         <HowItWorks />

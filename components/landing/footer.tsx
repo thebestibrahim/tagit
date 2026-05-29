@@ -2,30 +2,28 @@ import Link from "next/link";
 
 const COLS = [
   {
-    label: "Product",
+    label: "Platform",
     links: [
       { label: "How it works", href: "#how-it-works" },
       { label: "Industries", href: "#industries" },
       { label: "Pricing", href: "#pricing" },
-      { label: "Apply", href: "/auth/register" },
+      { label: "Request a Demo", href: "mailto:business@tagitlux.com" },
     ],
   },
   {
     label: "Company",
     links: [
       { label: "About", href: "#" },
-      { label: "Blog", href: "#" },
-      { label: "Careers", href: "#" },
-      { label: "Contact", href: "#" },
+      { label: "Contact", href: "mailto:business@tagitlux.com" },
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
     ],
   },
   {
-    label: "Resources",
+    label: "Brand Login",
     links: [
-      { label: "Documentation", href: "#" },
       { label: "Brand dashboard", href: "/auth/login" },
-      { label: "Privacy policy", href: "#" },
-      { label: "Terms of service", href: "#" },
+      { label: "Sign in", href: "/auth/login" },
     ],
   },
 ];
@@ -42,12 +40,15 @@ export default function LandingFooter() {
               <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#B8945D", display: "inline-block" }} />
               <span style={{ fontFamily: "var(--font-display)", fontSize: 18, fontStyle: "italic", color: "#0A0A0B", letterSpacing: "-0.02em" }}>Tagit</span>
             </div>
-            <p style={{ fontSize: 13, color: "#6E6E73", lineHeight: 1.65, maxWidth: 240, margin: 0 }}>
-              Identity infrastructure for physical luxury goods. Every item deserves a permanent digital identity.
+            <p style={{ fontSize: 13, color: "#6E6E73", lineHeight: 1.65, maxWidth: 240, margin: "0 0 16px" }}>
+              Every luxury piece deserves a permanent record. Tagit gives your work a life beyond the point of sale.
             </p>
-            <p style={{ margin: "20px 0 0", fontFamily: "var(--font-mono)", fontSize: 10, color: "#9E9EA3", letterSpacing: "0.08em" }}>
-              EU DPP COMPLIANT · 2026–2030
-            </p>
+            <a
+              href="mailto:business@tagitlux.com"
+              style={{ fontSize: 13, color: "#B8945D", textDecoration: "none", fontWeight: 450 }}
+            >
+              business@tagitlux.com
+            </a>
           </div>
 
           {/* Columns */}
@@ -85,7 +86,7 @@ export default function LandingFooter() {
           }}
         >
           <p style={{ margin: 0, fontSize: 12, color: "#9E9EA3" }}>
-            © {new Date().getFullYear()} Tagit. Identity infrastructure for luxury.
+            © {new Date().getFullYear()} Tagit. All rights reserved.
           </p>
           <p style={{ margin: 0, fontFamily: "var(--font-mono)", fontSize: 10, color: "#C7C7CC", letterSpacing: "0.06em" }}>
             BUILT FOR THOSE WHO BUILD TO LAST

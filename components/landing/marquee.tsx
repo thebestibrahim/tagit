@@ -1,16 +1,16 @@
 "use client";
 
 const ITEMS = [
-  "Cryptographic Authentication",
+  "Verified Authentic",
   "Permanent Provenance",
-  "Verified Ownership",
-  "NFC Technology",
-  "Tamper-Evident",
-  "EU DPP Compliant",
-  "Append-Only Ledger",
-  "AI Voice Persona",
-  "Clone Detection",
-  "Two-Party Transfer",
+  "Confirmed Ownership",
+  "Made to Last",
+  "Impossible to Fake",
+  "EU Compliant",
+  "Ownership History",
+  "Brand Voice",
+  "Protected Resale",
+  "Global Coverage",
 ];
 
 const SEP = " · ";

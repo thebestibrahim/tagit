@@ -1,16 +1,15 @@
 "use client";
 import { motion } from "motion/react";
-import Link from "next/link";
 
 const INCLUDED = [
-  "NFC tag provisioning & pairing",
-  "Product registration & photography",
-  "Cryptographic authentication (HMAC)",
-  "Ownership tracking & transfer flows",
-  "Branded consumer scan pages",
-  "AI voice persona",
-  "Scan analytics & provenance reports",
-  "EU Digital Product Passport compliance",
+  "Physical tag, created and ready to embed",
+  "Every piece registered with its full story",
+  "Verified genuine — on every scan, anywhere",
+  "Full ownership history for every piece",
+  "Your branded experience when customers scan",
+  "Your brand's voice, heard on every scan",
+  "Insights into where your work travels",
+  "EU compliance, built in from day one",
 ];
 
 export default function Pricing() {
@@ -134,8 +133,8 @@ export default function Pricing() {
                 you activate — so it scales exactly with your product catalogue.
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <Link
-                  href="/auth/register"
+                <a
+                  href="mailto:business@tagitlux.com"
                   style={{
                     display: "block",
                     textAlign: "center",
@@ -149,10 +148,10 @@ export default function Pricing() {
                     color: "#fff",
                   }}
                 >
-                  Apply for access
-                </Link>
+                  Request a Demo
+                </a>
                 <a
-                  href="mailto:info@tagitlux.com"
+                  href="mailto:business@tagitlux.com"
                   style={{
                     display: "block",
                     textAlign: "center",
@@ -167,7 +166,7 @@ export default function Pricing() {
                     border: "1px solid rgba(212,182,138,0.15)",
                   }}
                 >
-                  Talk to us first
+                  Send us a message
                 </a>
               </div>
             </div>
