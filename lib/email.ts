@@ -49,24 +49,28 @@ function keyVal(label: string, value: string) {
 }
 
 export async function sendOtpEmail(to: string, code: string, purpose: "claim" | "transfer") {
-  const subject =
-    purpose === "claim"
-      ? "Your Tagit ownership claim code"
-      : "Your Tagit transfer verification code";
+  const subject = `${code} is your Tagit verification code`;
 
   const action =
     purpose === "claim"
       ? "verify your email and submit your ownership claim"
       : "verify your identity and initiate the ownership transfer";
 
-  const html = base(`
-    ${heading(purpose === "claim" ? "Ownership claim code" : "Transfer verification code")}
-    ${para(`Use this code to ${action}. It expires in 10 minutes.`)}
-    ${codeBlock(code)}
-    ${para('<span style="color:#9E9EA3;font-size:13px">If you didn\'t request this, you can safely ignore this email.</span>')}
-  `);
+  // Minimal HTML — no tables, no colored blocks, no headers. Keeps it out of Promotions.
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:32px 24px;font-family:system-ui,-apple-system,sans-serif;background:#ffffff;color:#1F1F22">
+  <p style="margin:0 0 24px;font-size:15px;line-height:1.6">Use the code below to ${action}. It expires in 10 minutes.</p>
+  <p style="margin:0 0 24px;font-size:40px;font-weight:700;letter-spacing:0.12em;font-family:monospace">${code}</p>
+  <p style="margin:0;font-size:13px;color:#6E6E73">If you didn't request this, you can safely ignore this email.</p>
+  <p style="margin:24px 0 0;font-size:13px;color:#9E9EA3">— Tagit</p>
+</body>
+</html>`;
 
-  await resend.emails.send({ from: FROM, to, subject, html });
+  const text = `Your Tagit verification code: ${code}\n\nUse this code to ${action}. It expires in 10 minutes.\n\nIf you didn't request this, ignore this email.\n\n— Tagit`;
+
+  await resend.emails.send({ from: FROM, to, subject, html, text });
 }
 
 export async function sendClaimNotificationEmail(
@@ -158,29 +162,30 @@ export async function sendTransferAcceptanceEmail(
     currency?: string;
   }
 ) {
-  const priceNote = opts.salePrice
-    ? `${keyVal("Sale price", `${opts.currency || "NGN"} ${opts.salePrice.toLocaleString()}`)}`
+  const priceLine = opts.salePrice
+    ? `\nSale price: ${opts.currency || "NGN"} ${opts.salePrice.toLocaleString()}`
     : "";
 
-  const html = base(`
-    ${heading("You've been sent an item")}
-    ${para(`${opts.fromName} is transferring ownership of <strong>${opts.productName}</strong> by ${opts.companyName} to you on Tagit.`)}
-    <table style="width:100%;border-collapse:collapse;margin:16px 0">
-      ${keyVal("Item", opts.productName)}
-      ${keyVal("From", opts.fromName)}
-      ${priceNote}
-    </table>
-    ${para("Click below to accept and become the verified owner. This link expires in 24 hours.")}
-    <div style="margin:24px 0">${button("Accept ownership", opts.acceptanceUrl)}</div>
-    ${para('<span style="color:#9E9EA3;font-size:13px">If you weren\'t expecting this, you can ignore this email. The transfer will expire automatically.</span>')}
-  `);
+  const subject = `${opts.fromName} is transferring ${opts.productName} to you`;
 
-  await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `${opts.fromName} is transferring ${opts.productName} to you`,
-    html,
-  });
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:32px 24px;font-family:system-ui,-apple-system,sans-serif;background:#ffffff;color:#1F1F22;max-width:520px">
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.6">Hi ${opts.recipientName},</p>
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.6"><strong>${opts.fromName}</strong> is transferring ownership of <strong>${opts.productName}</strong> by ${opts.companyName} to you on Tagit.</p>
+  <p style="margin:0 0 4px;font-size:13px;color:#6E6E73">Item: ${opts.productName}</p>
+  <p style="margin:0 0 4px;font-size:13px;color:#6E6E73">From: ${opts.fromName}${priceLine}</p>
+  <p style="margin:24px 0;font-size:15px;line-height:1.6">Click the link below to accept and become the verified owner. This link expires in 24 hours.</p>
+  <p style="margin:0 0 24px"><a href="${opts.acceptanceUrl}" style="font-size:15px;color:#0A0A0B;font-weight:600">${opts.acceptanceUrl}</a></p>
+  <p style="margin:0;font-size:13px;color:#6E6E73">If you weren't expecting this, you can ignore this email. The transfer will expire automatically.</p>
+  <p style="margin:24px 0 0;font-size:13px;color:#9E9EA3">— Tagit</p>
+</body>
+</html>`;
+
+  const text = `Hi ${opts.recipientName},\n\n${opts.fromName} is transferring ownership of ${opts.productName} by ${opts.companyName} to you on Tagit.\n\nItem: ${opts.productName}\nFrom: ${opts.fromName}${priceLine}\n\nAccept ownership here (expires in 24 hours):\n${opts.acceptanceUrl}\n\nIf you weren't expecting this, ignore this email.\n\n— Tagit`;
+
+  await resend.emails.send({ from: FROM, to, subject, html, text });
 }
 
 export async function sendTransferCompleteEmail(
