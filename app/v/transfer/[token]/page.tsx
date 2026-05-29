@@ -21,7 +21,7 @@ export default async function TransferAcceptPage({
 
   const { data: transferData } = await admin
     .from("transfer_requests")
-    .select("id, tag_id, from_owner_id, to_name, to_email, sale_price, status, expires_at")
+    .select("id, tag_id, from_owner_id, to_name, to_email, sale_price, currency, status, expires_at")
     .eq("acceptance_token", token)
     .single();
 
@@ -34,6 +34,7 @@ export default async function TransferAcceptPage({
     to_name: string;
     to_email: string;
     sale_price: number | null;
+    currency: string;
     status: string;
     expires_at: string;
   };
@@ -121,7 +122,7 @@ export default async function TransferAcceptPage({
               {[
                 ["From", owner?.owner_name || "—"],
                 ["To", transfer.to_name],
-                ...(transfer.sale_price ? [["Sale price", `NGN ${transfer.sale_price.toLocaleString()}`]] : []),
+                ...(transfer.sale_price ? [["Sale price", `${transfer.currency || "NGN"} ${transfer.sale_price.toLocaleString()}`]] : []),
                 ["Brand", product?.companies?.name || "—"],
               ].map(([label, value]) => (
                 <tr key={label} style={{ borderBottom: "1px solid #F5F2EC" }}>
