@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
   const { data: transferData } = await admin
     .from("transfer_requests")
-    .select("id, tag_id, from_owner_id, to_name, to_email, sale_price, status, expires_at")
+    .select("id, tag_id, from_owner_id, to_name, to_email, sale_price, currency, status, expires_at")
     .eq("acceptance_token", acceptance_token)
     .single();
 
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     to_name: string;
     to_email: string;
     sale_price: number | null;
+    currency: string;
     status: string;
     expires_at: string;
   } | null;
@@ -95,6 +96,7 @@ export async function POST(request: Request) {
       acquisition_type: "transfer",
       acquired_from_id: currentOwner.id,
       sale_price: transfer.sale_price,
+      currency: transfer.currency ?? "NGN",
       is_current: true,
     })
     .select("id")

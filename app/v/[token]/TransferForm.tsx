@@ -3,18 +3,22 @@
 import { useState } from "react";
 import { Loader2, CheckCircle2, ArrowRightLeft, MailWarning } from "lucide-react";
 
+const CURRENCIES = ["NGN", "USD", "EUR", "GBP", "GHS", "KES", "ZAR", "AED", "CHF"];
+
 type Step = "closed" | "form" | "otp" | "success";
 
 export default function TransferForm({
   tagId,
   currentOwnerEmail,
   currentOwnerName,
+  defaultCurrency = "NGN",
   accent,
   primary,
 }: {
   tagId: string;
   currentOwnerEmail: string;
   currentOwnerName: string;
+  defaultCurrency?: string;
   accent: string;
   primary: string;
 }) {
@@ -23,6 +27,7 @@ export default function TransferForm({
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [salePrice, setSalePrice] = useState("");
+  const [currency, setCurrency] = useState(defaultCurrency);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -32,6 +37,8 @@ export default function TransferForm({
   const [acceptanceUrl, setAcceptanceUrl] = useState("");
   const [acceptanceEmailSent, setAcceptanceEmailSent] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState("");
 
   async function handleInitiate(e: React.FormEvent) {
     e.preventDefault();
@@ -53,6 +60,7 @@ export default function TransferForm({
         recipient_name: recipientName,
         recipient_email: recipientEmail,
         sale_price: salePrice ? parseFloat(salePrice) : null,
+        currency,
       }),
     });
 
@@ -122,6 +130,25 @@ export default function TransferForm({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
+  }
+
+  async function handleCancelFromSuccess() {
+    setCancelError("");
+    setCancelling(true);
+    const res = await fetch("/api/transfer/cancel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ transfer_id: transferId, owner_email: ownerEmail }),
+    });
+    setCancelling(false);
+    if (res.ok) {
+      setStep("closed");
+      setTransferId("");
+      setAcceptanceUrl("");
+    } else {
+      const d = await res.json();
+      setCancelError(d.error || "Failed to cancel transfer");
+    }
   }
 
   if (step === "closed") {
@@ -203,6 +230,7 @@ export default function TransferForm({
               border: "1px solid #B5D9C5",
               borderRadius: "10px",
               padding: "12px 14px",
+              marginBottom: 12,
             }}
           >
             <p style={{ margin: "0 0 6px", fontSize: "10px", fontWeight: "700", color: "#2D6A4F", textTransform: "uppercase", letterSpacing: "0.06em" }}>
@@ -229,6 +257,29 @@ export default function TransferForm({
             </button>
           </div>
         )}
+
+        {/* Inline cancel option */}
+        <div style={{ borderTop: "1px solid #B5D9C5", paddingTop: 12, marginTop: acceptanceEmailSent ? 4 : 0 }}>
+          {cancelError && (
+            <p style={{ margin: "0 0 8px", fontSize: "12px", color: "#B85C5C" }}>{cancelError}</p>
+          )}
+          <button
+            onClick={handleCancelFromSuccess}
+            disabled={cancelling}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: cancelling ? "not-allowed" : "pointer",
+              fontSize: "12px",
+              color: "#2D6A4F",
+              textDecoration: "underline",
+              padding: 0,
+              opacity: cancelling ? 0.6 : 1,
+            }}
+          >
+            {cancelling ? "Cancelling…" : "Cancel this transfer"}
+          </button>
+        </div>
       </div>
     );
   }
@@ -318,15 +369,33 @@ export default function TransferForm({
               </div>
               <div>
                 <label style={labelStyle}>Sale price (optional)</label>
-                <input
-                  type="number"
-                  value={salePrice}
-                  onChange={(e) => setSalePrice(e.target.value)}
-                  min="0"
-                  step="0.01"
-                  placeholder="e.g. 150000"
-                  style={inputStyle}
-                />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    style={{
+                      ...inputStyle,
+                      width: "auto",
+                      paddingLeft: 10,
+                      paddingRight: 10,
+                      flexShrink: 0,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    value={salePrice}
+                    onChange={(e) => setSalePrice(e.target.value)}
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g. 150000"
+                    style={{ ...inputStyle, flex: 1 }}
+                  />
+                </div>
               </div>
             </div>
           </div>

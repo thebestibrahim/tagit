@@ -9,12 +9,13 @@ const admin = createAdminClient();
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
-  const { tag_id, owner_email, recipient_name, recipient_email, sale_price } = body as {
+  const { tag_id, owner_email, recipient_name, recipient_email, sale_price, currency } = body as {
     tag_id?: string;
     owner_email?: string;
     recipient_name?: string;
     recipient_email?: string;
     sale_price?: number | null;
+    currency?: string;
   };
 
   if (!tag_id || !owner_email || !recipient_name || !recipient_email) {
@@ -72,6 +73,7 @@ export async function POST(request: Request) {
       to_name: recipient_name,
       to_email: recipient_email,
       sale_price: sale_price ?? null,
+      currency: currency ?? "NGN",
       status: "otp_pending",
       acceptance_token,
     })

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Clock, Loader2, XCircle } from "lucide-react";
 
 export default function CancelTransferForm({
@@ -9,18 +9,28 @@ export default function CancelTransferForm({
   toEmail,
   primary,
   accent,
+  onCancelled,
 }: {
   transferId: string;
   toName: string;
   toEmail: string;
   primary: string;
   accent: string;
+  onCancelled?: () => void;
 }) {
   const [showForm, setShowForm] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [cancelled, setCancelled] = useState(false);
+
+  // Auto-switch back to TransferForm after showing the success banner
+  useEffect(() => {
+    if (cancelled && onCancelled) {
+      const t = setTimeout(onCancelled, 1600);
+      return () => clearTimeout(t);
+    }
+  }, [cancelled, onCancelled]);
 
   async function handleCancel(e: React.FormEvent) {
     e.preventDefault();

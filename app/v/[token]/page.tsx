@@ -8,8 +8,7 @@ import { ShieldX, ShieldCheck, Clock, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import { INDUSTRY_FIELDS } from "@/lib/industry-fields";
 import ClaimForm from "./ClaimForm";
-import TransferForm from "./TransferForm";
-import CancelTransferForm from "./CancelTransferForm";
+import ActionShell from "./ActionShell";
 import VoiceWidget from "./VoiceWidget";
 import CollapsibleSection from "./CollapsibleSection";
 
@@ -900,56 +899,21 @@ function ActionSection({
     );
   }
 
-  if (tag.status === "owned" && currentOwner) {
+  if (
+    (tag.status === "owned" && currentOwner) ||
+    tag.status === "transfer_pending"
+  ) {
     return (
-      <div style={{ margin: "16px 24px 0" }}>
-        <TransferForm
-          tagId={tag.id}
-          currentOwnerEmail={currentOwner.owner_email}
-          currentOwnerName={currentOwner.owner_name}
-          accent={accent}
-          primary={primary}
-        />
-      </div>
-    );
-  }
-
-  if (tag.status === "transfer_pending") {
-    if (activeTransfer) {
-      return (
-        <CancelTransferForm
-          transferId={activeTransfer.id}
-          toName={activeTransfer.to_name}
-          toEmail={activeTransfer.to_email}
-          primary={primary}
-          accent={accent}
-        />
-      );
-    }
-    return (
-      <div style={{ margin: "16px 24px 0" }}>
-        <div
-          style={{
-            padding: "18px 20px",
-            backgroundColor: "#FBE8D8",
-            borderRadius: 12,
-            border: "1px solid #E8C99A",
-            display: "flex",
-            gap: 12,
-            alignItems: "flex-start",
-          }}
-        >
-          <Clock size={16} color="#B85C00" style={{ marginTop: 2, flexShrink: 0 }} />
-          <div>
-            <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 600, color: "#B85C00" }}>
-              Transfer in progress
-            </p>
-            <p style={{ margin: 0, fontSize: 12, color: "#8B6F3F", lineHeight: 1.55 }}>
-              Ownership of this item is currently being transferred.
-            </p>
-          </div>
-        </div>
-      </div>
+      <ActionShell
+        tagId={tag.id}
+        initialStatus={tag.status}
+        currentOwner={currentOwner
+          ? { owner_name: currentOwner.owner_name, owner_email: currentOwner.owner_email, currency: currentOwner.currency }
+          : null}
+        activeTransfer={activeTransfer}
+        accent={accent}
+        primary={primary}
+      />
     );
   }
 
