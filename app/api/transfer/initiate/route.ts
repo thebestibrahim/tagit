@@ -3,6 +3,7 @@ import { randomInt } from "crypto";
 import { NextResponse } from "next/server";
 import { sendOtpEmail } from "@/lib/email";
 import { hash } from "bcryptjs";
+import { log } from "@/lib/logger";
 
 const admin = createAdminClient();
 
@@ -96,13 +97,15 @@ export async function POST(request: Request) {
   });
 
   let emailSent = false;
+  let emailError: string | null = null;
   try {
     await sendOtpEmail(owner_email, code, "transfer");
     emailSent = true;
-  } catch {
-    // OTP is stored — don't block the flow; UI will surface the warning
+  } catch (err) {
+    emailError = err instanceof Error ? err.message : String(err);
+    log.error("transfer", "OTP email failed", { owner_email, error: emailError });
   }
 
   const transfer = transferData as { id: string };
-  return NextResponse.json({ success: true, transfer_id: transfer.id, emailSent });
+  return NextResponse.json({ success: true, transfer_id: transfer.id, emailSent, emailError });
 }

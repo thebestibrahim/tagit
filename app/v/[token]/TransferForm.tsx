@@ -28,6 +28,7 @@ export default function TransferForm({
   const [error, setError] = useState("");
   const [transferId, setTransferId] = useState("");
   const [otpEmailSent, setOtpEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [acceptanceUrl, setAcceptanceUrl] = useState("");
   const [acceptanceEmailSent, setAcceptanceEmailSent] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -64,6 +65,7 @@ export default function TransferForm({
 
     setTransferId(data.transfer_id);
     setOtpEmailSent(data.emailSent ?? false);
+    setEmailError(data.emailError ?? null);
     setStep("otp");
     setLoading(false);
   }
@@ -72,16 +74,10 @@ export default function TransferForm({
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/transfer/initiate", {
+    const res = await fetch("/api/transfer/resend-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tag_id: tagId,
-        owner_email: ownerEmail,
-        recipient_name: recipientName,
-        recipient_email: recipientEmail,
-        sale_price: salePrice ? parseFloat(salePrice) : null,
-      }),
+      body: JSON.stringify({ transfer_id: transferId, owner_email: ownerEmail }),
     });
 
     const data = await res.json();
@@ -91,11 +87,8 @@ export default function TransferForm({
       return;
     }
 
-    setTransferId(data.transfer_id);
     setOtpEmailSent(data.emailSent ?? false);
-    if (data.emailSent) {
-      setError("");
-    }
+    setEmailError(data.emailError ?? null);
     setLoading(false);
   }
 
@@ -376,10 +369,15 @@ export default function TransferForm({
                 <p style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: "600", color: "#92400E" }}>
                   Email delivery issue
                 </p>
-                <p style={{ margin: "0 0 8px", fontSize: "12px", color: "#92400E", lineHeight: 1.5 }}>
+                <p style={{ margin: "0 0 4px", fontSize: "12px", color: "#92400E", lineHeight: 1.5 }}>
                   We couldn&apos;t send the code to <strong>{ownerEmail}</strong>. Check your spam folder,
                   or tap <em>Resend code</em> to try again.
                 </p>
+                {emailError && (
+                  <p style={{ margin: "0 0 8px", fontSize: "11px", color: "#92400E", fontFamily: "monospace", wordBreak: "break-all", opacity: 0.8 }}>
+                    {emailError}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={handleResendOtp}
