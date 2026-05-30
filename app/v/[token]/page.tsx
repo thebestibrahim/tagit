@@ -11,6 +11,7 @@ import ClaimForm from "./ClaimForm";
 import ActionShell from "./ActionShell";
 import VoiceWidget from "./VoiceWidget";
 import CollapsibleSection from "./CollapsibleSection";
+import { getFlagsForConsumerPage } from "@/lib/feature-flags/server";
 
 const admin = createAdminClient();
 
@@ -103,6 +104,7 @@ export default async function ScanPage({
     { data: companyExt },
     { data: ownershipData },
     { data: activeTransferData },
+    scanPageFlags,
   ] = await Promise.all([
     tag.product_id
       ? admin
@@ -135,6 +137,8 @@ export default async function ScanPage({
           .eq("status", "awaiting_acceptance")
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    // brandId comes from tag.company_id — consumer is not authenticated
+    getFlagsForConsumerPage(tag.company_id),
   ]);
 
   const product = productData as Product | null;
@@ -431,7 +435,7 @@ export default async function ScanPage({
         </div>
       </div>
 
-      {company?.ai_enabled && (
+      {company?.ai_enabled && scanPageFlags.ai_persona && (
         <VoiceWidget
           tagId={tag.id}
           personaName={company.ai_persona_name || "Assistant"}

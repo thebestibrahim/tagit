@@ -3,6 +3,7 @@ import { Instrument_Serif, Inter_Tight, JetBrains_Mono } from "next/font/google"
 import "./globals.css";
 import "@/lib/env";
 import { Toaster } from "@/components/ui/sonner";
+import { StagingBanner } from "@/components/ui/staging-banner";
 
 const instrumentSerif = Instrument_Serif({
   weight: "400",
@@ -39,7 +40,12 @@ export default function RootLayout({
       lang="en"
       className={`${instrumentSerif.variable} ${interTight.variable} ${jetbrainsMono.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col antialiased" suppressHydrationWarning>
+      <body
+        className="min-h-full flex flex-col antialiased"
+        suppressHydrationWarning
+        style={process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging' ? { paddingTop: '32px' } : undefined}
+      >
+        <StagingBanner />
         {children}
         <Toaster position="top-right" richColors />
       </body>

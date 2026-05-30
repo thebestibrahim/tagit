@@ -11,17 +11,19 @@ import {
   Settings,
   LogOut,
   ChevronRight,
+  ToggleLeft,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 const navItems = [
-  { label: "Overview",    href: "/admin",             icon: LayoutDashboard },
-  { label: "Companies",   href: "/admin/companies",   icon: Building2 },
-  { label: "Tags",        href: "/admin/tags",        icon: Tag },
-  { label: "Batches",     href: "/admin/batches",     icon: Package },
-  { label: "Scan Logs",   href: "/admin/scans",       icon: ScanLine },
-  { label: "Settings",    href: "/admin/settings",    icon: Settings },
+  { label: "Overview",      href: "/admin",                  icon: LayoutDashboard },
+  { label: "Companies",     href: "/admin/companies",        icon: Building2 },
+  { label: "Tags",          href: "/admin/tags",             icon: Tag },
+  { label: "Batches",       href: "/admin/batches",          icon: Package },
+  { label: "Scan Logs",     href: "/admin/scans",            icon: ScanLine },
+  { label: "Feature Flags", href: "/admin/feature-flags",   icon: ToggleLeft },
+  { label: "Settings",      href: "/admin/settings",         icon: Settings },
 ];
 
 export function AdminSidebar() {

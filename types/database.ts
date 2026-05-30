@@ -652,6 +652,131 @@ export type Database = {
           },
         ]
       }
+      feature_flags: {
+        Row: {
+          id: string
+          key: string
+          name: string
+          description: string | null
+          enabled: boolean
+          rollout_percentage: number
+          environments: string[]
+          metadata: Json
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          last_updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          name: string
+          description?: string | null
+          enabled?: boolean
+          rollout_percentage?: number
+          environments?: string[]
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          last_updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          name?: string
+          description?: string | null
+          enabled?: boolean
+          rollout_percentage?: number
+          environments?: string[]
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          last_updated_by?: string | null
+        }
+        Relationships: []
+      }
+      feature_flag_overrides: {
+        Row: {
+          id: string
+          flag_id: string
+          entity_type: string
+          entity_id: string
+          enabled: boolean
+          reason: string | null
+          created_at: string
+          created_by: string | null
+        }
+        Insert: {
+          id?: string
+          flag_id: string
+          entity_type: string
+          entity_id: string
+          enabled: boolean
+          reason?: string | null
+          created_at?: string
+          created_by?: string | null
+        }
+        Update: {
+          id?: string
+          flag_id?: string
+          entity_type?: string
+          entity_id?: string
+          enabled?: boolean
+          reason?: string | null
+          created_at?: string
+          created_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flag_overrides_flag_id_fkey"
+            columns: ["flag_id"]
+            isOneToOne: false
+            referencedRelation: "feature_flags"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      feature_flag_audit: {
+        Row: {
+          id: string
+          flag_id: string | null
+          flag_key: string
+          action: string
+          old_value: Json | null
+          new_value: Json | null
+          performed_by: string | null
+          performed_by_email: string | null
+          performed_at: string
+          ip_address: string | null
+        }
+        Insert: {
+          id?: string
+          flag_id?: string | null
+          flag_key: string
+          action: string
+          old_value?: Json | null
+          new_value?: Json | null
+          performed_by?: string | null
+          performed_by_email?: string | null
+          performed_at?: string
+          ip_address?: string | null
+        }
+        Update: {
+          id?: string
+          flag_id?: string | null
+          flag_key?: string
+          action?: string
+          old_value?: Json | null
+          new_value?: Json | null
+          performed_by?: string | null
+          performed_by_email?: string | null
+          performed_at?: string
+          ip_address?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

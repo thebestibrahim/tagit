@@ -3,6 +3,9 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { CompanySidebar } from "@/components/company/Sidebar";
 import type { CompanyStatus } from "@/types/database";
+import { getFlagsForBrand } from "@/lib/feature-flags/server";
+import { FlagProvider } from "@/lib/feature-flags/client";
+import type { FlagMap } from "@/lib/feature-flags/types";
 
 export default async function CompanyLayout({ children }: { children: React.ReactNode }) {
   const user = await getUser();
@@ -20,14 +23,18 @@ export default async function CompanyLayout({ children }: { children: React.Reac
     redirect("/auth/unauthorized");
   }
 
+  const flags: FlagMap = await getFlagsForBrand(user.id);
+
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#1C1A14" }}>
-      <CompanySidebar companyName={company.name} logoUrl={company.logo_url} />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden rounded-tl-xl rounded-bl-xl" style={{ backgroundColor: "var(--color-smoke)" }}>
-        <main className="flex-1 overflow-y-auto bg-dot-grid">
-          {children}
-        </main>
+    <FlagProvider flags={flags}>
+      <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#1C1A14" }}>
+        <CompanySidebar companyName={company.name} logoUrl={company.logo_url} />
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden rounded-tl-xl rounded-bl-xl" style={{ backgroundColor: "var(--color-smoke)" }}>
+          <main className="flex-1 overflow-y-auto bg-dot-grid">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </FlagProvider>
   );
 }

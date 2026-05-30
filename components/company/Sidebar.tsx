@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Layers,
   Award,
+  Sparkles,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -30,6 +31,7 @@ const navItems = [
   { label: "Customization",  href: "/dashboard/customization",   icon: Paintbrush },
   { label: "AI Persona",     href: "/dashboard/ai-persona",      icon: Bot },
   { label: "Analytics",      href: "/dashboard/analytics",       icon: BarChart2 },
+  { label: "Features",       href: "/dashboard/features",        icon: Sparkles },
   { label: "Settings",       href: "/dashboard/settings",        icon: Settings },
 ];
 
