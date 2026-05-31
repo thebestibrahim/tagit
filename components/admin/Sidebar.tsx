@@ -12,6 +12,7 @@ import {
   LogOut,
   ChevronRight,
   ToggleLeft,
+  Inbox,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -19,6 +20,7 @@ import { toast } from "sonner";
 const navItems = [
   { label: "Overview",      href: "/admin",                  icon: LayoutDashboard },
   { label: "Companies",     href: "/admin/companies",        icon: Building2 },
+  { label: "Inquiries",     href: "/admin/inquiries",        icon: Inbox },
   { label: "Tags",          href: "/admin/tags",             icon: Tag },
   { label: "Batches",       href: "/admin/batches",          icon: Package },
   { label: "Scan Logs",     href: "/admin/scans",            icon: ScanLine },

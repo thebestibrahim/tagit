@@ -222,6 +222,39 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_inquiries: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          company: string
+          phone: string | null
+          status: 'new' | 'contacted' | 'converted' | 'declined'
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          company: string
+          phone?: string | null
+          status?: 'new' | 'contacted' | 'converted' | 'declined'
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string
+          company?: string
+          phone?: string | null
+          status?: 'new' | 'contacted' | 'converted' | 'declined'
+          notes?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       industry_waitlist: {
         Row: {
           company_id: string | null
