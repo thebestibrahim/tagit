@@ -40,11 +40,7 @@ export default function RootLayout({
       lang="en"
       className={`${instrumentSerif.variable} ${interTight.variable} ${jetbrainsMono.variable} h-full`}
     >
-      <body
-        className="min-h-full flex flex-col antialiased"
-        suppressHydrationWarning
-        style={process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging' ? { paddingTop: '32px' } : undefined}
-      >
+      <body className="min-h-full flex flex-col antialiased" suppressHydrationWarning>
         <StagingBanner />
         {children}
         <Toaster position="top-right" richColors />
