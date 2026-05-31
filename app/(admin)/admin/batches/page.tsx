@@ -25,7 +25,7 @@ const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
 };
 
 export default async function AdminBatchesPage() {
-  const supabase = await createServiceClient();
+  const supabase = createServiceClient();
 
   const { data } = await supabase
     .from("tag_batches")

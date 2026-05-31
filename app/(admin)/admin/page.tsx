@@ -2,7 +2,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import type { CompanyStatus, TagStatus } from "@/types/database";
 
 export default async function AdminOverviewPage() {
-  const supabase = await createServiceClient();
+  const supabase = createServiceClient();
 
   const [companiesResult, tagsResult] = await Promise.all([
     supabase.from("companies").select("status"),

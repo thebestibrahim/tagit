@@ -37,7 +37,7 @@ export default async function AdminCompaniesPage({
 }) {
   const { status: filterStatus, q: rawQ } = await searchParams;
   const q = rawQ?.trim() ?? "";
-  const supabase = await createServiceClient();
+  const supabase = createServiceClient();
 
   let query = supabase
     .from("companies")

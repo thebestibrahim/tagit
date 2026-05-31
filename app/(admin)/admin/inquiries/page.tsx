@@ -12,7 +12,7 @@ const STATUS_STYLES: Record<InquiryStatus, { bg: string; color: string; label: s
 };
 
 export default async function InquiriesPage() {
-  const supabase = await createServiceClient();
+  const supabase = createServiceClient();
 
   const { data } = await supabase
     .from("brand_inquiries")

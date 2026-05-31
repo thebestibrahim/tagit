@@ -37,7 +37,7 @@ export default async function AdminTagsPage({
   const pageSize = 50;
   const offset = (page - 1) * pageSize;
 
-  const supabase = await createServiceClient();
+  const supabase = createServiceClient();
 
   let query = supabase
     .from("tags")
