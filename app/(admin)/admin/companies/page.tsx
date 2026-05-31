@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import type { CompanyStatus, Industry } from "@/types/database";
 import { format } from "date-fns";
@@ -37,7 +37,7 @@ export default async function AdminCompaniesPage({
 }) {
   const { status: filterStatus, q: rawQ } = await searchParams;
   const q = rawQ?.trim() ?? "";
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
 
   let query = supabase
     .from("companies")

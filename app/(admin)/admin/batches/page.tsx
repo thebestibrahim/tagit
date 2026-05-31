@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Plus, Package, Inbox, Layers } from "lucide-react";
@@ -25,7 +25,7 @@ const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
 };
 
 export default async function AdminBatchesPage() {
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
 
   const { data } = await supabase
     .from("tag_batches")

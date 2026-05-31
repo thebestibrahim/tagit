@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { format } from "date-fns";
 import { ScanLine, Globe } from "lucide-react";
@@ -28,7 +28,7 @@ export default async function AdminScansPage({
 }: {
   searchParams: Promise<{ q?: string; page?: string; result?: string }>;
 }) {
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || user.app_metadata?.role !== "tagit_admin") redirect("/auth/login");
 

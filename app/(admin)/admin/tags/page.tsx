@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
 import { Tag } from "lucide-react";
 import type { TagStatus } from "@/types/database";
@@ -37,7 +37,7 @@ export default async function AdminTagsPage({
   const pageSize = 50;
   const offset = (page - 1) * pageSize;
 
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
 
   let query = supabase
     .from("tags")
