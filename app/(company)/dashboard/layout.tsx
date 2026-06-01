@@ -11,6 +11,10 @@ export default async function CompanyLayout({ children }: { children: React.Reac
   const user = await getUser();
   if (!user) redirect("/auth/login");
 
+  // Admins have no company row — send them to their own area instead of
+  // failing the company access gate below and landing on "Access denied".
+  if (user.app_metadata?.role === "tagit_admin") redirect("/admin");
+
   const supabase = await createClient();
 
   const { data: company } = await supabase
