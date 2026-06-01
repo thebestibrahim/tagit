@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ShieldCheck } from "lucide-react";
 
@@ -38,27 +39,29 @@ export default function AdminSignInForm() {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const res = await fetch("/api/auth/admin-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const json = await res.json();
+    // Same proven client-side path as the brand portal — reliably sets the
+    // session cookies. Security comes from the generic error + hard role gate
+    // below, the unlinked/noindex URL, and Supabase's native auth rate limits.
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-      if (!res.ok) {
-        toast.error(json.error ?? "Invalid credentials.");
-        setLoading(false);
-        return;
-      }
-
-      // Session cookies were set server-side; refresh so the server sees them.
-      router.push("/admin");
-      router.refresh();
-    } catch {
-      toast.error("Something went wrong. Please try again.");
+    if (error || !data.user) {
+      toast.error("Invalid credentials.");
       setLoading(false);
+      return;
     }
+
+    // Staff portal — admins only. Anything else is torn down immediately,
+    // with the same generic message (no account/role enumeration).
+    if (data.user.app_metadata?.role !== "tagit_admin") {
+      await supabase.auth.signOut();
+      toast.error("Invalid credentials.");
+      setLoading(false);
+      return;
+    }
+
+    router.push("/admin");
+    router.refresh();
   }
 
   return (
