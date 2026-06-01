@@ -55,8 +55,9 @@ export async function isEnabled(
 
     if (error || !flag) return false
     if (!flag.environments.includes(env)) return false
-    if (!flag.enabled) return false
 
+    // A brand override always wins — even when the master switch is off.
+    // This is how you enable a feature for one brand while it's globally off.
     if (context.brandId) {
       const { data: override } = await supabase
         .from('feature_flag_overrides')
@@ -68,6 +69,9 @@ export async function isEnabled(
 
       if (override !== null) return override.enabled
     }
+
+    // No override: the master switch gates everyone else.
+    if (!flag.enabled) return false
 
     // Rollout governs brands without an override.
     // 0% = off, 100% = on, in between = a stable per-brand sample.
@@ -108,16 +112,21 @@ export const getFlagsForBrand = cache(async (brandId: string): Promise<FlagMap> 
     for (const key of FLAG_KEYS) {
       const flag = flags?.find(f => f.key === key)
 
-      if (!flag || !flag.environments.includes(env) || !flag.enabled) {
+      if (!flag || !flag.environments.includes(env)) {
         result[key] = false
         continue
       }
 
+      // A brand override always wins — even when the master switch is off.
+      // This is how you enable a feature for one brand while it's globally off.
       const override = overrideMap.get(flag.id)
       if (override !== undefined) {
         result[key] = override
         continue
       }
+
+      // No override: the master switch gates everyone else.
+      if (!flag.enabled) { result[key] = false; continue }
 
       // Rollout governs brands without an override:
       // 0% = off, 100% = on, in between = a stable per-brand sample.

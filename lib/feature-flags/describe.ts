@@ -15,11 +15,18 @@ export function describeFlagState(opts: {
       : "";
 
   if (!enabled) {
+    if (overrideCount > 0) {
+      return {
+        tone: "off",
+        label: "Off — except Force ON brands",
+        detail: `Off for all brands, except the ${overrideCount} ${overrideCount === 1 ? "override" : "overrides"} below.`,
+      };
+    }
     return {
       tone: "off",
       label: "Off for everyone",
       detail:
-        "The master switch is off, so no brand can use this — brand overrides are ignored until it's turned on.",
+        "No brand gets this. Add a Force ON override below to switch it on for specific brands.",
     };
   }
 

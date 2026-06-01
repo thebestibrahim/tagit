@@ -75,7 +75,7 @@ export function GlobalSettings({ flagKey, flagName, enabled, rolloutPercentage, 
       <div className="flex items-center justify-between">
         <div>
           <p className="text-body-sm font-medium" style={{ color: "var(--color-charcoal)" }}>Master switch</p>
-          <p className="text-caption" style={{ color: "var(--color-mist)" }}>Off here means off for every brand, overrides included</p>
+          <p className="text-caption" style={{ color: "var(--color-mist)" }}>Off turns it off for all brands — except any you Force ON below</p>
         </div>
         <button
           onClick={() => {
@@ -219,7 +219,7 @@ export function OverridesCard({ flagKey, overrides, brands }: OverridesCardProps
             Brand Overrides
           </h2>
           <p className="text-caption mt-0.5" style={{ color: "var(--color-mist)", maxWidth: 460, lineHeight: 1.5 }}>
-            Pin a specific brand on or off, ignoring the rollout above. Overrides always win — unless the master switch is off.
+            Pin a specific brand on or off, ignoring the rollout and master switch above. Overrides always win.
           </p>
         </div>
         <button

@@ -58,8 +58,7 @@ export default function FeatureWall({
           }}
         >
           {description ? `${description} ` : ""}
-          {name} isn&apos;t currently enabled for your account. Feature access is
-          managed by the Tagit team.
+          {`${name} isn't currently enabled for your account. Feature access is managed by the Tagit team.`}
         </p>
 
         <Link
