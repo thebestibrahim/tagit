@@ -27,8 +27,8 @@ const FEATURE_DISPLAY: {
   },
   {
     key: "resale_analytics",
-    name: "Resale Analytics",
-    description: "Track how your items perform in secondary markets",
+    name: "Analytics",
+    description: "See how your tags are scanned and how your products perform",
   },
   {
     key: "bulk_tag_creation",

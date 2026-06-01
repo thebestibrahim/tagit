@@ -18,8 +18,8 @@ export default async function AnalyticsPage() {
   if (!flags.resale_analytics) {
     return (
       <FeatureWall
-        name="Resale Analytics"
-        description="Track how your items perform across secondary markets."
+        name="Analytics"
+        description="See how your tags are scanned and how your products are performing."
       />
     );
   }
