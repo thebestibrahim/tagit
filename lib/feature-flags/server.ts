@@ -69,16 +69,15 @@ export async function isEnabled(
       if (override !== null) return override.enabled
     }
 
-    if (
-      flag.rollout_percentage > 0 &&
-      flag.rollout_percentage < 100 &&
-      context.brandId
-    ) {
+    // Rollout governs brands without an override.
+    // 0% = off, 100% = on, in between = a stable per-brand sample.
+    if (flag.rollout_percentage >= 100) return true
+    if (flag.rollout_percentage <= 0) return false
+    if (context.brandId) {
       const hash = simpleHash(context.brandId + flagKey)
       return (hash % 100) < flag.rollout_percentage
     }
-
-    return flag.enabled
+    return true
   } catch {
     return false
   }
@@ -120,13 +119,12 @@ export const getFlagsForBrand = cache(async (brandId: string): Promise<FlagMap> 
         continue
       }
 
-      if (flag.rollout_percentage > 0 && flag.rollout_percentage < 100) {
-        const hash = simpleHash(brandId + key)
-        result[key] = (hash % 100) < flag.rollout_percentage
-        continue
-      }
-
-      result[key] = flag.enabled
+      // Rollout governs brands without an override:
+      // 0% = off, 100% = on, in between = a stable per-brand sample.
+      if (flag.rollout_percentage >= 100) { result[key] = true; continue }
+      if (flag.rollout_percentage <= 0) { result[key] = false; continue }
+      const hash = simpleHash(brandId + key)
+      result[key] = (hash % 100) < flag.rollout_percentage
     }
 
     return result

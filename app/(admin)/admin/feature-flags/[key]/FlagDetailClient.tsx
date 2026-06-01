@@ -3,6 +3,13 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { X, Trash2 } from "lucide-react"
+import { describeFlagState, type FlagTone } from "@/lib/feature-flags/describe"
+
+const TONE_STYLES: Record<FlagTone, { bg: string; border: string; dot: string; text: string }> = {
+  on:      { bg: "#ECFDF5", border: "#A7F3D0", dot: "#16A34A", text: "#065F46" },
+  partial: { bg: "var(--color-soft-gold)", border: "#EBD9B4", dot: "var(--color-deep-gold)", text: "var(--color-deep-gold)" },
+  off:     { bg: "#F3F4F6", border: "#E5E7EB", dot: "#9CA3AF", text: "#4B5563" },
+}
 
 // ── Rollout slider ───────────────────────────────────────────────────────────
 
@@ -12,14 +19,19 @@ interface GlobalSettingsProps {
   enabled: boolean
   rolloutPercentage: number
   environments: string[]
+  overrideCount: number
 }
 
-export function GlobalSettings({ flagKey, flagName, enabled, rolloutPercentage, environments }: GlobalSettingsProps) {
+export function GlobalSettings({ flagKey, flagName, enabled, rolloutPercentage, environments, overrideCount }: GlobalSettingsProps) {
   const [en, setEn] = useState(enabled)
   const [rollout, setRollout] = useState(rolloutPercentage)
   const [envs, setEnvs] = useState<string[]>(environments)
   const [pending, startTransition] = useTransition()
   const router = useRouter()
+
+  // Live, plain-language preview of what the current (unsaved) settings mean.
+  const summary = describeFlagState({ enabled: en, rolloutPercentage: rollout, overrideCount })
+  const tone = TONE_STYLES[summary.tone]
 
   function save() {
     startTransition(async () => {
@@ -44,10 +56,26 @@ export function GlobalSettings({ flagKey, flagName, enabled, rolloutPercentage, 
         Global Settings
       </h2>
 
+      {/* Live plain-language summary of what these settings mean for brands */}
+      <div
+        className="flex items-start gap-3 rounded-lg px-4 py-3"
+        style={{ backgroundColor: tone.bg, border: `1px solid ${tone.border}` }}
+      >
+        <span className="rounded-full mt-1.5 shrink-0" style={{ width: 8, height: 8, backgroundColor: tone.dot }} />
+        <div>
+          <p className="text-body-sm font-semibold" style={{ color: tone.text }}>{summary.label}</p>
+          <p className="text-caption mt-0.5" style={{ color: "var(--color-slate)", lineHeight: 1.5 }}>{summary.detail}</p>
+          {pending && <p className="text-caption mt-1" style={{ color: "var(--color-mist)" }}>Saving…</p>}
+          {!pending && (en !== enabled || rollout !== rolloutPercentage) && (
+            <p className="text-caption mt-1" style={{ color: "var(--color-deep-gold)" }}>Unsaved — click Save Changes to apply.</p>
+          )}
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-body-sm font-medium" style={{ color: "var(--color-charcoal)" }}>Enabled</p>
-          <p className="text-caption" style={{ color: "var(--color-mist)" }}>Global on/off switch for this flag</p>
+          <p className="text-body-sm font-medium" style={{ color: "var(--color-charcoal)" }}>Master switch</p>
+          <p className="text-caption" style={{ color: "var(--color-mist)" }}>Off here means off for every brand, overrides included</p>
         </div>
         <button
           onClick={() => {
@@ -71,15 +99,21 @@ export function GlobalSettings({ flagKey, flagName, enabled, rolloutPercentage, 
         </button>
       </div>
 
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-body-sm font-medium" style={{ color: "var(--color-charcoal)" }}>Rollout Percentage</p>
-          <span className="text-body-sm font-semibold" style={{ color: "var(--color-gold)" }}>{rollout}%</span>
+      <div style={{ opacity: en ? 1 : 0.5 }}>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-body-sm font-medium" style={{ color: "var(--color-charcoal)" }}>Rollout</p>
+          <span className="text-body-sm font-semibold" style={{ color: "var(--color-gold)" }}>
+            {rollout === 0 ? "Off" : rollout === 100 ? "All brands" : `${rollout}%`}
+          </span>
         </div>
+        <p className="text-caption mb-2" style={{ color: "var(--color-mist)" }}>
+          What share of brands (without an override) get this. 0% = none, 100% = everyone.
+        </p>
         <input
           type="range"
           min={0} max={100} step={10}
           value={rollout}
+          disabled={!en}
           onChange={(e) => setRollout(Number(e.target.value))}
           style={{ width: "100%", accentColor: "var(--color-gold)" }}
         />
@@ -179,18 +213,24 @@ export function OverridesCard({ flagKey, overrides, brands }: OverridesCardProps
 
   return (
     <div className="card-raised p-6">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="font-semibold" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-h3)" }}>
-          Brand Overrides
-        </h2>
+      <div className="flex items-start justify-between mb-1">
+        <div>
+          <h2 className="font-semibold" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-h3)" }}>
+            Brand Overrides
+          </h2>
+          <p className="text-caption mt-0.5" style={{ color: "var(--color-mist)", maxWidth: 460, lineHeight: 1.5 }}>
+            Pin a specific brand on or off, ignoring the rollout above. Overrides always win — unless the master switch is off.
+          </p>
+        </div>
         <button
           onClick={() => setShowModal(true)}
-          className="px-4 py-1.5 rounded-lg text-body-sm font-medium"
+          className="px-4 py-1.5 rounded-lg text-body-sm font-medium shrink-0"
           style={{ backgroundColor: "var(--color-soft-gold)", color: "var(--color-deep-gold)" }}
         >
           + Add Override
         </button>
       </div>
+      <div className="mb-4" />
 
       {overrides.length === 0 ? (
         <p className="text-body-sm py-4 text-center" style={{ color: "var(--color-mist)" }}>
@@ -220,7 +260,7 @@ export function OverridesCard({ flagKey, overrides, brands }: OverridesCardProps
                     color: ov.enabled ? "#166534" : "#991B1B",
                   }}
                 >
-                  {ov.enabled ? "Enabled" : "Disabled"}
+                  {ov.enabled ? "Force ON" : "Force OFF"}
                 </span>
                 <button
                   onClick={() => removeOverride(ov.id)}
@@ -280,12 +320,12 @@ export function OverridesCard({ flagKey, overrides, brands }: OverridesCardProps
 
               <div>
                 <label className="text-micro font-medium uppercase tracking-wider block mb-2" style={{ color: "var(--color-slate)" }}>
-                  Access
+                  Access for this brand
                 </label>
                 <div className="flex gap-4">
                   {[
-                    { label: "Enable", value: true },
-                    { label: "Disable", value: false },
+                    { label: "Force ON", value: true },
+                    { label: "Force OFF", value: false },
                   ].map(({ label, value }) => (
                     <label key={label} className="flex items-center gap-2 cursor-pointer">
                       <input

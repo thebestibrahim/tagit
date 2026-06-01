@@ -113,6 +113,7 @@ export default async function FlagDetailPage({
           enabled={flag.enabled}
           rolloutPercentage={flag.rollout_percentage}
           environments={flag.environments}
+          overrideCount={overrides.length}
         />
 
         {/* Brand overrides */}

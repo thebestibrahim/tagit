@@ -3,6 +3,13 @@ import Link from "next/link";
 import { ToggleLeft } from "lucide-react";
 import { FlagToggle } from "./FlagToggle";
 import { CreateFlagModal } from "./CreateFlagModal";
+import { describeFlagState, type FlagTone } from "@/lib/feature-flags/describe";
+
+const TONE_DOT: Record<FlagTone, string> = {
+  on: "#16A34A",
+  partial: "var(--color-deep-gold)",
+  off: "#9CA3AF",
+};
 
 type FlagRow = {
   id: string;
@@ -58,7 +65,7 @@ export default async function FeatureFlagsPage() {
           <table className="w-full">
             <thead>
               <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
-                {["Name", "Key", "Status", "Rollout", "Overrides", ""].map((h) => (
+                {["Feature", "Master", "Effective access", "Overrides", ""].map((h) => (
                   <th
                     key={h}
                     className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider"
@@ -72,6 +79,11 @@ export default async function FeatureFlagsPage() {
             <tbody>
               {flags.map((flag, i) => {
                 const overrideCount = flag.feature_flag_overrides?.length ?? 0;
+                const state = describeFlagState({
+                  enabled: flag.enabled,
+                  rolloutPercentage: flag.rollout_percentage,
+                  overrideCount,
+                });
                 return (
                   <tr
                     key={flag.id}
@@ -84,47 +96,35 @@ export default async function FeatureFlagsPage() {
                       <p className="font-medium" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>
                         {flag.name}
                       </p>
-                      {flag.description && (
-                        <p className="mt-0.5 line-clamp-1" style={{ color: "var(--color-mist)", fontSize: "var(--text-caption)" }}>
-                          {flag.description}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-5 py-4">
                       <code
-                        className="px-2 py-0.5 rounded text-caption"
-                        style={{ backgroundColor: "var(--color-smoke)", color: "var(--color-graphite)", fontFamily: "var(--font-jetbrains-mono)" }}
+                        className="mt-1 inline-block px-1.5 py-0.5 rounded text-micro"
+                        style={{ backgroundColor: "var(--color-smoke)", color: "var(--color-mist)", fontFamily: "var(--font-jetbrains-mono)" }}
                       >
                         {flag.key}
                       </code>
                     </td>
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <FlagToggle
-                          flagKey={flag.key}
-                          enabled={flag.enabled}
-                          rolloutPercentage={flag.rollout_percentage}
-                          flagName={flag.name}
-                        />
-                        <span
-                          className="text-caption font-medium"
-                          style={{ color: flag.enabled ? "#16A34A" : "var(--color-mist)" }}
-                        >
-                          {flag.enabled ? "ON" : "OFF"}
-                        </span>
-                      </div>
+                      <FlagToggle
+                        flagKey={flag.key}
+                        enabled={flag.enabled}
+                        rolloutPercentage={flag.rollout_percentage}
+                        flagName={flag.name}
+                      />
                     </td>
                     <td className="px-5 py-4">
-                      <span style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-                        {flag.rollout_percentage}%
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full shrink-0" style={{ width: 8, height: 8, backgroundColor: TONE_DOT[state.tone] }} />
+                        <span style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+                          {state.label}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       <span
                         className="text-caption font-medium"
                         style={{ color: overrideCount > 0 ? "var(--color-deep-gold)" : "var(--color-mist)" }}
                       >
-                        {overrideCount}
+                        {overrideCount > 0 ? overrideCount : "—"}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-right">
