@@ -6,8 +6,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user || user.app_metadata?.role !== "tagit_admin") {
+  // No session at all -> staff login. A logged-in non-admin (a brand) ->
+  // their own dashboard, not the staff login page (which would look broken
+  // to someone who is already signed in).
+  if (!user) {
     redirect("/control/signin");
+  }
+  if (user.app_metadata?.role !== "tagit_admin") {
+    redirect("/dashboard");
   }
 
   return (
