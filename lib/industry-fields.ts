@@ -85,3 +85,44 @@ export function groupFields(fields: FieldDef[]): Record<string, FieldDef[]> {
     return acc;
   }, {});
 }
+
+// Flat lookup of every known field across all industries, keyed by field key.
+// Used to resolve labels/types for stored data even when a tag's `industry`
+// doesn't match the schema the product was actually entered under.
+export const ALL_FIELDS: Record<string, FieldDef> = Object.values(INDUSTRY_FIELDS)
+  .flat()
+  .reduce<Record<string, FieldDef>>((acc, f) => {
+    if (!acc[f.key]) acc[f.key] = f;
+    return acc;
+  }, {});
+
+// Resolve a stored field key to a definition. Falls back to a prettified label
+// so unknown keys (industries without a schema: jewellery, electronics, other,
+// or future additions) are still displayed instead of silently dropped.
+export function resolveField(key: string): FieldDef {
+  return (
+    ALL_FIELDS[key] ?? {
+      key,
+      label: key.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()),
+      type: "text",
+      group: "Details",
+    }
+  );
+}
+
+// Pick the schema that best matches a set of stored keys. Products are entered
+// under a company's industry, but a tag may carry a different `industry`; this
+// recovers the real schema (for priority ordering) from the data itself.
+export function inferIndustry(storedKeys: string[], fallback: string): string {
+  let best = fallback;
+  let bestScore = 0;
+  for (const [ind, defs] of Object.entries(INDUSTRY_FIELDS)) {
+    const defKeys = new Set(defs.map((d) => d.key));
+    const score = storedKeys.filter((k) => defKeys.has(k)).length;
+    if (score > bestScore) {
+      bestScore = score;
+      best = ind;
+    }
+  }
+  return best;
+}

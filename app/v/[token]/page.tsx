@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { ShieldX, ShieldCheck, Clock, AlertTriangle } from "lucide-react";
 import Image from "next/image";
-import { INDUSTRY_FIELDS } from "@/lib/industry-fields";
+import { INDUSTRY_FIELDS, resolveField, inferIndustry } from "@/lib/industry-fields";
 import ClaimForm from "./ClaimForm";
 import ActionShell from "./ActionShell";
 import VoiceWidget from "./VoiceWidget";
@@ -495,10 +495,19 @@ function ProductSection({
   ownershipRecords: OwnershipRecord[];
   template: string;
 }) {
-  const fields = INDUSTRY_FIELDS[industry] ?? [];
-  const filledFields = fields.filter(
-    (f) => product.industry_fields[f.key] && String(product.industry_fields[f.key]).trim() !== ""
-  );
+  // Derive fields from what's actually stored — never from the tag's industry
+  // alone — so content is never silently dropped when the tag's industry has no
+  // schema or differs from the one the product was entered under (see resolveField).
+  const stored = product.industry_fields ?? {};
+  const storedKeys = Object.keys(stored).filter((k) => String(stored[k] ?? "").trim() !== "");
+  const effectiveIndustry = inferIndustry(storedKeys, industry);
+  const schemaKeys = (INDUSTRY_FIELDS[effectiveIndustry] ?? []).map((f) => f.key);
+  // Schema-ordered keys that have values first, then any remaining stored keys.
+  const orderedKeys = [
+    ...schemaKeys.filter((k) => storedKeys.includes(k)),
+    ...storedKeys.filter((k) => !schemaKeys.includes(k)),
+  ];
+  const filledFields = orderedKeys.map(resolveField);
 
   const priorityKeys: Record<string, string[]> = {
     fashion: ["primary_material", "made_in", "collection", "colorway", "size", "production_year"],
@@ -506,12 +515,12 @@ function ProductSection({
     collectibles: ["brand", "model_reference", "serial_number", "year", "condition_grade", "graded_by"],
   };
 
-  const highlight = priorityKeys[industry] ?? [];
+  const highlight = priorityKeys[effectiveIndustry] ?? [];
   const highlightFields = filledFields.filter((f) => highlight.includes(f.key)).slice(0, 6);
   const detailFields = filledFields.filter((f) => !highlight.includes(f.key) && f.type !== "textarea");
   const storyFields = filledFields.filter((f) => f.type === "textarea" && product.industry_fields[f.key]);
   const photo = product.photos?.[0];
-  const industryLabel = industry ? industry.charAt(0).toUpperCase() + industry.slice(1) : "Product";
+  const industryLabel = effectiveIndustry ? effectiveIndustry.charAt(0).toUpperCase() + effectiveIndustry.slice(1) : "Product";
 
   // ── MINIMAL ───────────────────────────────────────────────────────────────
   if (template === "minimal") {
