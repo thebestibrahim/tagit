@@ -52,7 +52,7 @@ export async function POST(
   await sendBrandInvitationEmail(inquiry.email, {
     name: inquiry.name,
     company: inquiry.company,
-    registerUrl: `${APP_URL}/auth/register`,
+    loginUrl: `${APP_URL}/auth/login`,
   }).catch((err) => log.error("admin/inquiries/invite", "Invitation email failed", err));
 
   return NextResponse.json({ success: true });
