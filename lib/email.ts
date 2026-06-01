@@ -253,6 +253,48 @@ export async function sendCompanyRejectedEmail(
   });
 }
 
+export async function sendBrandInvitationEmail(
+  to: string,
+  opts: { name: string; company: string; registerUrl: string }
+) {
+  const firstName = opts.name.split(" ")[0];
+
+  // Plain, conversational HTML — no headers, no promotional elements, no unsubscribe.
+  // Signed as a person rather than a brand blast. This keeps it out of Gmail Promotions.
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:32px 24px;font-family:system-ui,-apple-system,sans-serif;background:#ffffff;color:#1F1F22;max-width:560px">
+  <p style="margin:0 0 20px;font-size:15px;line-height:1.6">Hi ${firstName},</p>
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.6">I'm Fawaz, founder of Tagit. I personally reviewed your application and I'm glad to let you know that <strong>${opts.company}</strong> has been approved.</p>
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.6">We built Tagit because luxury goods deserve an identity layer that can't be faked or lost — one that travels with the product forever, through every owner. Your brand is exactly the kind we want on the platform.</p>
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.6">Once you create your account you can register products, assign NFC tags, and give your customers ownership records they can verify and transfer themselves.</p>
+  <p style="margin:0 0 24px;font-size:15px;line-height:1.6">Get started here:</p>
+  <p style="margin:0 0 8px"><a href="${opts.registerUrl}" style="display:inline-block;padding:11px 22px;background:#0A0A0B;color:#FAFAF8;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600">Create your account</a></p>
+  <p style="margin:16px 0 0;font-size:13px;color:#6E6E73">Or: <a href="${opts.registerUrl}" style="color:#0A0A0B">${opts.registerUrl}</a></p>
+  <p style="margin:28px 0 4px;font-size:15px;line-height:1.6;color:#1F1F22">Looking forward to having you on board.</p>
+  <p style="margin:0 0 4px;font-size:14px;color:#4A4A4F">Fawaz Ibrahim</p>
+  <p style="margin:0;font-size:13px;color:#9E9EA3">Founder, Tagit</p>
+  <p style="margin:20px 0 0;font-size:13px;color:#B0B0B5">Reply to this email if you have any questions before you start — I read every reply.</p>
+</body>
+</html>`;
+
+  const text = `Hi ${firstName},\n\nI'm Fawaz, founder of Tagit. I personally reviewed your application and I'm glad to let you know that ${opts.company} has been approved.\n\nWe built Tagit because luxury goods deserve an identity layer that can't be faked or lost — one that travels with the product forever, through every owner. Your brand is exactly the kind we want on the platform.\n\nOnce you create your account you can register products, assign NFC tags, and give your customers ownership records they can verify and transfer themselves.\n\nGet started here:\n${opts.registerUrl}\n\nLooking forward to having you on board.\n\nFawaz Ibrahim\nFounder, Tagit\n\nReply to this email if you have any questions — I read every reply.`;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    replyTo: "info@tagitlux.com",
+    subject: `Your Tagit account is ready, ${firstName}`,
+    html,
+    text,
+    headers: {
+      // Unique per send so Gmail doesn't thread separate invitations together
+      "X-Entity-Ref-ID": `brand-invite-${Buffer.from(to).toString("base64").slice(0, 12)}-${Date.now()}`,
+    },
+  });
+}
+
 export async function sendCertificateEmail(
   to: string,
   opts: {

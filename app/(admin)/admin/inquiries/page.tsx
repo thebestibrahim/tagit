@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
 import { Inbox } from "lucide-react";
+import InquiryActions from "./InquiryActions";
 
 type InquiryStatus = 'new' | 'contacted' | 'converted' | 'declined';
 
@@ -58,7 +59,7 @@ export default async function InquiriesPage() {
           <table className="w-full">
             <thead>
               <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
-                {["Name", "Company", "Contact", "Status", "Submitted"].map((h) => (
+                {["Name", "Company", "Contact", "Status", "Submitted", ""].map((h) => (
                   <th
                     key={h}
                     className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider"
@@ -112,6 +113,12 @@ export default async function InquiriesPage() {
                       <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
                         {format(new Date(inquiry.created_at), "MMM d, yyyy")}
                       </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <InquiryActions
+                        inquiryId={inquiry.id}
+                        status={inquiry.status as "new" | "contacted" | "converted" | "declined"}
+                      />
                     </td>
                   </tr>
                 );
