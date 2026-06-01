@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
+import { cache } from 'react'
+import { getUser } from '@/lib/auth'
 import type { FlagKey, FlagMap, FlagContext } from './types'
 
 const FLAG_KEYS: FlagKey[] = [
@@ -82,8 +84,9 @@ export async function isEnabled(
   }
 }
 
-// Load all flags for a brand in two queries — call at layout level only
-export async function getFlagsForBrand(brandId: string): Promise<FlagMap> {
+// Load all flags for a brand in two queries. Wrapped in React cache() so the
+// layout, a page, and a feature gate within the same request share one lookup.
+export const getFlagsForBrand = cache(async (brandId: string): Promise<FlagMap> => {
   try {
     const supabase = getServiceClient()
     const env = process.env.NEXT_PUBLIC_ENVIRONMENT ?? 'production'
@@ -130,9 +133,24 @@ export async function getFlagsForBrand(brandId: string): Promise<FlagMap> {
   } catch {
     return { ...DEFAULT_MAP }
   }
-}
+})
 
 // Consumer scan page — brandId comes from tag.company_id, not from auth
 export async function getFlagsForConsumerPage(brandId: string): Promise<FlagMap> {
   return getFlagsForBrand(brandId)
+}
+
+// Flags for the currently authenticated brand. Cached per request; safe to
+// call from any dashboard page to gate a feature behind its flag.
+export const getCurrentBrandFlags = cache(async (): Promise<FlagMap> => {
+  const user = await getUser()
+  if (!user) return { ...DEFAULT_MAP }
+  return getFlagsForBrand(user.id)
+})
+
+// API-route enforcement: true when the flag is on for this brand. Lets write
+// routes reject a disabled feature instead of relying on the UI wall alone.
+export async function isBrandFlagEnabled(brandId: string, key: FlagKey): Promise<boolean> {
+  const flags = await getFlagsForBrand(brandId)
+  return flags[key] ?? false
 }

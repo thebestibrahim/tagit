@@ -5,6 +5,8 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Award, CheckCircle, AlertTriangle, Clock, ExternalLink, ArrowRight } from "lucide-react";
+import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
+import FeatureWall from "@/components/company/FeatureWall";
 
 const admin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,6 +31,16 @@ export default async function CertificatesPage() {
   const supabase = await createClient();
   const user = await getUser();
   if (!user) redirect("/auth/login");
+
+  const flags = await getCurrentBrandFlags();
+  if (!flags.certificate_generation) {
+    return (
+      <FeatureWall
+        name="Certificate of Authenticity"
+        description="Issue verified certificates for every ownership confirmation."
+      />
+    );
+  }
 
   // Get all company tag IDs
   const { data: tagData } = await supabase

@@ -1,12 +1,24 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
+import FeatureWall from "@/components/company/FeatureWall";
 import PersonaForm from "./PersonaForm";
 
 export default async function AiPersonaPage() {
   const supabase = await createClient();
   const user = await getUser();
   if (!user) redirect("/auth/login");
+
+  const flags = await getCurrentBrandFlags();
+  if (!flags.ai_persona) {
+    return (
+      <FeatureWall
+        name="AI Product Persona"
+        description="Give your items a voice your customers can speak with after a scan."
+      />
+    );
+  }
 
   const { data: companyData } = await supabase
     .from("companies")

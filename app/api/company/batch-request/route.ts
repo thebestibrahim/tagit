@@ -1,6 +1,7 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { log } from "@/lib/logger";
+import { isBrandFlagEnabled } from "@/lib/feature-flags/server";
 import { NextResponse } from "next/server";
 
 const ALLOWED_INDUSTRIES = new Set(["fashion", "arts", "collectibles", "jewellery", "electronics", "other"]);
@@ -11,6 +12,10 @@ export async function POST(request: Request) {
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (!(await isBrandFlagEnabled(user.id, "bulk_tag_creation"))) {
+    return NextResponse.json({ error: "This feature is not available on your account." }, { status: 403 });
+  }
 
   const body = await request.json();
   const { industry, quantity, notes, batch_name } = body;

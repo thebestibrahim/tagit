@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { log } from "@/lib/logger";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { isBrandFlagEnabled } from "@/lib/feature-flags/server";
 import type { Database } from "@/types/database";
 import { NextResponse } from "next/server";
 
@@ -8,6 +9,10 @@ export async function POST(request: Request) {
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+
+  if (!(await isBrandFlagEnabled(user.id, "brand_customisation"))) {
+    return NextResponse.json({ error: "This feature is not available on your account." }, { status: 403 });
+  }
 
   const body = await request.json();
 

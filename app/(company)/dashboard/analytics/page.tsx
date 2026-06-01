@@ -6,11 +6,23 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { format, subDays } from "date-fns";
 import { BarChart2, Eye, Package, Award, TrendingUp } from "lucide-react";
+import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
+import FeatureWall from "@/components/company/FeatureWall";
 import ScanChart from "./ScanChart";
 export default async function AnalyticsPage() {
   const supabase = await createClient();
   const user = await getUser();
   if (!user) redirect("/auth/login");
+
+  const flags = await getCurrentBrandFlags();
+  if (!flags.resale_analytics) {
+    return (
+      <FeatureWall
+        name="Resale Analytics"
+        description="Track how your items perform across secondary markets."
+      />
+    );
+  }
 
   // Fetch this company's tags
   const { data: tagsData } = await supabase

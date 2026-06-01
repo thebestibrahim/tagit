@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
+import FeatureWall from "@/components/company/FeatureWall";
 import CustomizationForm from "./CustomizationForm";
 
 type Company = {
@@ -23,6 +25,16 @@ export default async function CustomizationPage() {
   const supabase = await createClient();
   const user = await getUser();
   if (!user) redirect("/auth/login");
+
+  const flags = await getCurrentBrandFlags();
+  if (!flags.brand_customisation) {
+    return (
+      <FeatureWall
+        name="Brand Customisation"
+        description="Personalise how your brand looks on every customer scan page."
+      />
+    );
+  }
 
   // brand_text_color and brand_template require docs/add-brand-fields.sql migration.
   // Select them separately so a missing column doesn't break the whole page.

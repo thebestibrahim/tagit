@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Layers, Plus, Clock, CheckCircle2, Truck } from "lucide-react";
+import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
+import FeatureWall from "@/components/company/FeatureWall";
 
 type Batch = {
   id: string;
@@ -34,6 +36,16 @@ export default async function CompanyBatchesPage() {
   const supabase = await createClient();
   const user = await getUser();
   if (!user) redirect("/auth/login");
+
+  const flags = await getCurrentBrandFlags();
+  if (!flags.bulk_tag_creation) {
+    return (
+      <FeatureWall
+        name="Bulk Tag Creation"
+        description="Request and manage large batches of tags in one operation."
+      />
+    );
+  }
 
   const { data } = await supabase
     .from("tag_batches")
