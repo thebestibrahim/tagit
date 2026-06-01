@@ -36,7 +36,7 @@ export function AdminSidebar() {
     const supabase = createClient();
     await supabase.auth.signOut();
     toast.success("Signed out");
-    router.push("/auth/login?type=admin");
+    router.push("/control/signin");
   }
 
   return (

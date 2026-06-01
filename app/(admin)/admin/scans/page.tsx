@@ -30,7 +30,7 @@ export default async function AdminScansPage({
 }) {
   const supabase = createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.app_metadata?.role !== "tagit_admin") redirect("/auth/login");
+  if (!user || user.app_metadata?.role !== "tagit_admin") redirect("/control/signin");
 
   const params = await searchParams;
   const q = params.q?.trim() ?? "";

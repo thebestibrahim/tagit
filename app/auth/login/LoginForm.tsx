@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -26,8 +26,6 @@ const inputBase: React.CSSProperties = {
 
 export default function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const isAdmin = searchParams.get("type") === "admin";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,24 +47,21 @@ export default function LoginForm() {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      toast.error(error.message);
+      // Generic message — don't reveal whether the email exists or is confirmed.
+      toast.error("Invalid email or password.");
       setLoading(false);
       return;
     }
 
+    // This is the brand partner portal — companies only. Staff sign in elsewhere.
     const role = data.user?.app_metadata?.role;
-    if (isAdmin && role !== "tagit_admin") {
+    if (role === "company") {
+      router.push("/dashboard");
+    } else {
       await supabase.auth.signOut();
-      toast.error("You don't have admin access.");
+      toast.error("Invalid email or password.");
       setLoading(false);
       return;
-    }
-
-    if (role === "tagit_admin") router.push("/admin");
-    else if (role === "company") router.push("/dashboard");
-    else {
-      await supabase.auth.signOut();
-      toast.error("Account type not recognized.");
     }
     setLoading(false);
   }
@@ -101,7 +96,7 @@ export default function LoginForm() {
         {/* Quote */}
         <div style={{ position: "relative" }}>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#D4B68A", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 24 }}>
-            {isAdmin ? "Internal Dashboard" : "Brand Partner Portal"}
+            Brand Partner Portal
           </p>
           <h2
             style={{
@@ -207,7 +202,7 @@ export default function LoginForm() {
                 <label htmlFor="password" style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", letterSpacing: "-0.003em" }}>
                   Password
                 </label>
-                <Link href={isAdmin ? "/auth/forgot-password?type=admin" : "/auth/forgot-password"} style={{ fontSize: 12, color: "#9E9EA3", textDecoration: "none", letterSpacing: "-0.003em" }}>
+                <Link href="/auth/forgot-password" style={{ fontSize: 12, color: "#9E9EA3", textDecoration: "none", letterSpacing: "-0.003em" }}>
                   Forgot password?
                 </Link>
               </div>
@@ -252,14 +247,12 @@ export default function LoginForm() {
             </button>
           </form>
 
-          {!isAdmin && (
-            <p style={{ marginTop: 24, fontSize: 13, color: "#9E9EA3", letterSpacing: "-0.003em" }}>
-              New brand partner?{" "}
-              <Link href="/auth/register" style={{ color: "#4A4A4F", textDecoration: "none", borderBottom: "1px solid #E8E2D5" }}>
-                Apply for access →
-              </Link>
-            </p>
-          )}
+          <p style={{ marginTop: 24, fontSize: 13, color: "#9E9EA3", letterSpacing: "-0.003em" }}>
+            New brand partner?{" "}
+            <Link href="/auth/register" style={{ color: "#4A4A4F", textDecoration: "none", borderBottom: "1px solid #E8E2D5" }}>
+              Apply for access →
+            </Link>
+          </p>
         </motion.div>
       </div>
 

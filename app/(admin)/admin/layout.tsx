@@ -7,7 +7,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user || user.app_metadata?.role !== "tagit_admin") {
-    redirect("/auth/login?type=admin");
+    redirect("/control/signin");
   }
 
   return (
