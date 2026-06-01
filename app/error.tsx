@@ -53,6 +53,28 @@ export default function Error({
       <p style={{ fontSize: 14, color: "#6E6E73", marginBottom: 32, maxWidth: 400 }}>
         Our team has been notified. You can try again or return to the dashboard.
       </p>
+
+      {/* Staging only: surface the real error so we can diagnose it. */}
+      {process.env.NEXT_PUBLIC_ENVIRONMENT === "staging" && (
+        <pre
+          style={{
+            maxWidth: 560,
+            margin: "0 0 28px",
+            padding: "12px 14px",
+            backgroundColor: "#FDECEC",
+            border: "1px solid #F0C0C0",
+            borderRadius: 8,
+            fontSize: 12,
+            color: "#9B1C1C",
+            textAlign: "left",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+          }}
+        >
+          {error?.message || "Unknown error"}
+          {error?.digest ? `\n\ndigest: ${error.digest}` : ""}
+        </pre>
+      )}
       <div style={{ display: "flex", gap: 12 }}>
         <button
           onClick={reset}

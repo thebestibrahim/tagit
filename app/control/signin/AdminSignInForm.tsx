@@ -39,29 +39,32 @@ export default function AdminSignInForm() {
     e.preventDefault();
     setLoading(true);
 
-    // Same proven client-side path as the brand portal — reliably sets the
-    // session cookies. Security comes from the generic error + hard role gate
-    // below, the unlinked/noindex URL, and Supabase's native auth rate limits.
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    // Wrapped so an unexpected throw shows a clear message here instead of
+    // crashing the whole page to the error boundary ("Something went wrong").
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error || !data.user) {
-      toast.error("Invalid credentials.");
+      if (error || !data?.user) {
+        toast.error(error?.message ?? "Invalid credentials.");
+        setLoading(false);
+        return;
+      }
+
+      // Staff portal — admins only. Anything else is torn down immediately.
+      if (data.user.app_metadata?.role !== "tagit_admin") {
+        await supabase.auth.signOut();
+        toast.error("This account can't sign in here.");
+        setLoading(false);
+        return;
+      }
+
+      router.push("/admin");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Sign in failed. Please try again.");
       setLoading(false);
-      return;
     }
-
-    // Staff portal — admins only. Anything else is torn down immediately,
-    // with the same generic message (no account/role enumeration).
-    if (data.user.app_metadata?.role !== "tagit_admin") {
-      await supabase.auth.signOut();
-      toast.error("Invalid credentials.");
-      setLoading(false);
-      return;
-    }
-
-    router.push("/admin");
-    router.refresh();
   }
 
   return (
