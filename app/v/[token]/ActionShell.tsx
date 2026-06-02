@@ -18,21 +18,21 @@ type TransferInfo = {
 
 export default function ActionShell({
   tagId,
-  initialStatus,
+  hasPendingTransfer,
   currentOwner,
   activeTransfer,
   accent,
   primary,
 }: {
   tagId: string;
-  initialStatus: string;
+  hasPendingTransfer: boolean;
   currentOwner: OwnerInfo | null;
   activeTransfer: TransferInfo | null;
   accent: string;
   primary: string;
 }) {
   const [mode, setMode] = useState<"owned" | "transfer_pending">(
-    initialStatus === "transfer_pending" ? "transfer_pending" : "owned"
+    hasPendingTransfer ? "transfer_pending" : "owned"
   );
   const [transfer, setTransfer] = useState<TransferInfo | null>(activeTransfer);
 

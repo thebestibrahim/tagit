@@ -107,11 +107,12 @@ export default async function ClaimDetailPage({
     issued_at: string;
   } | null;
 
-  // A null expires_at means "no expiry" — never treat it as expired (otherwise
-  // new Date(null) coerces to 1970 and every such claim looks expired).
-  const expired = claim.expires_at != null && new Date(claim.expires_at) < new Date();
-  const canReview = claim.status === "pending" && !expired;
+  // PRD v3.0: `expires_at` is the auto-confirm moment, not a dead-end. While the
+  // claim is pending the brand may approve early OR reject; silence past
+  // expires_at auto-confirms (the cron flips it to `approved`).
   const isPending = claim.status === "pending";
+  const canReview = isPending;
+  const autoConfirmPassed = isPending && claim.expires_at != null && new Date(claim.expires_at) < new Date();
 
   const statusStyle = {
     pending:  { bg: "var(--color-soft-gold)",    color: "var(--color-deep-gold)" },
@@ -119,8 +120,7 @@ export default async function ClaimDetailPage({
     rejected: { bg: "var(--color-alert-tint)",   color: "var(--color-alert)" },
     expired:  { bg: "var(--color-linen)",         color: "var(--color-slate)" },
   };
-  const displayStatus = expired && claim.status === "pending" ? "expired" : claim.status;
-  const badge = statusStyle[displayStatus as keyof typeof statusStyle] ?? statusStyle.expired;
+  const badge = statusStyle[claim.status as keyof typeof statusStyle] ?? statusStyle.expired;
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
@@ -150,7 +150,7 @@ export default async function ClaimDetailPage({
           className="px-3 py-1 rounded-full text-body-sm font-medium capitalize mt-1 shrink-0"
           style={{ backgroundColor: badge.bg, color: badge.color }}
         >
-          {displayStatus}
+          {claim.status}
         </span>
       </div>
 
@@ -345,11 +345,13 @@ export default async function ClaimDetailPage({
           )}
           {isPending && (
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-              <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: expired ? "var(--color-alert)" : "var(--color-stone)", flexShrink: 0 }} />
+              <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-gold)", flexShrink: 0 }} />
               <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)" }}>
                 {claim.expires_at
-                  ? <>Review window closes — {format(new Date(claim.expires_at), "MMM d, yyyy 'at' HH:mm")}{expired ? " · expired" : ""}</>
-                  : "Review window — no expiry set"}
+                  ? autoConfirmPassed
+                    ? <>Auto-confirms shortly — review window closed {format(new Date(claim.expires_at), "MMM d, yyyy 'at' HH:mm")}. Reject now to stop it.</>
+                    : <>Auto-confirms {format(new Date(claim.expires_at), "MMM d, yyyy 'at' HH:mm")} unless you reject</>
+                  : "Auto-confirms after the review window unless you reject"}
               </span>
             </div>
           )}

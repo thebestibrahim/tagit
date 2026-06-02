@@ -94,10 +94,16 @@ describe("POST /api/transfer/initiate", () => {
     expect(res.status).toBe(429);
   });
 
-  it("returns 409 when tag is not in owned status", async () => {
-    mockTagQuery.mockReturnValue({ data: { id: "tag-uuid", status: "activated" }, error: null });
+  it("returns 409 when tag is not in a transferable status", async () => {
+    mockTagQuery.mockReturnValue({ data: { id: "tag-uuid", status: "live" }, error: null });
     const res = await POST(makeRequest(validBody));
     expect(res.status).toBe(409);
+  });
+
+  it("allows transfer of an already-transferred tag", async () => {
+    mockTagQuery.mockReturnValue({ data: { id: "tag-uuid", status: "transferred" }, error: null });
+    const res = await POST(makeRequest(validBody));
+    expect(res.status).toBe(200);
   });
 
   it("returns 404 when no ownership record found", async () => {

@@ -14,17 +14,13 @@ type TagRow = {
 };
 
 const STATUS_STYLES: Record<TagStatus, { bg: string; color: string }> = {
-  created:          { bg: "var(--color-cream)",     color: "var(--color-slate)" },
-  written:          { bg: "#EFF6FF",                color: "#1D4ED8" },
-  shipped:          { bg: "#F5F3FF",                color: "#5B21B6" },
-  embedded:         { bg: "#FFF7ED",                color: "#9A3412" },
-  activated:        { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" },
-  unowned:          { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" },
-  claim_pending:    { bg: "#FEF3C7",                color: "#92400E" },
-  owned:            { bg: "#ECFDF5",                color: "#065F46" },
-  transfer_pending: { bg: "#EFF6FF",                color: "#1D4ED8" },
-  flagged:          { bg: "#FEF2F2",                color: "#991B1B" },
-  suspended:        { bg: "#F3F4F6",                color: "#374151" },
+  created:     { bg: "var(--color-cream)",     color: "var(--color-slate)" },
+  shipped:     { bg: "#F5F3FF",                color: "#5B21B6" },
+  live:        { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" },
+  owned:       { bg: "#ECFDF5",                color: "#065F46" },
+  transferred: { bg: "#EFF6FF",                color: "#1D4ED8" },
+  flagged:     { bg: "#FEF2F2",                color: "#991B1B" },
+  suspended:   { bg: "#F3F4F6",                color: "#374151" },
 };
 
 export default async function AdminTagsPage({
@@ -55,11 +51,13 @@ export default async function AdminTagsPage({
   const totalPages = Math.ceil(total / pageSize);
 
   const STATUS_GROUPS = [
-    { key: "all",      label: "All" },
-    { key: "created",  label: "Created" },
-    { key: "owned",    label: "Owned" },
-    { key: "unowned",  label: "Unowned" },
-    { key: "flagged",  label: "Flagged" },
+    { key: "all",         label: "All" },
+    { key: "created",     label: "Created" },
+    { key: "shipped",     label: "Shipped" },
+    { key: "live",        label: "Live" },
+    { key: "owned",       label: "Owned" },
+    { key: "transferred", label: "Transferred" },
+    { key: "flagged",     label: "Flagged" },
   ];
 
   const activeStatus = filterStatus ?? "all";

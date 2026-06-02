@@ -42,8 +42,10 @@ export async function POST(request: Request) {
     .eq("id", tag_id)
     .single();
 
+  // Transferable once owned — including items already acquired via a prior
+  // transfer (status `transferred`), which can be transferred onward.
   const tag = tagData as { id: string; status: string } | null;
-  if (!tag || tag.status !== "owned") {
+  if (!tag || !["owned", "transferred"].includes(tag.status)) {
     return NextResponse.json({ error: "Tag is not available for transfer" }, { status: 409 });
   }
 

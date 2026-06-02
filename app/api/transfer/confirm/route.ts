@@ -90,11 +90,9 @@ export async function POST(request: Request) {
     .update({ status: "awaiting_acceptance", expires_at: acceptanceExpiresAt })
     .eq("id", transfer_id);
 
-  // Update tag to transfer_pending
-  await admin
-    .from("tags")
-    .update({ status: "transfer_pending" })
-    .eq("id", transfer.tag_id);
+  // The tag stays in its current ownership stage (`owned`/`transferred`). The
+  // pending transfer is derived from this awaiting_acceptance row, not stored
+  // on the tag — so there is no transient tag state to set here.
 
   // Get current owner info and product name for acceptance email
   const [{ data: ownerData }, { data: tagProductData }] = await Promise.all([

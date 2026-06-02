@@ -12,7 +12,6 @@ import ActionShell from "./ActionShell";
 import VoiceWidget from "./VoiceWidget";
 import CollapsibleSection from "./CollapsibleSection";
 import { getFlagsForConsumerPage } from "@/lib/feature-flags/server";
-import { releaseExpiredClaims } from "@/lib/claims";
 
 const admin = createAdminClient();
 
@@ -86,14 +85,6 @@ export default async function ScanPage({
     product_id: string | null;
   };
 
-  // If the tag is parked on a claim whose review window has lapsed, release it
-  // so the scan page offers the claim form again instead of a permanent
-  // "under review" dead-end.
-  if (tag.status === "claim_pending") {
-    const released = await releaseExpiredClaims(admin, tag.id);
-    if (released) tag.status = "embedded";
-  }
-
   // HMAC is used for the "Verified Authentic" badge only — it is NOT a page gate.
   // nanoid(21) tokens have 126 bits of entropy, making them impossible to guess.
   // Blocking the page on HMAC failure silently breaks tags whenever the secret
@@ -113,6 +104,7 @@ export default async function ScanPage({
     { data: companyExt },
     { data: ownershipData },
     { data: activeTransferData },
+    { data: pendingClaimData },
     scanPageFlags,
   ] = await Promise.all([
     tag.product_id
@@ -138,14 +130,22 @@ export default async function ScanPage({
       .select("id, owner_name, owner_email, acquisition_type, acquired_at, sale_price, currency, is_current")
       .eq("tag_id", tag.id)
       .order("acquired_at", { ascending: true }),
-    tag.status === "transfer_pending"
-      ? admin
-          .from("transfer_requests")
-          .select("id, to_name, to_email")
-          .eq("tag_id", tag.id)
-          .eq("status", "awaiting_acceptance")
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
+    // Pending transfer is derived from an awaiting_acceptance row — not from a
+    // tag state — so we always look for one regardless of tag.status.
+    admin
+      .from("transfer_requests")
+      .select("id, to_name, to_email")
+      .eq("tag_id", tag.id)
+      .eq("status", "awaiting_acceptance")
+      .maybeSingle(),
+    // A pending first-ownership claim is likewise derived from the claims table;
+    // the tag stays `live` during the 24h auto-confirm window.
+    admin
+      .from("ownership_claims")
+      .select("id")
+      .eq("tag_id", tag.id)
+      .eq("status", "pending")
+      .maybeSingle(),
     // brandId comes from tag.company_id — consumer is not authenticated
     getFlagsForConsumerPage(tag.company_id),
   ]);
@@ -180,6 +180,7 @@ export default async function ScanPage({
   const ownershipRecords = (ownershipData ?? []) as OwnershipRecord[];
   const currentOwner = ownershipRecords.find((r) => r.is_current) ?? null;
   const activeTransfer = activeTransferData as { id: string; to_name: string; to_email: string } | null;
+  const hasPendingClaim = !!(pendingClaimData as { id: string } | null);
 
   const primary = company?.brand_primary_color || "#0A0A0B";
   const accent = company?.brand_accent_color || "#B8945D";
@@ -295,8 +296,9 @@ export default async function ScanPage({
       </header>
 
       <div style={{ maxWidth: 480, margin: "0 auto", paddingTop: 24, paddingBottom: 96 }}>
-        {/* Status edge cases */}
-        {["created", "written", "shipped"].includes(tag.status) && <NotRegisteredYet />}
+        {/* Status edge cases. A `created`/`shipped` tag has no product yet — show
+            the branded placeholder. `flagged`/`suspended` show their notices. */}
+        {["created", "shipped"].includes(tag.status) && <NotRegisteredYet />}
         {tag.status === "flagged" && <FlaggedItem />}
         {tag.status === "suspended" && <SuspendedItem />}
 
@@ -315,12 +317,13 @@ export default async function ScanPage({
               product={product}
               currentOwner={currentOwner}
               activeTransfer={activeTransfer}
+              hasPendingClaim={hasPendingClaim}
               accent={accent}
               primary={primary}
             />
           </>
         ) : (
-          !["created", "written", "shipped", "flagged", "suspended"].includes(tag.status) && (
+          !["created", "shipped", "flagged", "suspended"].includes(tag.status) && (
             <div style={{ padding: "48px 24px", textAlign: "center" }}>
               <p style={{ fontSize: 14, color: "#9E9EA3" }}>No product registered to this tag yet.</p>
             </div>
@@ -704,6 +707,7 @@ function ActionSection({
   product,
   currentOwner,
   activeTransfer,
+  hasPendingClaim,
   accent,
   primary,
 }: {
@@ -711,12 +715,13 @@ function ActionSection({
   product: { name: string };
   currentOwner: OwnershipRecord | null;
   activeTransfer: { id: string; to_name: string; to_email: string } | null;
+  hasPendingClaim: boolean;
   accent: string;
   primary: string;
 }) {
-  const claimableStatuses = ["embedded", "activated", "unowned"];
-
-  if (claimableStatuses.includes(tag.status)) {
+  // A `live` tag is claimable — unless a first-ownership claim is already
+  // pending its 24h auto-confirm, in which case we show the pending banner.
+  if (tag.status === "live" && !hasPendingClaim) {
     return (
       <div style={{ margin: "16px 24px 0" }}>
         <div
@@ -791,7 +796,7 @@ function ActionSection({
     );
   }
 
-  if (tag.status === "claim_pending") {
+  if (tag.status === "live" && hasPendingClaim) {
     return (
       <div style={{ margin: "16px 24px 0" }}>
         <div
@@ -818,7 +823,8 @@ function ActionSection({
               Ownership claim pending
             </p>
             <p style={{ margin: 0, fontSize: 12, color: "#8B6F3F", lineHeight: 1.55 }}>
-              A claim is under review by the brand. Check back soon.
+              A claim has been submitted and confirms automatically within 24 hours
+              unless the brand objects.
             </p>
           </div>
         </div>
@@ -826,17 +832,19 @@ function ActionSection({
     );
   }
 
-  if (
-    (tag.status === "owned" && currentOwner) ||
-    tag.status === "transfer_pending"
-  ) {
+  // Owner actions for an item that has an owner (claimed → `owned`, or acquired
+  // via a prior transfer → `transferred`). A pending onward transfer is derived
+  // from activeTransfer, not from a tag state.
+  if (["owned", "transferred"].includes(tag.status) && currentOwner) {
     return (
       <ActionShell
         tagId={tag.id}
-        initialStatus={tag.status}
-        currentOwner={currentOwner
-          ? { owner_name: currentOwner.owner_name, owner_email: currentOwner.owner_email, currency: currentOwner.currency }
-          : null}
+        hasPendingTransfer={!!activeTransfer}
+        currentOwner={{
+          owner_name: currentOwner.owner_name,
+          owner_email: currentOwner.owner_email,
+          currency: currentOwner.currency,
+        }}
         activeTransfer={activeTransfer}
         accent={accent}
         primary={primary}

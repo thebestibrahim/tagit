@@ -3,7 +3,7 @@ import { log } from "@/lib/logger";
 import { compare } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { sendClaimNotificationEmail, APP_URL } from "@/lib/email";
-import { claimExpiresAt, releaseExpiredClaims } from "@/lib/claims";
+import { claimAutoConfirmAt } from "@/lib/claims";
 import { headers } from "next/headers";
 
 const admin = createAdminClient();
@@ -57,10 +57,6 @@ export async function POST(request: Request) {
   // Mark OTP used immediately
   await admin.from("otp_codes").update({ is_used: true }).eq("id", otp.id);
 
-  // Release any lapsed claim first, so an expired-but-unreviewed claim never
-  // permanently blocks the item from being claimed again.
-  await releaseExpiredClaims(admin, tag_id);
-
   // Verify tag is in a claimable state
   const { data: tagData } = await admin
     .from("tags")
@@ -79,7 +75,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Tag not found" }, { status: 404 });
   }
 
-  const claimableStatuses = ["embedded", "activated", "unowned"];
+  // PRD v3.0: a tag is claimable only while `live` (product attached, no owner).
+  const claimableStatuses = ["live"];
   if (!claimableStatuses.includes(tag.status)) {
     return NextResponse.json(
       { error: "This item is not available for claiming" },
@@ -115,7 +112,8 @@ export async function POST(request: Request) {
       claim_ip: ip,
       claim_location: claim_location ?? null,
       status: "pending",
-      expires_at: claimExpiresAt(),
+      // The tag stays `live`; this is the moment silence auto-confirms (now + 24h).
+      expires_at: claimAutoConfirmAt(),
     })
     .select("id")
     .single();
@@ -123,9 +121,6 @@ export async function POST(request: Request) {
   if (claimError || !claimData) {
     return NextResponse.json({ error: "Failed to create claim" }, { status: 500 });
   }
-
-  // Update tag status
-  await admin.from("tags").update({ status: "claim_pending" }).eq("id", tag_id);
 
   // Fetch product name (via tags.product_id FK) and company email for notification
   const [{ data: tagProductData }, { data: companyData }] = await Promise.all([

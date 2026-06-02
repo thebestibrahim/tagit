@@ -81,40 +81,25 @@ export async function POST(request: Request) {
 
   const completedAt = new Date().toISOString();
 
-  // End old ownership
-  await admin
-    .from("ownership_records")
-    .update({ is_current: false, ended_at: completedAt })
-    .eq("id", currentOwner.id);
+  // Atomic completion: end the old owner record, create the new owner record,
+  // flip the tag → `transferred`, and mark the transfer completed — all in one
+  // database transaction. Idempotent: returns no row if it was already resolved.
+  const { data: rpcRows, error: rpcError } = await admin.rpc("complete_transfer", {
+    p_transfer_id: transfer.id,
+  });
 
-  // Create new ownership record — capture ID
-  const { data: newOwnerData, error: insertError } = await admin
-    .from("ownership_records")
-    .insert({
-      tag_id: transfer.tag_id,
-      owner_name: transfer.to_name,
-      owner_email: transfer.to_email,
-      acquisition_type: "transfer",
-      acquired_from_id: currentOwner.id,
-      sale_price: transfer.sale_price,
-      currency: transfer.currency ?? "NGN",
-      is_current: true,
-    })
-    .select("id")
-    .single();
-
-  if (insertError) {
-    return NextResponse.json({ error: "Failed to create ownership record" }, { status: 500 });
+  if (rpcError) {
+    log.error("transfer/accept", "complete_transfer RPC failed", rpcError);
+    return NextResponse.json({ error: "Failed to complete transfer" }, { status: 500 });
   }
 
-  const newOwner = newOwnerData as { id: string };
+  const rpcResult = (rpcRows ?? [])[0] as { new_owner_id: string; old_owner_id: string } | undefined;
+  if (!rpcResult) {
+    // Lost a race — the transfer was no longer awaiting acceptance.
+    return NextResponse.json({ error: "Transfer already completed" }, { status: 409 });
+  }
 
-  await Promise.all([
-    admin.from("tags").update({ status: "owned" }).eq("id", transfer.tag_id),
-    admin.from("transfer_requests")
-      .update({ status: "completed", completed_at: completedAt })
-      .eq("id", transfer.id),
-  ]);
+  const newOwner = { id: rpcResult.new_owner_id };
 
   // Fetch tag (with joined product name) and company branding in parallel
   const { data: tagData } = await admin

@@ -195,7 +195,7 @@ export default async function CompanyDetailPage({
                     </span>
                   </td>
                   <td className="px-5 py-3">
-                    <span className="px-2 py-0.5 rounded-full text-micro font-medium capitalize" style={{ backgroundColor: p.tags[0]?.status === "owned" ? "var(--color-verified-tint)" : "var(--color-soft-gold)", color: p.tags[0]?.status === "owned" ? "var(--color-verified)" : "var(--color-deep-gold)" }}>
+                    <span className="px-2 py-0.5 rounded-full text-micro font-medium capitalize" style={{ backgroundColor: ["owned", "transferred"].includes(p.tags[0]?.status ?? "") ? "var(--color-verified-tint)" : "var(--color-soft-gold)", color: ["owned", "transferred"].includes(p.tags[0]?.status ?? "") ? "var(--color-verified)" : "var(--color-deep-gold)" }}>
                       {p.tags[0]?.status?.replace(/_/g, " ") ?? "—"}
                     </span>
                   </td>

@@ -9,7 +9,7 @@ import SearchInput from "@/components/ui/SearchInput";
 import CopyLinkButton from "@/components/ui/CopyLinkButton";
 import ClickableRow from "./ClickableRow";
 
-const STATUS_FILTERS = ["all", "owned", "claim_pending", "embedded", "unowned", "flagged"];
+const STATUS_FILTERS = ["all", "live", "owned", "transferred", "flagged"];
 
 type Product = {
   id: string;
@@ -64,8 +64,8 @@ export default async function ProductsPage({
   }
 
   const tagStatusColor = (status: string) => {
-    if (status === "owned") return { bg: "#ECFDF5", color: "#065F46" };
-    if (status === "claim_pending") return { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" };
+    if (status === "owned" || status === "transferred") return { bg: "#ECFDF5", color: "#065F46" };
+    if (status === "live") return { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" };
     if (status === "flagged") return { bg: "var(--color-alert-tint)", color: "var(--color-alert)" };
     return { bg: "var(--color-linen)", color: "var(--color-slate)" };
   };

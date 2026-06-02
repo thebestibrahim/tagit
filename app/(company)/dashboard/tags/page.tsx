@@ -8,20 +8,16 @@ import { Tag, Layers } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
 
-const STATUS_FILTERS = ["all", "created", "embedded", "owned", "unowned", "flagged"];
+const STATUS_FILTERS = ["all", "created", "shipped", "live", "owned", "transferred", "flagged"];
 
 const BADGE: Record<string, { bg: string; color: string }> = {
-  created:          { bg: "var(--color-linen)",         color: "var(--color-slate)" },
-  written:          { bg: "var(--color-linen)",         color: "var(--color-slate)" },
-  shipped:          { bg: "var(--color-soft-gold)",    color: "var(--color-deep-gold)" },
-  embedded:         { bg: "var(--color-soft-gold)",    color: "var(--color-deep-gold)" },
-  activated:        { bg: "var(--color-soft-gold)",    color: "var(--color-deep-gold)" },
-  unowned:          { bg: "var(--color-linen)",         color: "var(--color-graphite)" },
-  claim_pending:    { bg: "var(--color-soft-gold)",    color: "var(--color-warning)" },
-  owned:            { bg: "var(--color-verified-tint)", color: "var(--color-verified)" },
-  transfer_pending: { bg: "var(--color-soft-gold)",    color: "var(--color-warning)" },
-  flagged:          { bg: "var(--color-alert-tint)",   color: "var(--color-alert)" },
-  suspended:        { bg: "var(--color-alert-tint)",   color: "var(--color-alert)" },
+  created:     { bg: "var(--color-linen)",         color: "var(--color-slate)" },
+  shipped:     { bg: "var(--color-soft-gold)",     color: "var(--color-deep-gold)" },
+  live:        { bg: "var(--color-soft-gold)",     color: "var(--color-deep-gold)" },
+  owned:       { bg: "var(--color-verified-tint)", color: "var(--color-verified)" },
+  transferred: { bg: "var(--color-verified-tint)", color: "var(--color-verified)" },
+  flagged:     { bg: "var(--color-alert-tint)",    color: "var(--color-alert)" },
+  suspended:   { bg: "var(--color-alert-tint)",    color: "var(--color-alert)" },
 };
 
 const BATCH_STATUS_STYLES: Record<string, { bg: string; color: string }> = {

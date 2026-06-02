@@ -82,8 +82,8 @@ async function seed() {
   const ounjeTags = [
     { status: 'created' },
     { status: 'created' },
-    { status: 'activated', activated_at: daysAgo(12) },
-    { status: 'activated', activated_at: daysAgo(8) },
+    { status: 'live', activated_at: daysAgo(12) },
+    { status: 'live', activated_at: daysAgo(8) },
     { status: 'owned', activated_at: daysAgo(10) },
   ].map(t => {
     const token = makeToken()
@@ -102,8 +102,8 @@ async function seed() {
     { status: 'created' },
     { status: 'created' },
     { status: 'created' },
-    { status: 'activated', activated_at: daysAgo(5) },
-    { status: 'activated', activated_at: daysAgo(3) },
+    { status: 'live', activated_at: daysAgo(5) },
+    { status: 'live', activated_at: daysAgo(3) },
   ].map(t => {
     const token = makeToken()
     return {

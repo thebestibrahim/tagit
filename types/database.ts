@@ -815,7 +815,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      confirm_claim: {
+        Args: { p_claim_id: string; p_reviewed_by?: string | null }
+        Returns: { ownership_record_id: string; tag_id: string }[]
+      }
+      complete_transfer: {
+        Args: { p_transfer_id: string }
+        Returns: { new_owner_id: string; old_owner_id: string }[]
+      }
     }
     Enums: {
       [_ in never]: never
@@ -956,14 +963,10 @@ export const Constants = {
 export type CompanyStatus = "pending" | "approved" | "rejected" | "suspended";
 export type TagStatus =
   | "created"
-  | "written"
   | "shipped"
-  | "embedded"
-  | "activated"
-  | "unowned"
-  | "claim_pending"
+  | "live"
   | "owned"
-  | "transfer_pending"
+  | "transferred"
   | "flagged"
   | "suspended";
 export type ClaimStatus = "pending" | "approved" | "rejected" | "expired";

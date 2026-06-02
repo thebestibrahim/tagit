@@ -33,7 +33,9 @@ export async function POST(request: Request) {
     if (!tag || tag.company_id !== company_id) {
       return NextResponse.json({ error: `Tag not found.` }, { status: 404 });
     }
-    if (tag.status !== "created") {
+    // A tag may have a product attached while still `created` (not yet shipped)
+    // or after it has been `shipped` to the brand — both go `live` on attach.
+    if (!["created", "shipped"].includes(tag.status)) {
       return NextResponse.json({ error: `Tag ${tagId} is already assigned to a product.` }, { status: 409 });
     }
   }
@@ -58,7 +60,7 @@ export async function POST(request: Request) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (admin.from("tags") as any)
-    .update({ product_id: (insertedProduct as { id: string }).id, status: "embedded" })
+    .update({ product_id: (insertedProduct as { id: string }).id, status: "live" })
     .in("id", tag_ids);
 
   return NextResponse.json({ success: true });

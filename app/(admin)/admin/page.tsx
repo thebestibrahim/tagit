@@ -22,7 +22,7 @@ export default async function AdminOverviewPage() {
     {
       label: "Total tags",
       value: tags.length,
-      sub: `${tags.filter((t) => t.status === "owned").length} owned`,
+      sub: `${tags.filter((t) => ["owned", "transferred"].includes(t.status)).length} owned`,
       accent: false,
     },
     {
@@ -34,7 +34,7 @@ export default async function AdminOverviewPage() {
     {
       label: "Active tags",
       value: tags.filter((t) =>
-        ["unowned", "claim_pending", "owned", "transfer_pending"].includes(t.status)
+        ["live", "owned", "transferred"].includes(t.status)
       ).length,
       sub: "In market",
       accent: false,

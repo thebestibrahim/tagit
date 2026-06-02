@@ -45,16 +45,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Email does not match current owner" }, { status: 403 });
   }
 
-  // Cancel the transfer and restore tag status to owned
+  // Cancel the transfer. The tag was never moved off its ownership stage
+  // (`owned`/`transferred`) — the pending transfer is derived from this row —
+  // so there is no tag status to restore.
   const [{ error: cancelError }] = await Promise.all([
     admin
       .from("transfer_requests")
       .update({ status: "cancelled" })
       .eq("id", transfer_id),
-    admin
-      .from("tags")
-      .update({ status: "owned" })
-      .eq("id", transfer.tag_id),
     // Invalidate any unused OTPs for this owner
     admin
       .from("otp_codes")

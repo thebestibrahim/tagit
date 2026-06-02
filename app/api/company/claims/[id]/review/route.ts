@@ -2,13 +2,8 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { log } from "@/lib/logger";
 import { NextResponse } from "next/server";
-import { sendClaimApprovedEmail, sendClaimRejectedEmail, sendCertificateEmail, APP_URL } from "@/lib/email";
-import {
-  generateCertNumber,
-  generateCertificatePdf,
-  fetchLogoDataUrl,
-  certificateUrl,
-} from "@/lib/certificate";
+import { sendClaimRejectedEmail } from "@/lib/email";
+import { confirmClaim } from "@/lib/claims";
 
 const admin = createAdminClient();
 
@@ -23,20 +18,11 @@ export async function POST(
 
   const { data: companyData } = await authClient
     .from("companies")
-    .select("id, name, status, logo_url, signature_url, brand_primary_color, brand_accent_color, cert_template")
+    .select("id, status")
     .eq("id", user.id)
     .single();
 
-  const company = companyData as {
-    id: string;
-    name: string;
-    status: string;
-    logo_url: string | null;
-    signature_url: string | null;
-    brand_primary_color: string;
-    brand_accent_color: string;
-    cert_template: string | null;
-  } | null;
+  const company = companyData as { id: string; status: string } | null;
 
   if (!company || company.status !== "approved") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -68,18 +54,39 @@ export async function POST(
     return NextResponse.json({ error: "Claim has already been reviewed" }, { status: 409 });
   }
 
+  // Authorize: the claim's tag must belong to this company.
   const { data: tagData } = await admin
     .from("tags")
-    .select("id, company_id, token, short_id")
+    .select("id, company_id")
     .eq("id", claim.tag_id)
     .single();
 
-  const tag = tagData as { id: string; company_id: string; token: string; short_id: string } | null;
+  const tag = tagData as { id: string; company_id: string } | null;
   if (!tag || tag.company_id !== company.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
+  // ── Approve early (before the 24h auto-confirm) ──
+  // Shares the exact path the auto-confirm cron uses: atomic confirm_claim RPC
+  // + certificate issuance/email. Idempotent against a concurrent auto-confirm.
+  if (action === "approve") {
+    const { confirmed } = await confirmClaim(admin, claim.id, user.id);
+    if (!confirmed) {
+      return NextResponse.json({ error: "Claim has already been reviewed" }, { status: 409 });
+    }
+    return NextResponse.json({ success: true });
+  }
+
+  // ── Reject ── tag stays `live` so the item can be claimed again.
   const now = new Date().toISOString();
+  await admin.from("ownership_claims").update({
+    status: "rejected",
+    reviewed_by: user.id,
+    reviewed_at: now,
+    rejection_reason: rejection_reason ?? null,
+  }).eq("id", id);
+
+  // tag remains `live`; no status change needed on reject.
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: tagProductData } = await (admin as any)
@@ -90,118 +97,6 @@ export async function POST(
 
   const rawProd = (tagProductData as { products: unknown } | null)?.products;
   const product = (Array.isArray(rawProd) ? rawProd[0] : rawProd) as { name: string } | null;
-
-  if (action === "approve") {
-    // Create ownership record — capture returned ID
-    const { data: ownerRecordData, error: ownerError } = await admin
-      .from("ownership_records")
-      .insert({
-        tag_id: claim.tag_id,
-        owner_name: claim.claimant_name,
-        owner_email: claim.claimant_email,
-        acquisition_type: "origin",
-        is_current: true,
-      })
-      .select("id")
-      .single();
-
-    if (ownerError) {
-      return NextResponse.json({ error: "Failed to create ownership record" }, { status: 500 });
-    }
-
-    const ownerRecord = ownerRecordData as { id: string };
-
-    await Promise.all([
-      admin.from("tags").update({ status: "owned", activated_at: now }).eq("id", claim.tag_id),
-      admin.from("ownership_claims").update({
-        status: "approved",
-        reviewed_by: user.id,
-        reviewed_at: now,
-      }).eq("id", id),
-    ]);
-
-    const tagUrl = `${APP_URL}/v/${tag.token}`;
-
-    if (product) {
-      // Generate certificate
-      const certNumber = generateCertNumber();
-      const template = (company.cert_template ?? "classic") as "classic" | "minimal" | "heritage";
-
-      const { data: certRecord } = await admin
-        .from("certificates")
-        .insert({
-          cert_number: certNumber,
-          ownership_record_id: ownerRecord.id,
-          tag_id: claim.tag_id,
-          cert_type: "ownership",
-          template,
-          issued_to_name: claim.claimant_name,
-          issued_to_email: claim.claimant_email,
-        })
-        .select("id")
-        .single();
-
-      const certId = (certRecord as { id: string } | null)?.id ?? "";
-      const verifyUrl = certificateUrl(certId);
-
-      const [logoDataUrl, signatureDataUrl] = await Promise.all([
-        fetchLogoDataUrl(company.logo_url),
-        fetchLogoDataUrl(company.signature_url),
-      ]);
-
-      const pdfBuffer = await generateCertificatePdf({
-        certNumber,
-        certId,
-        certType: "ownership",
-        ownerName: claim.claimant_name,
-        ownerEmail: claim.claimant_email,
-        productName: product.name,
-        companyName: company.name,
-        companyLogoDataUrl: logoDataUrl,
-        companySignatureDataUrl: signatureDataUrl,
-        brandPrimaryColor: company.brand_primary_color,
-        brandAccentColor: company.brand_accent_color,
-        issuedAt: new Date(),
-        tagShortId: tag.short_id,
-        verifyUrl,
-        template,
-      }).catch(() => null);
-
-      await Promise.all([
-        // Standard approval email (no attachment)
-        sendClaimApprovedEmail(claim.claimant_email, {
-          claimantName: claim.claimant_name,
-          productName: product.name,
-          companyName: company.name,
-          tagUrl,
-        }).catch((err) => log.error("company/claims/review", "Email failed", err)),
-        // Certificate email with PDF
-        pdfBuffer
-          ? sendCertificateEmail(claim.claimant_email, {
-              ownerName: claim.claimant_name,
-              productName: product.name,
-              companyName: company.name,
-              certNumber,
-              certType: "ownership",
-              tagUrl,
-              pdfBuffer,
-            }).catch((err) => log.error("company/claims/review", "Email failed", err))
-          : Promise.resolve(),
-      ]);
-    }
-
-    return NextResponse.json({ success: true });
-  }
-
-  // Reject
-  await admin.from("ownership_claims").update({
-    status: "rejected",
-    reviewed_by: user.id,
-    reviewed_at: now,
-    rejection_reason: rejection_reason ?? null,
-  }).eq("id", id);
-
-  await admin.from("tags").update({ status: "embedded" }).eq("id", claim.tag_id);
 
   if (product) {
     await sendClaimRejectedEmail(claim.claimant_email, {

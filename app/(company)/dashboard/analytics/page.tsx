@@ -75,10 +75,11 @@ export default async function AnalyticsPage() {
 
   const uniqueItemsScanned = new Set((recentScans ?? []).map((s) => s.tag_id)).size;
 
-  const ownedTags = tags.filter((t) => t.status === "owned").length;
+  const ownedTags = tags.filter((t) => ["owned", "transferred"].includes(t.status)).length;
   const totalTags = tags.length;
+  // "Deployed" = chip is out in the world with content attached.
   const deployedTags = tags.filter((t) =>
-    ["embedded", "activated", "unowned", "claim_pending", "owned", "transfer_pending"].includes(t.status)
+    ["live", "owned", "transferred"].includes(t.status)
   ).length;
 
   // ── 14-day chart: one count query per day ──

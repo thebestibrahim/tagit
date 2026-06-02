@@ -3,6 +3,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { Plus, Package, Inbox, Layers } from "lucide-react";
 import BatchActions from "./BatchActions";
+import ShipBatchButton from "./ShipBatchButton";
 
 type Batch = {
   id: string;
@@ -171,7 +172,7 @@ export default async function AdminBatchesPage() {
             <table className="w-full">
               <thead>
                 <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
-                  {["Company", "Batch", "Industry", "Size", "Status", "Created", "Shipped"].map((h) => (
+                  {["Company", "Batch", "Industry", "Size", "Status", "Created", "Shipped", ""].map((h) => (
                     <th
                       key={h}
                       className="text-left px-4 py-3 text-micro font-medium uppercase tracking-wider"
@@ -240,6 +241,9 @@ export default async function AdminBatchesPage() {
                         <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
                           {batch.shipped_at ? format(new Date(batch.shipped_at), "MMM d, yyyy") : "—"}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {batch.status === "generated" && <ShipBatchButton batchId={batch.id} />}
                       </td>
                     </tr>
                   );
