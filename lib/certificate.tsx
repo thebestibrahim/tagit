@@ -69,12 +69,83 @@ export async function fetchLogoDataUrl(url: string | null): Promise<string | nul
 // ─── Shared design tokens ────────────────────────────────────────────────────
 
 const GOLD = "#B8945D";
+const GOLD_DEEP = "#8A6A38";
+const GOLD_LIGHT = "#D9C28F";
+const SEAL_INK = "#4A381A";
 const ONYX = "#0A0A0B";
 const PEARL = "#FAFAF8";
 const CREAM = "#F5F2EC";
 const SLATE = "#6E6E73";
 const MIST = "#9E9EA3";
 const STONE = "#E8E2D5";
+
+// Canonical public base for certificate verify URLs. Falls back to the
+// production domain (never localhost) so a scanned QR always resolves even if
+// NEXT_PUBLIC_APP_URL is unset in the deployment environment.
+const PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://tagitlux.com";
+
+export function certificateUrl(certId: string): string {
+  return `${PUBLIC_APP_URL}/certificate/${certId}`;
+}
+
+// ─── Shared golden seal ──────────────────────────────────────────────────────
+// A dimensional, embossed "wax seal" built from concentric gold rings. Tone-on-
+// tone ink gives the engraved look rather than a flat coloured disc.
+
+function VerifiedSeal({ size = 80 }: { size?: number }) {
+  const face = size - 9;
+  const inner = size - 22;
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: GOLD_DEEP,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <View
+        style={{
+          width: face,
+          height: face,
+          borderRadius: face / 2,
+          backgroundColor: GOLD,
+          borderWidth: 1,
+          borderColor: GOLD_LIGHT,
+          borderStyle: "solid",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <View
+          style={{
+            width: inner,
+            height: inner,
+            borderRadius: inner / 2,
+            borderWidth: 0.75,
+            borderColor: GOLD_DEEP,
+            borderStyle: "solid",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ fontFamily: "Helvetica-Bold", fontSize: size * 0.1, color: SEAL_INK, letterSpacing: 2.5 }}>
+            TAGIT
+          </Text>
+          <View style={{ width: size * 0.28, height: 0.75, backgroundColor: SEAL_INK, opacity: 0.45, marginVertical: 3 }} />
+          <Text style={{ fontFamily: "Helvetica-Bold", fontSize: size * 0.058, color: SEAL_INK, letterSpacing: 1 }}>
+            VERIFIED
+          </Text>
+          <Text style={{ fontFamily: "Helvetica-Bold", fontSize: size * 0.058, color: SEAL_INK, letterSpacing: 1, marginTop: 1 }}>
+            AUTHENTIC
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+}
 
 // ─── TEMPLATE 1: Classic ─────────────────────────────────────────────────────
 // Formal parchment feel. Gold header bar, centred seal, structured details box.
@@ -372,41 +443,9 @@ function ClassicCertificate({ data, qr }: { data: CertificateData; qr: string })
           </View>
         </View>
 
-        {/* Seal ring */}
-        <View
-          style={{
-            alignSelf: "center",
-            width: 72,
-            height: 72,
-            borderRadius: 36,
-            borderWidth: 2,
-            borderColor: accentColor,
-            borderStyle: "solid",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "Helvetica-Bold",
-              fontSize: 7,
-              color: accentColor,
-              letterSpacing: 2,
-            }}
-          >
-            TAGIT
-          </Text>
-          <Text
-            style={{
-              fontFamily: "Helvetica",
-              fontSize: 5,
-              color: accentColor,
-              letterSpacing: 1,
-              marginTop: 2,
-            }}
-          >
-            VERIFIED
-          </Text>
+        {/* Golden seal */}
+        <View style={{ alignSelf: "center" }}>
+          <VerifiedSeal size={72} />
         </View>
 
         {/* Signature area */}
@@ -457,7 +496,7 @@ function ClassicCertificate({ data, qr }: { data: CertificateData; qr: string })
             }}
           >
             This document is cryptographically recorded on the Tagit Ownership Ledger.{"\n"}
-            Verify at: tagitlux.com/certificate/{data.certId}
+            Verify at: {data.verifyUrl.replace(/^https?:\/\//, "")}
           </Text>
         </View>
         <Image src={qr} style={{ width: 60, height: 60 }} />
@@ -735,10 +774,13 @@ function MinimalCertificate({ data, qr }: { data: CertificateData; qr: string })
               }}
             >
               Recorded on the Tagit Ownership Ledger.{"\n"}
-              tagitlux.com/certificate/{data.certId}
+              {data.verifyUrl.replace(/^https?:\/\//, "")}
             </Text>
           </View>
-          <Image src={qr} style={{ width: 56, height: 56 }} />
+          <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 12 }}>
+            <VerifiedSeal size={52} />
+            <Image src={qr} style={{ width: 56, height: 56 }} />
+          </View>
         </View>
       </View>
     </Page>
@@ -927,7 +969,7 @@ function HeritageCertificate({ data, qr }: { data: CertificateData; qr: string }
         </View>
 
         {/* Cert details */}
-        <View style={{ flexDirection: "row", gap: 0, marginBottom: 20 }}>
+        <View style={{ flexDirection: "row", gap: 0, marginBottom: 20, width: "100%" }}>
           {[
             ["Certificate No.", data.certNumber],
             ["Date Issued", format(data.issuedAt, "dd MMMM yyyy")],
@@ -966,7 +1008,7 @@ function HeritageCertificate({ data, qr }: { data: CertificateData; qr: string }
           </Text>
         )}
         {isProvenance && (
-          <View style={{ flexDirection: "row", marginBottom: 16, gap: 0 }}>
+          <View style={{ flexDirection: "row", marginBottom: 16, gap: 0, width: "100%" }}>
             {data.ownedFrom && (
               <View style={{ flex: 1, alignItems: "center" }}>
                 <Text style={{ fontFamily: "Helvetica", fontSize: 7, color: MIST, letterSpacing: 1, marginBottom: 4, textAlign: "center" }}>
@@ -1012,39 +1054,9 @@ function HeritageCertificate({ data, qr }: { data: CertificateData; qr: string }
           <View style={{ width: 110, height: 0.5, backgroundColor: accentColor, marginTop: 5 }} />
         </View>
 
-        {/* Heritage seal */}
-        <View
-          style={{
-            width: 80,
-            height: 80,
-            borderRadius: 40,
-            backgroundColor: primaryColor,
-            alignItems: "center",
-            justifyContent: "center",
-            marginTop: 4,
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "Helvetica-Bold",
-              fontSize: 7,
-              color: accentColor,
-              letterSpacing: 2,
-            }}
-          >
-            TAGIT
-          </Text>
-          <Text
-            style={{
-              fontFamily: "Helvetica",
-              fontSize: 5,
-              color: "rgba(255,255,255,0.6)",
-              letterSpacing: 0.5,
-              marginTop: 3,
-            }}
-          >
-            VERIFIED AUTHENTIC
-          </Text>
+        {/* Golden seal */}
+        <View style={{ marginTop: 4 }}>
+          <VerifiedSeal size={80} />
         </View>
       </View>
 
@@ -1081,7 +1093,7 @@ function HeritageCertificate({ data, qr }: { data: CertificateData; qr: string }
               lineHeight: 1.5,
             }}
           >
-            {data.certNumber}  |  tagitlux.com/certificate/{data.certId}
+            {data.certNumber}  |  {data.verifyUrl.replace(/^https?:\/\//, "")}
           </Text>
         </View>
         <Image

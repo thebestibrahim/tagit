@@ -6,6 +6,7 @@ import {
   generateCertNumber,
   generateCertificatePdf,
   fetchLogoDataUrl,
+  certificateUrl,
 } from "@/lib/certificate";
 
 const admin = createAdminClient();
@@ -163,7 +164,7 @@ export async function POST(request: Request) {
       .single();
 
     const certId = (certRecord as { id: string } | null)?.id ?? "";
-    const verifyUrl = `${APP_URL}/certificate/${certId}`;
+    const verifyUrl = certificateUrl(certId);
     const [logoDataUrl, signatureDataUrl] = await Promise.all([
       fetchLogoDataUrl(company.logo_url),
       fetchLogoDataUrl(company.signature_url),
@@ -205,7 +206,7 @@ export async function POST(request: Request) {
       .single();
 
     const provCertId = (provCertRecord as { id: string } | null)?.id ?? "";
-    const provVerifyUrl = `${APP_URL}/certificate/${provCertId}`;
+    const provVerifyUrl = certificateUrl(provCertId);
 
     const provPdfBuffer = await generateCertificatePdf({
       certNumber: provCertNumber,
