@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (new Date(transfer.expires_at) < new Date(now)) {
+  if (transfer.expires_at != null && new Date(transfer.expires_at) < new Date(now)) {
     await admin
       .from("transfer_requests")
       .update({ status: "expired" })

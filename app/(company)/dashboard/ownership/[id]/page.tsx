@@ -347,8 +347,9 @@ export default async function ClaimDetailPage({
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
               <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: expired ? "var(--color-alert)" : "var(--color-stone)", flexShrink: 0 }} />
               <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)" }}>
-                Review window closes — {format(new Date(claim.expires_at), "MMM d, yyyy 'at' HH:mm")}
-                {expired ? " · expired" : ""}
+                {claim.expires_at
+                  ? <>Review window closes — {format(new Date(claim.expires_at), "MMM d, yyyy 'at' HH:mm")}{expired ? " · expired" : ""}</>
+                  : "Review window — no expiry set"}
               </span>
             </div>
           )}

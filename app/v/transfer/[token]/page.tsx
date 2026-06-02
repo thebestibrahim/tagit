@@ -39,7 +39,9 @@ export default async function TransferAcceptPage({
     expires_at: string;
   };
 
-  const expired = new Date(transfer.expires_at) < new Date();
+  // Null expires_at means "no expiry" — never treat it as expired (otherwise
+  // new Date(null) coerces to 1970 and the link always shows as expired).
+  const expired = transfer.expires_at != null && new Date(transfer.expires_at) < new Date();
 
   // Fetch product (via tags.product_id FK) and current owner
   const [{ data: tagProductData }, { data: ownerData }] = await Promise.all([

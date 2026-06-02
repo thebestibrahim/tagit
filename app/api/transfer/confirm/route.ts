@@ -81,10 +81,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Transfer not found or already processed" }, { status: 404 });
   }
 
-  // Update transfer to awaiting_acceptance
+  // Update transfer to awaiting_acceptance. The acceptance window starts now —
+  // when the recipient is actually emailed the link — not at initiate time
+  // (the OTP step has its own short expiry). Give the recipient 7 days.
+  const acceptanceExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   await admin
     .from("transfer_requests")
-    .update({ status: "awaiting_acceptance" })
+    .update({ status: "awaiting_acceptance", expires_at: acceptanceExpiresAt })
     .eq("id", transfer_id);
 
   // Update tag to transfer_pending
