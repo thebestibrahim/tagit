@@ -3,6 +3,7 @@ import { log } from "@/lib/logger";
 import { compare } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { sendClaimNotificationEmail, APP_URL } from "@/lib/email";
+import { claimExpiresAt, releaseExpiredClaims } from "@/lib/claims";
 import { headers } from "next/headers";
 
 const admin = createAdminClient();
@@ -55,6 +56,10 @@ export async function POST(request: Request) {
 
   // Mark OTP used immediately
   await admin.from("otp_codes").update({ is_used: true }).eq("id", otp.id);
+
+  // Release any lapsed claim first, so an expired-but-unreviewed claim never
+  // permanently blocks the item from being claimed again.
+  await releaseExpiredClaims(admin, tag_id);
 
   // Verify tag is in a claimable state
   const { data: tagData } = await admin
@@ -110,6 +115,7 @@ export async function POST(request: Request) {
       claim_ip: ip,
       claim_location: claim_location ?? null,
       status: "pending",
+      expires_at: claimExpiresAt(),
     })
     .select("id")
     .single();

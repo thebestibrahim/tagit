@@ -107,7 +107,9 @@ export default async function ClaimDetailPage({
     issued_at: string;
   } | null;
 
-  const expired = new Date(claim.expires_at) < new Date();
+  // A null expires_at means "no expiry" — never treat it as expired (otherwise
+  // new Date(null) coerces to 1970 and every such claim looks expired).
+  const expired = claim.expires_at != null && new Date(claim.expires_at) < new Date();
   const canReview = claim.status === "pending" && !expired;
   const isPending = claim.status === "pending";
 

@@ -12,6 +12,7 @@ import ActionShell from "./ActionShell";
 import VoiceWidget from "./VoiceWidget";
 import CollapsibleSection from "./CollapsibleSection";
 import { getFlagsForConsumerPage } from "@/lib/feature-flags/server";
+import { releaseExpiredClaims } from "@/lib/claims";
 
 const admin = createAdminClient();
 
@@ -84,6 +85,14 @@ export default async function ScanPage({
     hmac_signature: string;
     product_id: string | null;
   };
+
+  // If the tag is parked on a claim whose review window has lapsed, release it
+  // so the scan page offers the claim form again instead of a permanent
+  // "under review" dead-end.
+  if (tag.status === "claim_pending") {
+    const released = await releaseExpiredClaims(admin, tag.id);
+    if (released) tag.status = "embedded";
+  }
 
   // HMAC is used for the "Verified Authentic" badge only — it is NOT a page gate.
   // nanoid(21) tokens have 126 bits of entropy, making them impossible to guess.
