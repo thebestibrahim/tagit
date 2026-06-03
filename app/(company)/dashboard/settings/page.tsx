@@ -33,7 +33,6 @@ export default async function SettingsPage() {
       </div>
 
       <SettingsForm
-        companyId={user.id}
         initialName={company.name}
         email={user.email ?? company.email}
         logoUrl={company.logo_url}

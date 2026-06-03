@@ -9,12 +9,10 @@ import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SettingsForm({
-  companyId,
   initialName,
   email,
   logoUrl,
 }: {
-  companyId: string;
   initialName: string;
   email: string;
   logoUrl: string | null;
@@ -42,22 +40,17 @@ export default function SettingsForm({
 
   async function handleLogoUpload(file: File) {
     setUploadingLogo(true);
-    const supabase = createClient();
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const path = `logos/${companyId}.${ext}`;
-    const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
-    if (error) { toast.error("Logo upload failed."); setUploadingLogo(false); return; }
-    const { data: { publicUrl } } = supabase.storage.from("product-images").getPublicUrl(path);
-    setLogo(publicUrl);
-
-    const res = await fetch("/api/company/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ logo_url: publicUrl }),
-    });
+    // Upload via the service-role route (same as Brand customisation). It writes
+    // to the `logos` bucket and persists companies.logo_url. A direct browser
+    // upload to `product-images` is rejected by that bucket's owner-scoped RLS.
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/company/logo", { method: "POST", body: fd });
+    const json = await res.json().catch(() => ({}));
     setUploadingLogo(false);
-    if (res.ok) toast.success("Logo updated.");
-    else toast.error("Failed to save logo.");
+    if (!res.ok) { toast.error(json.error ?? "Logo upload failed."); return; }
+    setLogo(json.logo_url);
+    toast.success("Logo updated.");
   }
 
   async function handleSaveProfile(e: React.FormEvent) {
