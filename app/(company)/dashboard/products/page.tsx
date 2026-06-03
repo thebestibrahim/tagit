@@ -51,8 +51,10 @@ export default async function ProductsPage({
   const products = (data ?? []) as Product[];
   const totalPages = Math.ceil((count ?? 0) / PER_PAGE);
 
+  // A product can be linked to several tags (each with its own link); match the
+  // status filter if ANY of its tags is in that status.
   const filtered = statusFilter && statusFilter !== "all"
-    ? products.filter((p) => p.tags[0]?.status === statusFilter)
+    ? products.filter((p) => p.tags.some((t) => t.status === statusFilter))
     : products;
 
   function buildHref(overrides: Record<string, string | undefined>) {
@@ -164,6 +166,9 @@ export default async function ProductsPage({
                       <td className="px-5 py-4">
                         <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-graphite)", letterSpacing: "0.05em" }}>
                           {product.tags[0]?.short_id ?? "—"}
+                          {product.tags.length > 1 && (
+                            <span style={{ color: "var(--color-mist)", letterSpacing: 0 }}> +{product.tags.length - 1} more</span>
+                          )}
                         </span>
                       </td>
                       <td className="px-5 py-4">

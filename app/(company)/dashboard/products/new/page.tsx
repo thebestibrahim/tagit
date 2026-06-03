@@ -20,12 +20,13 @@ export default async function NewProductPage() {
   const company = companyData as { id: string; industry: string; status: CompanyStatus } | null;
   if (!company || company.status !== "approved") redirect("/auth/unauthorized");
 
-  // Only show tags that belong to this company and are not yet linked to a product
+  // Only show tags that belong to this company and are not yet linked to a
+  // product — i.e. still `created` (not shipped) or `shipped` (no product yet).
   const { data: tagData } = await supabase
     .from("tags")
     .select("id, short_id, token")
     .eq("company_id", user.id)
-    .eq("status", "created")
+    .in("status", ["created", "shipped"])
     .order("created_at", { ascending: false });
 
   const tags = (tagData ?? []) as { id: string; short_id: string; token: string }[];

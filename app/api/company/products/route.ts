@@ -58,10 +58,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: (productError as { message?: string } | null)?.message ?? "Failed to create product." }, { status: 500 });
   }
 
+  const productId = (insertedProduct as { id: string }).id;
+
+  // Link the tags and flip them to `live`. If this fails (e.g. a status that
+  // the DB constraint rejects), roll back the just-created product so we never
+  // leave an orphan product with no linked tag (which showed as a blank status).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (admin.from("tags") as any)
-    .update({ product_id: (insertedProduct as { id: string }).id, status: "live" })
+  const { error: tagLinkError } = await (admin.from("tags") as any)
+    .update({ product_id: productId, status: "live" })
     .in("id", tag_ids);
+
+  if (tagLinkError) {
+    await admin.from("products").delete().eq("id", productId);
+    return NextResponse.json(
+      { error: (tagLinkError as { message?: string }).message ?? "Failed to link tags to product." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ success: true });
 }

@@ -194,7 +194,6 @@ export default async function ProductDetailPage({
   const certificates = ((certsRes as { data: Certificate[] | null }).data ?? []) as Certificate[];
 
   const currentOwner = ownershipRecords.find((r) => r.is_current) ?? null;
-  const scanUrl = primaryTag?.token ? `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${primaryTag.token}` : null;
 
   const industryFields = INDUSTRY_FIELDS[company.industry] ?? [];
   const grouped = groupFields(industryFields);
@@ -367,14 +366,17 @@ export default async function ProductDetailPage({
             {productTags.length === 0 ? (
               <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>—</p>
             ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {productTags.map((t) => (
-                  <span
-                    key={t.id}
-                    style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-graphite)", letterSpacing: "0.05em" }}
-                  >
-                    {t.short_id}
-                  </span>
+                  <div key={t.id} style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    <span
+                      style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-graphite)", letterSpacing: "0.05em" }}
+                    >
+                      {t.short_id}
+                    </span>
+                    {/* Each tag carries its own unique consumer link. */}
+                    <CopyLinkButton url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${t.token}`} label="Copy link" />
+                  </div>
                 ))}
               </div>
             )}
@@ -402,12 +404,6 @@ export default async function ProductDetailPage({
             <div>
               <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>First scanned</p>
               <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>{fmtDate(primaryTag.activated_at)}</p>
-            </div>
-          )}
-          {scanUrl && (
-            <div>
-              <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>Consumer link</p>
-              <CopyLinkButton url={scanUrl} label="Copy scan URL" />
             </div>
           )}
         </div>
