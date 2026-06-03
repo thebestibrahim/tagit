@@ -9,8 +9,13 @@ import { headers } from "next/headers";
 const admin = createAdminClient();
 
 /**
- * PRD v3.0 auto-confirm. Runs every ~15 min (Vercel Cron). Confirms every
- * pending ownership claim whose 24h review window has lapsed with no rejection.
+ * PRD v3.0 auto-confirm. Confirms every pending ownership claim whose 24h
+ * review window has lapsed with no rejection.
+ *
+ * Scheduled by Vercel Cron (vercel.json). NOTE: the Vercel Hobby plan caps
+ * crons at once-per-day, so the schedule is daily; on Pro, tighten it to
+ * every ~15 min for prompt confirmation. The endpoint is also POST/GET
+ * triggerable on demand (same auth guard) for testing or an external scheduler.
  *
  * Guarded by CRON_SECRET (Vercel sends it as `Authorization: Bearer <secret>`).
  * Fails closed: if CRON_SECRET is unset, or the header does not match, no work
