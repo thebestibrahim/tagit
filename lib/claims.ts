@@ -8,26 +8,48 @@ import {
   certificateUrl,
 } from "@/lib/certificate";
 
-// PRD v3.0: a consumer's first-ownership claim auto-confirms after the brand's
-// review window lapses with no rejection. The brand may also approve early.
-export const CLAIM_AUTO_CONFIRM_HOURS = 24;
+// A consumer's first-ownership claim must be MANUALLY approved by the brand
+// within this window. There is intentionally NO auto-confirm (auto-granting
+// ownership on silence is a security risk). If the brand does not act in time,
+// the claim simply expires and the item becomes claimable again.
+export const CLAIM_WINDOW_HOURS = 24;
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
-/** ISO timestamp at which a claim created `from` auto-confirms (now + 24h). */
-export function claimAutoConfirmAt(from: Date = new Date()): string {
-  return new Date(from.getTime() + CLAIM_AUTO_CONFIRM_HOURS * 60 * 60 * 1000).toISOString();
+/** ISO timestamp at which a claim created `from` expires (now + 24h). */
+export function claimExpiresAt(from: Date = new Date()): string {
+  return new Date(from.getTime() + CLAIM_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
 }
 
 /**
- * Confirm a pending ownership claim: create the ownership record, flip the tag
- * to `owned`, mark the claim approved — atomically via the confirm_claim RPC —
- * then issue + email the certificate. Shared by the brand early-approve route
- * and the auto-confirm cron.
+ * Lazily expire pending claims on a tag group whose 24h window has lapsed.
+ * Tags stay `live` throughout a pending claim, so there is no tag status to
+ * reset — we just mark the lapsed claims `expired` so the item is claimable
+ * again and the brand can no longer approve them. Pass every tag id in the
+ * product group so a claim made via any sibling tag is covered.
+ */
+export async function releaseExpiredClaims(
+  admin: AdminClient,
+  tagIds: string[]
+): Promise<void> {
+  if (tagIds.length === 0) return;
+  await admin
+    .from("ownership_claims")
+    .update({ status: "expired" })
+    .in("tag_id", tagIds)
+    .eq("status", "pending")
+    .not("expires_at", "is", null)
+    .lt("expires_at", new Date().toISOString());
+}
+
+/**
+ * Confirm a pending ownership claim (MANUAL brand approval): create the
+ * ownership record, flip the whole product group to `owned`, mark the claim
+ * approved — atomically via the confirm_claim RPC — then issue + email the
+ * certificate.
  *
- * `reviewedBy` is the brand user id for an early approval, or null when the
- * cron auto-confirms on silence. Idempotent: returns { confirmed: false } if
- * the claim was already reviewed (the RPC is a no-op in that case).
+ * `reviewedBy` is the approving brand user id. Idempotent: returns
+ * { confirmed: false } if the claim was already reviewed/expired (RPC no-ops).
  */
 export async function confirmClaim(
   admin: AdminClient,

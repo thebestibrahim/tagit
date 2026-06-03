@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { sendOtpEmail } from "@/lib/email";
 import { hash } from "bcryptjs";
 import { log } from "@/lib/logger";
+import { getSiblingTagIds } from "@/lib/tags";
 
 const admin = createAdminClient();
 
@@ -38,21 +39,24 @@ export async function POST(request: Request) {
   // Verify tag is owned and owner email matches
   const { data: tagData } = await admin
     .from("tags")
-    .select("id, status")
+    .select("id, status, product_id")
     .eq("id", tag_id)
     .single();
 
   // Transferable once owned — including items already acquired via a prior
   // transfer (status `transferred`), which can be transferred onward.
-  const tag = tagData as { id: string; status: string } | null;
+  const tag = tagData as { id: string; status: string; product_id: string | null } | null;
   if (!tag || !["owned", "transferred"].includes(tag.status)) {
     return NextResponse.json({ error: "Tag is not available for transfer" }, { status: 409 });
   }
 
+  // Ownership is unified across the product's tag group — resolve the current
+  // owner from any sibling tag so a transfer can be initiated from any chip.
+  const siblingIds = await getSiblingTagIds(admin, tag);
   const { data: ownerData } = await admin
     .from("ownership_records")
     .select("id, owner_email")
-    .eq("tag_id", tag_id)
+    .in("tag_id", siblingIds)
     .eq("is_current", true)
     .single();
 

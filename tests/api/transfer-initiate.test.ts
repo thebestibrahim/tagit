@@ -20,9 +20,10 @@ vi.mock("@supabase/supabase-js", () => ({
         };
       }
       if (table === "ownership_records") {
+        // Owner is now resolved across the product's tag group: .in().eq().single()
         return {
           select: vi.fn(() => ({
-            eq: vi.fn(() => ({
+            in: vi.fn(() => ({
               eq: vi.fn(() => ({
                 single: vi.fn(() => Promise.resolve(mockOwnerQuery())),
               })),

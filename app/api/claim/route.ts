@@ -3,7 +3,8 @@ import { log } from "@/lib/logger";
 import { compare } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { sendClaimNotificationEmail, APP_URL } from "@/lib/email";
-import { claimAutoConfirmAt } from "@/lib/claims";
+import { claimExpiresAt, releaseExpiredClaims } from "@/lib/claims";
+import { getSiblingTagIds } from "@/lib/tags";
 import { headers } from "next/headers";
 
 const admin = createAdminClient();
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
   // Verify tag is in a claimable state
   const { data: tagData } = await admin
     .from("tags")
-    .select("id, status, company_id, short_id")
+    .select("id, status, company_id, short_id, product_id")
     .eq("id", tag_id)
     .single();
 
@@ -69,26 +70,47 @@ export async function POST(request: Request) {
     status: string;
     company_id: string;
     short_id: string;
+    product_id: string | null;
   } | null;
 
   if (!tag) {
     return NextResponse.json({ error: "Tag not found" }, { status: 404 });
   }
 
-  // PRD v3.0: a tag is claimable only while `live` (product attached, no owner).
-  const claimableStatuses = ["live"];
-  if (!claimableStatuses.includes(tag.status)) {
+  // A tag is claimable only while `live` (product attached, no owner).
+  if (tag.status !== "live") {
     return NextResponse.json(
       { error: "This item is not available for claiming" },
       { status: 409 }
     );
   }
 
-  // Check for existing pending claim
+  // Ownership is unified across the product's tag group — resolve siblings and
+  // expire any lapsed pending claims before deciding eligibility.
+  const siblingIds = await getSiblingTagIds(admin, tag);
+  await releaseExpiredClaims(admin, siblingIds);
+
+  // If the item already has an owner (claim confirmed via any sibling tag), it
+  // is not claimable.
+  const { data: ownerRows } = await admin
+    .from("ownership_records")
+    .select("id")
+    .in("tag_id", siblingIds)
+    .eq("is_current", true)
+    .limit(1);
+  if ((ownerRows ?? []).length > 0) {
+    return NextResponse.json(
+      { error: "This item has already been claimed" },
+      { status: 409 }
+    );
+  }
+
+  // Lock the whole group: any still-pending claim on a sibling tag blocks a new
+  // claim on this item.
   const { data: existingClaims } = await admin
     .from("ownership_claims")
     .select("id")
-    .eq("tag_id", tag_id)
+    .in("tag_id", siblingIds)
     .eq("status", "pending")
     .limit(1);
 
@@ -112,8 +134,9 @@ export async function POST(request: Request) {
       claim_ip: ip,
       claim_location: claim_location ?? null,
       status: "pending",
-      // The tag stays `live`; this is the moment silence auto-confirms (now + 24h).
-      expires_at: claimAutoConfirmAt(),
+      // Tag stays `live`; the brand must manually approve before this expiry
+      // (now + 24h), after which the claim lapses and the item is claimable again.
+      expires_at: claimExpiresAt(),
     })
     .select("id")
     .single();

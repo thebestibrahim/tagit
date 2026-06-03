@@ -12,6 +12,8 @@ import ActionShell from "./ActionShell";
 import VoiceWidget from "./VoiceWidget";
 import CollapsibleSection from "./CollapsibleSection";
 import { getFlagsForConsumerPage } from "@/lib/feature-flags/server";
+import { releaseExpiredClaims } from "@/lib/claims";
+import { getSiblingTagIds } from "@/lib/tags";
 
 const admin = createAdminClient();
 
@@ -96,6 +98,12 @@ export default async function ScanPage({
   // Fire scan log without blocking page render
   logScan(tag.id, hmacValid ? "valid" : "unverified", headerStore);
 
+  // Ownership is unified across the product's tag group (multiple chips on one
+  // item). Resolve the sibling tags, then expire any lapsed pending claims so a
+  // scan re-offers the claim form instead of showing a stale "pending" banner.
+  const siblingIds = await getSiblingTagIds(admin, tag);
+  await releaseExpiredClaims(admin, siblingIds);
+
   // Split company into two queries — stable columns first, then migration-dependent columns.
   // This way a missing DB column (migration not yet run) never breaks the scan page.
   const [
@@ -125,27 +133,28 @@ export default async function ScanPage({
       .eq("id", tag.company_id)
       .single()
       .then((r) => ({ data: r.error ? null : r.data })),
+    // Ownership chain resolves across the whole product group, not one tag.
     admin
       .from("ownership_records")
       .select("id, owner_name, owner_email, acquisition_type, acquired_at, sale_price, currency, is_current")
-      .eq("tag_id", tag.id)
+      .in("tag_id", siblingIds)
       .order("acquired_at", { ascending: true }),
-    // Pending transfer is derived from an awaiting_acceptance row — not from a
-    // tag state — so we always look for one regardless of tag.status.
+    // Pending transfer is derived from an awaiting_acceptance row on any sibling
+    // tag — not from a tag state.
     admin
       .from("transfer_requests")
       .select("id, to_name, to_email")
-      .eq("tag_id", tag.id)
+      .in("tag_id", siblingIds)
       .eq("status", "awaiting_acceptance")
-      .maybeSingle(),
-    // A pending first-ownership claim is likewise derived from the claims table;
-    // the tag stays `live` during the 24h auto-confirm window.
+      .limit(1),
+    // A pending first-ownership claim (any sibling tag) — the tag stays `live`
+    // during the 24h manual-review window; expired ones were just released.
     admin
       .from("ownership_claims")
       .select("id")
-      .eq("tag_id", tag.id)
+      .in("tag_id", siblingIds)
       .eq("status", "pending")
-      .maybeSingle(),
+      .limit(1),
     // brandId comes from tag.company_id — consumer is not authenticated
     getFlagsForConsumerPage(tag.company_id),
   ]);
@@ -179,8 +188,8 @@ export default async function ScanPage({
 
   const ownershipRecords = (ownershipData ?? []) as OwnershipRecord[];
   const currentOwner = ownershipRecords.find((r) => r.is_current) ?? null;
-  const activeTransfer = activeTransferData as { id: string; to_name: string; to_email: string } | null;
-  const hasPendingClaim = !!(pendingClaimData as { id: string } | null);
+  const activeTransfer = ((activeTransferData ?? []) as { id: string; to_name: string; to_email: string }[])[0] ?? null;
+  const hasPendingClaim = ((pendingClaimData ?? []) as { id: string }[]).length > 0;
 
   const primary = company?.brand_primary_color || "#0A0A0B";
   const accent = company?.brand_accent_color || "#B8945D";

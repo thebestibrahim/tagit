@@ -37,7 +37,7 @@ export async function POST(
 
   const { data: claimData } = await admin
     .from("ownership_claims")
-    .select("id, tag_id, claimant_name, claimant_email, status")
+    .select("id, tag_id, claimant_name, claimant_email, status, expires_at")
     .eq("id", id)
     .single();
 
@@ -47,11 +47,23 @@ export async function POST(
     claimant_name: string;
     claimant_email: string;
     status: string;
+    expires_at: string | null;
   } | null;
 
   if (!claim) return NextResponse.json({ error: "Claim not found" }, { status: 404 });
   if (claim.status !== "pending") {
     return NextResponse.json({ error: "Claim has already been reviewed" }, { status: 409 });
+  }
+
+  // A claim that has lapsed its 24h window can no longer be approved — mark it
+  // expired so the item becomes claimable again. (Reject is still allowed.)
+  const expired = claim.expires_at != null && new Date(claim.expires_at) < new Date();
+  if (expired && action === "approve") {
+    await admin.from("ownership_claims").update({ status: "expired" }).eq("id", id);
+    return NextResponse.json(
+      { error: "This claim has expired. Ask the owner to submit a new claim." },
+      { status: 409 }
+    );
   }
 
   // Authorize: the claim's tag must belong to this company.
