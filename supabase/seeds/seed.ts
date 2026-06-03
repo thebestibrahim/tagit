@@ -198,9 +198,9 @@ async function seed() {
       environments: ['production', 'staging'],
     },
     {
-      key: 'chip_migration',
-      name: 'Chip Migration Request',
-      description: 'Allows brands to request chip replacement for damaged or failed chips',
+      key: 'tag_migration',
+      name: 'Tag Migration Request',
+      description: 'Allows brands to request tag replacement for damaged or failed tags',
       enabled: false,
       rollout_percentage: 0,
       environments: ['production', 'staging'],

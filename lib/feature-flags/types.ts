@@ -5,7 +5,7 @@ export type FlagKey =
   | 'resale_analytics'
   | 'ownership_transfer_fee'
   | 'bulk_tag_creation'
-  | 'chip_migration'
+  | 'tag_migration'
   | 'intelligence_reports'
 
 export type FlagMap = Record<FlagKey, boolean>

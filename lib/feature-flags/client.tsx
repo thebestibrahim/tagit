@@ -9,7 +9,7 @@ const defaultFlags: FlagMap = {
   resale_analytics: false,
   ownership_transfer_fee: false,
   bulk_tag_creation: false,
-  chip_migration: false,
+  tag_migration: false,
   intelligence_reports: false,
 }
 
