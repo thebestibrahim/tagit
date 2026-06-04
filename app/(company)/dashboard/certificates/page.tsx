@@ -65,19 +65,18 @@ export default async function CertificatesPage() {
 
   // Fetch product names by joining tags → products (via tags.product_id FK added in migration)
   const certTagIds = [...new Set(certs.map((c) => c.tag_id))];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: tagProductData } = certTagIds.length
-    ? await (admin as any).from("tags").select("id, products(name)").in("id", certTagIds)
+    ? await admin.from("tags").select("id, products(name)").in("id", certTagIds)
     : { data: [] };
 
   const productMap = Object.fromEntries(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ((tagProductData ?? []) as any[]).map(
-      (t: { id: string; products: { name: string } | { name: string }[] | null }) => {
-        const name = Array.isArray(t.products) ? (t.products[0]?.name ?? "—") : (t.products?.name ?? "—");
-        return [t.id, name];
-      }
-    )
+    (tagProductData ?? []).map((t) => {
+      // Supabase types a to-one parent embed as an array (FK isOneToOne: false),
+      // but PostgREST returns a single object at runtime — handle both shapes.
+      const product = t.products as { name: string } | { name: string }[] | null;
+      const name = Array.isArray(product) ? (product[0]?.name ?? "—") : (product?.name ?? "—");
+      return [t.id, name];
+    })
   );
 
   // Fetch ownership record statuses

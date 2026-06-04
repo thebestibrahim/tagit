@@ -7,15 +7,11 @@ export default function CancelTransferForm({
   transferId,
   toName,
   toEmail,
-  primary,
-  accent,
   onCancelled,
 }: {
   transferId: string;
   toName: string;
   toEmail: string;
-  primary: string;
-  accent: string;
   onCancelled?: () => void;
 }) {
   const [showForm, setShowForm] = useState(false);

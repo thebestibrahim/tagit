@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import TransferForm from "./TransferForm";
 import CancelTransferForm from "./CancelTransferForm";
 
@@ -36,11 +36,6 @@ export default function ActionShell({
   );
   const [transfer, setTransfer] = useState<TransferInfo | null>(activeTransfer);
 
-  // Keep transfer ref in sync if parent re-renders with new activeTransfer
-  useEffect(() => {
-    setTransfer(activeTransfer);
-  }, [activeTransfer]);
-
   if (mode === "owned" && currentOwner) {
     return (
       <div style={{ margin: "16px 24px 0" }}>
@@ -62,8 +57,6 @@ export default function ActionShell({
         transferId={transfer.id}
         toName={transfer.to_name}
         toEmail={transfer.to_email}
-        primary={primary}
-        accent={accent}
         onCancelled={() => {
           setTransfer(null);
           setMode("owned");

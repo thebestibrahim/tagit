@@ -31,12 +31,6 @@ function para(text: string) {
   return `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4A4A4F">${text}</p>`;
 }
 
-function codeBlock(code: string) {
-  return `<div style="margin:24px 0;padding:20px;background:#F5F2EC;border-radius:8px;text-align:center">
-    <span style="font-size:36px;font-weight:700;letter-spacing:0.15em;color:#0A0A0B;font-family:monospace">${code}</span>
-  </div>`;
-}
-
 function button(text: string, url: string) {
   return `<a href="${url}" style="display:inline-block;padding:12px 24px;background:#0A0A0B;color:#FAFAF8;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600">${text}</a>`;
 }
