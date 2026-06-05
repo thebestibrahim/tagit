@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { format } from "date-fns";
 import { ScanLine, Globe } from "lucide-react";
@@ -28,9 +28,15 @@ export default async function AdminScansPage({
 }: {
   searchParams: Promise<{ q?: string; page?: string; result?: string }>;
 }) {
-  const supabase = createServiceClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // Auth check must use the cookie-based client — the service-role client has no
+  // user session, so getUser() there is always null and would bounce every admin
+  // out to /control/signin. Data queries below still use the service client to
+  // bypass RLS.
+  const authClient = await createClient();
+  const { data: { user } } = await authClient.auth.getUser();
   if (!user || user.app_metadata?.role !== "tagit_admin") redirect("/control/signin");
+
+  const supabase = createServiceClient();
 
   const params = await searchParams;
   const q = params.q?.trim() ?? "";
