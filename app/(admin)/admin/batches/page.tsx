@@ -5,11 +5,16 @@ import { Plus, Package, Inbox, Layers } from "lucide-react";
 import BatchActions from "./BatchActions";
 import ShipBatchButton from "./ShipBatchButton";
 
+import { batchQuantityLabel, BATCH_TYPE_BADGE } from "@/components/company/batch-display";
+import type { BatchType } from "@/types/database";
+
 type Batch = {
   id: string;
   company_id: string;
   industry: string;
   batch_size: number;
+  cards_quantity: number;
+  batch_type: BatchType;
   batch_name: string | null;
   status: "pending" | "generated" | "written" | "shipped";
   notes: string | null;
@@ -30,7 +35,7 @@ export default async function AdminBatchesPage() {
 
   const { data } = await supabase
     .from("tag_batches")
-    .select("id, company_id, industry, batch_size, batch_name, status, notes, created_at, shipped_at, companies(name)")
+    .select("id, company_id, industry, batch_size, cards_quantity, batch_type, batch_name, status, notes, created_at, shipped_at, companies(name)")
     .order("created_at", { ascending: false });
 
   const batches = (data ?? []) as Batch[];
@@ -114,6 +119,14 @@ export default async function AdminBatchesPage() {
                         >
                           {batch.industry}
                         </span>
+                        {(() => { const tb = BATCH_TYPE_BADGE[batch.batch_type] ?? BATCH_TYPE_BADGE.tags; return (
+                        <span
+                          className="px-2 py-0.5 rounded-full font-medium"
+                          style={{ fontSize: 10, backgroundColor: tb.bg, color: tb.color }}
+                        >
+                          {tb.label}
+                        </span>
+                        ); })()}
                       </div>
                       {batch.batch_name && (
                         <p className="font-medium mt-0.5" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
@@ -122,7 +135,7 @@ export default async function AdminBatchesPage() {
                       )}
                       <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)", marginTop: 2 }}>
                         <span className="font-semibold" style={{ color: "var(--color-charcoal)" }}>
-                          {batch.batch_size.toLocaleString()} tags
+                          {batchQuantityLabel(batch)}
                         </span>
                         {" · "}requested {format(new Date(batch.created_at), "MMM d, yyyy")}
                       </p>
@@ -221,7 +234,7 @@ export default async function AdminBatchesPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)", fontWeight: 600 }}>
-                          {batch.batch_size.toLocaleString()}
+                          {batchQuantityLabel(batch)}
                         </span>
                       </td>
                       <td className="px-4 py-3">
