@@ -31,8 +31,8 @@ export default function ActionShell({
   accent: string;
   primary: string;
 }) {
-  const [mode, setMode] = useState<"owned" | "transfer_pending">(
-    hasPendingTransfer ? "transfer_pending" : "owned"
+  const [mode, setMode] = useState<"owned" | "awaiting_transfer">(
+    hasPendingTransfer ? "awaiting_transfer" : "owned"
   );
   const [transfer, setTransfer] = useState<TransferInfo | null>(activeTransfer);
 
@@ -51,7 +51,7 @@ export default function ActionShell({
     );
   }
 
-  if (mode === "transfer_pending" && transfer) {
+  if (mode === "awaiting_transfer" && transfer) {
     return (
       <CancelTransferForm
         transferId={transfer.id}

@@ -23,10 +23,10 @@ export async function POST(request: Request) {
   // Verify all tags belong to this company and are unlinked
   const { data: tagsData } = await admin
     .from("tags")
-    .select("id, status, company_id")
+    .select("id, status, company_id, medium")
     .in("id", tag_ids);
 
-  const tagRows = (tagsData ?? []) as { id: string; status: string; company_id: string }[];
+  const tagRows = (tagsData ?? []) as { id: string; status: string; company_id: string; medium: string }[];
 
   for (const tagId of tag_ids as string[]) {
     const tag = tagRows.find((t) => t.id === tagId);
@@ -38,6 +38,12 @@ export async function POST(request: Request) {
     if (!["created", "shipped"].includes(tag.status)) {
       return NextResponse.json({ error: `Tag ${tagId} is already assigned to a product.` }, { status: 409 });
     }
+  }
+
+  // A product may carry at most one card. This route always creates a fresh
+  // product, so the only way to exceed one is to attach two cards at once.
+  if (tagRows.filter((t) => t.medium === "card").length > 1) {
+    return NextResponse.json({ error: "A product can only have one card." }, { status: 409 });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -65,7 +71,7 @@ export async function POST(request: Request) {
   // leave an orphan product with no linked tag (which showed as a blank status).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error: tagLinkError } = await (admin.from("tags") as any)
-    .update({ product_id: productId, status: "live" })
+    .update({ product_id: productId, status: "live", live_at: new Date().toISOString() })
     .in("id", tag_ids);
 
   if (tagLinkError) {

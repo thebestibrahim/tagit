@@ -13,6 +13,7 @@ import {
   ChevronRight,
   ToggleLeft,
   Inbox,
+  Users,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ const navItems = [
   { label: "Inquiries",     href: "/admin/inquiries",        icon: Inbox },
   { label: "Tags",          href: "/admin/tags",             icon: Tag },
   { label: "Batches",       href: "/admin/batches",          icon: Package },
+  { label: "Ownership",     href: "/admin/ownership",        icon: Users },
   { label: "Scan Logs",     href: "/admin/scans",            icon: ScanLine },
   { label: "Feature Flags", href: "/admin/feature-flags",   icon: ToggleLeft },
   { label: "Settings",      href: "/admin/settings",         icon: Settings },

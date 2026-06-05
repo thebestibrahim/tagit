@@ -525,6 +525,8 @@ export type Database = {
         Row: {
           batch_name: string | null
           batch_size: number
+          batch_type: string
+          cards_quantity: number
           company_id: string
           created_at: string | null
           created_by: string | null
@@ -537,6 +539,8 @@ export type Database = {
         Insert: {
           batch_name?: string | null
           batch_size: number
+          batch_type?: string
+          cards_quantity?: number
           company_id: string
           created_at?: string | null
           created_by?: string | null
@@ -549,6 +553,8 @@ export type Database = {
         Update: {
           batch_name?: string | null
           batch_size?: number
+          batch_type?: string
+          cards_quantity?: number
           company_id?: string
           created_at?: string | null
           created_by?: string | null
@@ -577,10 +583,14 @@ export type Database = {
           hmac_signature: string
           id: string
           industry: string
+          live_at: string | null
+          medium: string
           product_id: string | null
+          shipped_at: string | null
           short_id: string
           status: string
           token: string
+          url: string
         }
         Insert: {
           activated_at?: string | null
@@ -590,10 +600,14 @@ export type Database = {
           hmac_signature: string
           id?: string
           industry: string
+          live_at?: string | null
+          medium?: string
           product_id?: string | null
+          shipped_at?: string | null
           short_id: string
           status?: string
           token: string
+          url: string
         }
         Update: {
           activated_at?: string | null
@@ -603,10 +617,14 @@ export type Database = {
           hmac_signature?: string
           id?: string
           industry?: string
+          live_at?: string | null
+          medium?: string
           product_id?: string | null
+          shipped_at?: string | null
           short_id?: string
           status?: string
           token?: string
+          url?: string
         }
         Relationships: [
           {
@@ -969,5 +987,7 @@ export type TagStatus =
   | "transferred"
   | "flagged"
   | "suspended";
+export type TagMedium = "tag" | "card";
+export type BatchType = "tags" | "cards" | "mixed";
 export type ClaimStatus = "pending" | "approved" | "rejected" | "expired";
 export type Industry = "fashion" | "arts" | "collectibles" | "restaurants" | "hotels";

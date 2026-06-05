@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
 import { Tag } from "lucide-react";
 import type { TagStatus } from "@/types/database";
+import { statusBadge } from "@/lib/tag-status";
 
 type TagRow = {
   id: string;
@@ -11,16 +12,6 @@ type TagRow = {
   status: TagStatus;
   created_at: string;
   companies: { name: string } | null;
-};
-
-const STATUS_STYLES: Record<TagStatus, { bg: string; color: string }> = {
-  created:     { bg: "var(--color-cream)",     color: "var(--color-slate)" },
-  shipped:     { bg: "#F5F3FF",                color: "#5B21B6" },
-  live:        { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" },
-  owned:       { bg: "#ECFDF5",                color: "#065F46" },
-  transferred: { bg: "#EFF6FF",                color: "#1D4ED8" },
-  flagged:     { bg: "#FEF2F2",                color: "#991B1B" },
-  suspended:   { bg: "#F3F4F6",                color: "#374151" },
 };
 
 export default async function AdminTagsPage({
@@ -122,7 +113,7 @@ export default async function AdminTagsPage({
             </thead>
             <tbody>
               {tags.map((tag, i) => {
-                const s = STATUS_STYLES[tag.status] ?? STATUS_STYLES.created;
+                const s = statusBadge(tag.status);
                 return (
                   <tr
                     key={tag.id}
@@ -155,10 +146,10 @@ export default async function AdminTagsPage({
                     </td>
                     <td className="px-5 py-3">
                       <span
-                        className="px-2 py-0.5 rounded-full text-micro font-medium capitalize"
+                        className="px-2 py-0.5 rounded-full text-micro font-medium"
                         style={{ backgroundColor: s.bg, color: s.color }}
                       >
-                        {tag.status.replace("_", " ")}
+                        {s.label}
                       </span>
                     </td>
                     <td className="px-5 py-3">

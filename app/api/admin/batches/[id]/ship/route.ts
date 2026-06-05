@@ -41,7 +41,7 @@ export async function POST(
   // already have a product (`live`) or further along are left untouched.
   const { error: tagError } = await admin
     .from("tags")
-    .update({ status: "shipped" })
+    .update({ status: "shipped", shipped_at: new Date().toISOString() })
     .eq("batch_id", batchId)
     .eq("status", "created");
 

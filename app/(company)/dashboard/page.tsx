@@ -85,7 +85,7 @@ export default async function CompanyOverviewPage() {
   const allDone = completedSteps === steps.length;
 
   const quickStats = [
-    { label: "Total tags",          value: tags.length,                                     icon: Tag,         href: "/dashboard/tags",      accent: false },
+    { label: "Total tags",          value: tags.length,                                     icon: Tag,         href: "/dashboard/id-keys/tags", accent: false },
     { label: "Products registered", value: products.length,                                  icon: Package,     href: "/dashboard/products",  accent: false },
     { label: "Owned tags",          value: tags.filter((t) => ["owned", "transferred"].includes(t.status)).length, icon: Users,       href: "/dashboard/ownership", accent: false },
     { label: "Pending claims",      value: pendingClaimsCount ?? 0,                          icon: AlertCircle, href: "/dashboard/ownership", accent: (pendingClaimsCount ?? 0) > 0 },

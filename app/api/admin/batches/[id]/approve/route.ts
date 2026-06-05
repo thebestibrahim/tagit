@@ -2,17 +2,8 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { log } from "@/lib/logger";
 import { NextResponse } from "next/server";
-import { nanoid, customAlphabet } from "nanoid";
-import { createHmac } from "crypto";
-import type { TagStatus } from "@/types/database";
-
-const shortId = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
-
-function generateHmac(token: string): string {
-  return createHmac("sha256", process.env.TAGIT_HMAC_SECRET!)
-    .update(token)
-    .digest("hex");
-}
+import { buildTagRecords } from "@/lib/tag-gen";
+import type { BatchType } from "@/types/database";
 
 export async function POST(
   _request: Request,
@@ -30,7 +21,7 @@ export async function POST(
 
   const { data: batchData, error: fetchError } = await admin
     .from("tag_batches")
-    .select("id, company_id, industry, batch_size, status")
+    .select("id, company_id, industry, batch_size, cards_quantity, batch_type, status")
     .eq("id", batchId)
     .single();
 
@@ -39,29 +30,22 @@ export async function POST(
   }
 
   const batch = batchData as {
-    id: string; company_id: string; industry: string; batch_size: number; status: string;
+    id: string; company_id: string; industry: string;
+    batch_size: number; cards_quantity: number; batch_type: BatchType; status: string;
   };
 
   if (batch.status !== "pending") {
     return NextResponse.json({ error: "This batch has already been processed." }, { status: 400 });
   }
 
-  const tags = Array.from({ length: batch.batch_size }, () => {
-    const token = nanoid(21);
-    return {
-      token,
-      short_id: shortId(),
-      company_id: batch.company_id,
-      industry: batch.industry,
-      batch_id: batchId,
-      status: "created" as TagStatus,
-      hmac_signature: generateHmac(token),
-    };
-  });
+  const records = [
+    ...buildTagRecords({ count: batch.batch_size ?? 0,     company_id: batch.company_id, industry: batch.industry, batch_id: batchId, medium: "tag" }),
+    ...buildTagRecords({ count: batch.cards_quantity ?? 0, company_id: batch.company_id, industry: batch.industry, batch_id: batchId, medium: "card" }),
+  ];
 
   const chunkSize = 500;
-  for (let i = 0; i < tags.length; i += chunkSize) {
-    const { error } = await admin.from("tags").insert(tags.slice(i, i + chunkSize));
+  for (let i = 0; i < records.length; i += chunkSize) {
+    const { error } = await admin.from("tags").insert(records.slice(i, i + chunkSize));
     if (error) {
       log.error("admin/batches/approve", "Tag insert failed", error);
       return NextResponse.json({ error: "Tag generation failed" }, { status: 500 });
@@ -77,5 +61,5 @@ export async function POST(
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true, count: batch.batch_size });
+  return NextResponse.json({ success: true, count: records.length });
 }

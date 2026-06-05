@@ -21,22 +21,43 @@ const SUGGESTED_QTY = [25, 50, 100, 250, 500, 1000];
 export default function BatchRequestPage() {
   const router = useRouter();
   const [batchName, setBatchName] = useState("");
+  const [batchType, setBatchType] = useState<"tags" | "cards" | "mixed">("tags");
   const [industry, setIndustry] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [cardsQuantity, setCardsQuantity] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const needsTags = batchType === "tags" || batchType === "mixed";
+  const needsCards = batchType === "cards" || batchType === "mixed";
+  const canSubmit = !!industry && (!needsTags || !!quantity) && (!needsCards || !!cardsQuantity);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!industry) { toast.error("Please select an industry."); return; }
-    const qty = parseInt(quantity, 10);
-    if (!qty || qty < 10 || qty > 10000) { toast.error("Enter a quantity between 10 and 10,000."); return; }
+
+    const tagsQty = needsTags ? parseInt(quantity, 10) : 0;
+    const cardsQty = needsCards ? parseInt(cardsQuantity, 10) : 0;
+
+    if (needsTags && (!tagsQty || tagsQty < 10 || tagsQty > 10000)) {
+      toast.error("Enter a tag quantity between 10 and 10,000."); return;
+    }
+    if (needsCards && (!cardsQty || cardsQty < 10 || cardsQty > 10000)) {
+      toast.error("Enter a card quantity between 10 and 10,000."); return;
+    }
 
     setLoading(true);
     const res = await fetch("/api/company/batch-request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ industry, quantity: qty, notes, batch_name: batchName }),
+      body: JSON.stringify({
+        industry,
+        batch_type: batchType,
+        quantity: tagsQty,
+        cards_quantity: cardsQty,
+        notes,
+        batch_name: batchName,
+      }),
     });
     const json = await res.json();
     setLoading(false);
@@ -98,6 +119,42 @@ export default function BatchRequestPage() {
           />
         </div>
 
+        {/* Batch type */}
+        <div className="space-y-3">
+          <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+            What are you ordering?
+          </Label>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {([
+              { value: "tags",  label: "Tags",  desc: "For embedding into items" },
+              { value: "cards", label: "Cards", desc: "For items that cannot be embedded" },
+              { value: "mixed", label: "Both",  desc: "Specify quantity of each" },
+            ] as const).map(({ value, label, desc }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setBatchType(value)}
+                style={{
+                  padding: "14px 14px",
+                  borderRadius: "var(--radius-md)",
+                  border: `2px solid ${batchType === value ? "var(--color-gold)" : "var(--color-cream)"}`,
+                  backgroundColor: batchType === value ? "var(--color-soft-gold)" : "var(--color-pearl)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  transition: "all 0.15s",
+                }}
+              >
+                <p className="font-semibold" style={{ fontSize: "var(--text-body-sm)", color: batchType === value ? "var(--color-deep-gold)" : "var(--color-charcoal)", marginBottom: 2 }}>
+                  {label}
+                </p>
+                <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)", lineHeight: 1.4 }}>
+                  {desc}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Industry */}
         <div className="space-y-3">
           <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
@@ -131,52 +188,14 @@ export default function BatchRequestPage() {
           </div>
         </div>
 
-        {/* Quantity */}
-        <div className="space-y-3">
-          <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-            How many tags do you need?
-          </Label>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {SUGGESTED_QTY.map((q) => (
-              <button
-                key={q}
-                type="button"
-                onClick={() => setQuantity(String(q))}
-                style={{
-                  padding: "6px 14px",
-                  borderRadius: 99,
-                  border: `1px solid ${quantity === String(q) ? "var(--color-gold)" : "var(--color-cream)"}`,
-                  backgroundColor: quantity === String(q) ? "var(--color-soft-gold)" : "var(--color-linen)",
-                  color: quantity === String(q) ? "var(--color-deep-gold)" : "var(--color-graphite)",
-                  fontSize: "var(--text-body-sm)",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-              >
-                {q.toLocaleString()}
-              </button>
-            ))}
-          </div>
-          <input
-            type="number"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            placeholder="Or enter a custom quantity (10–10,000)"
-            min={10}
-            max={10000}
-            style={{
-              width: "100%",
-              border: "1px solid var(--color-stone)",
-              borderRadius: "var(--radius-sm)",
-              padding: "10px 12px",
-              fontSize: "var(--text-body-sm)",
-              color: "var(--color-onyx)",
-              backgroundColor: "var(--color-pearl)",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
-          />
+        {/* Quantity — one field per medium in the batch */}
+        <div className={needsTags && needsCards ? "grid grid-cols-1 gap-6 sm:grid-cols-2" : ""}>
+          {needsTags && (
+            <QtyField label="How many tags do you need?" value={quantity} onChange={setQuantity} />
+          )}
+          {needsCards && (
+            <QtyField label="How many cards do you need?" value={cardsQuantity} onChange={setCardsQuantity} />
+          )}
         </div>
 
         {/* Notes */}
@@ -218,20 +237,79 @@ export default function BatchRequestPage() {
 
         <button
           type="submit"
-          disabled={loading || !industry || !quantity}
+          disabled={loading || !canSubmit}
           className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium w-full justify-center"
           style={{
             fontSize: "var(--text-body-sm)",
-            backgroundColor: !industry || !quantity || loading ? "var(--color-stone)" : "var(--color-onyx)",
+            backgroundColor: !canSubmit || loading ? "var(--color-stone)" : "var(--color-onyx)",
             color: "var(--color-pearl)",
             border: "none",
-            cursor: !industry || !quantity || loading ? "not-allowed" : "pointer",
+            cursor: !canSubmit || loading ? "not-allowed" : "pointer",
           }}
         >
           {loading && <Loader2 size={14} className="animate-spin" />}
           {loading ? "Submitting…" : "Submit batch request"}
         </button>
       </form>
+    </div>
+  );
+}
+
+function QtyField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+        {label}
+      </Label>
+      <div className="flex flex-wrap gap-2 mb-3">
+        {SUGGESTED_QTY.map((q) => (
+          <button
+            key={q}
+            type="button"
+            onClick={() => onChange(String(q))}
+            style={{
+              padding: "6px 14px",
+              borderRadius: 99,
+              border: `1px solid ${value === String(q) ? "var(--color-gold)" : "var(--color-cream)"}`,
+              backgroundColor: value === String(q) ? "var(--color-soft-gold)" : "var(--color-linen)",
+              color: value === String(q) ? "var(--color-deep-gold)" : "var(--color-graphite)",
+              fontSize: "var(--text-body-sm)",
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+          >
+            {q.toLocaleString()}
+          </button>
+        ))}
+      </div>
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Or enter a custom quantity (10–10,000)"
+        min={10}
+        max={10000}
+        style={{
+          width: "100%",
+          border: "1px solid var(--color-stone)",
+          borderRadius: "var(--radius-sm)",
+          padding: "10px 12px",
+          fontSize: "var(--text-body-sm)",
+          color: "var(--color-onyx)",
+          backgroundColor: "var(--color-pearl)",
+          outline: "none",
+          fontFamily: "inherit",
+        }}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { ChevronLeft, Pencil, Tag, User, ArrowRightLeft, Award, Package, CheckCircle2 } from "lucide-react";
 import type { CompanyStatus } from "@/types/database";
+import { statusBadge } from "@/lib/tag-status";
 import { INDUSTRY_FIELDS, groupFields } from "@/lib/industry-fields";
 import CopyLinkButton from "@/components/ui/CopyLinkButton";
 
@@ -62,19 +63,6 @@ function fmt(date: string) {
 
 function fmtDate(date: string) {
   return format(new Date(date), "MMM d, yyyy");
-}
-
-function tagStatusBadge(status: string) {
-  const map: Record<string, { bg: string; color: string }> = {
-    owned:         { bg: "#ECFDF5",                   color: "#065F46" },
-    claim_pending: { bg: "var(--color-soft-gold)",    color: "var(--color-deep-gold)" },
-    transfer_pending: { bg: "#EFF6FF",                color: "#1D4ED8" },
-    flagged:       { bg: "var(--color-alert-tint)",   color: "var(--color-alert)" },
-    embedded:      { bg: "var(--color-linen)",        color: "var(--color-slate)" },
-    unowned:       { bg: "var(--color-smoke)",        color: "var(--color-graphite)" },
-    suspended:     { bg: "var(--color-alert-tint)",   color: "var(--color-alert)" },
-  };
-  return map[status] ?? { bg: "var(--color-linen)", color: "var(--color-slate)" };
 }
 
 function claimStatusBadge(status: string) {
@@ -313,7 +301,7 @@ export default async function ProductDetailPage({
   // Sort oldest → newest
   timeline.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const tagBadge = tagStatusBadge(primaryTag?.status ?? "");
+  const tagBadge = statusBadge(primaryTag?.status ?? "created");
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -350,10 +338,10 @@ export default async function ProductDetailPage({
           </div>
           {primaryTag && (
             <span
-              className="px-2.5 py-1 rounded-full text-micro font-medium capitalize shrink-0"
+              className="px-2.5 py-1 rounded-full text-micro font-medium shrink-0"
               style={{ backgroundColor: tagBadge.bg, color: tagBadge.color }}
             >
-              {primaryTag.status.replace(/_/g, " ")}
+              {tagBadge.label}
             </span>
           )}
         </div>
