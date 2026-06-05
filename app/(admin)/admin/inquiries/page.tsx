@@ -2,6 +2,9 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
 import { Inbox } from "lucide-react";
 import InquiryActions from "./InquiryActions";
+import Pagination from "@/components/ui/Pagination";
+
+const PER_PAGE = 25;
 
 type InquiryStatus = 'new' | 'contacted' | 'converted' | 'declined';
 
@@ -12,7 +15,11 @@ const STATUS_STYLES: Record<InquiryStatus, { bg: string; color: string; label: s
   declined:  { bg: "#F3F4F6", color: "#374151", label: "Declined" },
 };
 
-export default async function InquiriesPage() {
+export default async function InquiriesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const supabase = createServiceClient();
 
   const { data } = await supabase
@@ -26,6 +33,12 @@ export default async function InquiriesPage() {
     all: inquiries.length,
     new: inquiries.filter((i) => i.status === "new").length,
   };
+
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10));
+  const totalPages = Math.ceil(inquiries.length / PER_PAGE);
+  const pageRows = inquiries.slice((page - 1) * PER_PAGE, (page - 1) * PER_PAGE + PER_PAGE);
+  const pageHref = (p: number) => (p > 1 ? `/admin/inquiries?page=${p}` : "/admin/inquiries");
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -71,14 +84,14 @@ export default async function InquiriesPage() {
               </tr>
             </thead>
             <tbody>
-              {inquiries.map((inquiry, i) => {
+              {pageRows.map((inquiry, i) => {
                 const s = STATUS_STYLES[inquiry.status as InquiryStatus] ?? STATUS_STYLES.new;
                 return (
                   <tr
                     key={inquiry.id}
                     style={{
                       backgroundColor: "var(--color-pearl)",
-                      borderBottom: i < inquiries.length - 1 ? "1px solid var(--color-cream)" : "none",
+                      borderBottom: i < pageRows.length - 1 ? "1px solid var(--color-cream)" : "none",
                     }}
                   >
                     <td className="px-5 py-4">
@@ -126,6 +139,7 @@ export default async function InquiriesPage() {
             </tbody>
           </table>
         )}
+        <Pagination page={page} totalPages={totalPages} makeHref={pageHref} totalLabel={`${inquiries.length} total`} />
       </div>
     </div>
   );

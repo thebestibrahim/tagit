@@ -121,7 +121,7 @@ export default async function ProductDetailPage({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
       .from("tags")
-      .select("id, short_id, token, status, created_at, activated_at")
+      .select("id, short_id, token, status, medium, created_at, activated_at")
       .eq("product_id", id),
   ]);
 
@@ -137,8 +137,18 @@ export default async function ProductDetailPage({
     created_at: string;
   };
 
-  type TagRecord = { id: string; short_id: string; token: string; status: string; created_at: string; activated_at: string | null };
-  const productTags = (linkedTagsData ?? []) as TagRecord[];
+  type TagRecord = { id: string; short_id: string; token: string; status: string; medium: string; created_at: string; activated_at: string | null };
+  // Tags first, then cards — stable, readable order in the ID list.
+  const productTags = ((linkedTagsData ?? []) as TagRecord[]).sort(
+    (a, b) => (a.medium === "card" ? 1 : 0) - (b.medium === "card" ? 1 : 0)
+  );
+  const cardCount = productTags.filter((t) => t.medium === "card").length;
+  const tagCount = productTags.length - cardCount;
+  // "2 tags + 1 card", "3 tags", or "1 card" — the human label for this set.
+  const keysLabel = [
+    tagCount > 0 ? `${tagCount} tag${tagCount !== 1 ? "s" : ""}` : "",
+    cardCount > 0 ? `${cardCount} card${cardCount !== 1 ? "s" : ""}` : "",
+  ].filter(Boolean).join(" + ");
   const productTagIds = productTags.map((t) => t.id);
   const primaryTag = productTags[0] ?? null;
 
@@ -210,20 +220,21 @@ export default async function ProductDetailPage({
     title: "Product registered",
     meta: [
       productTags.length > 0
-        ? `${productTags.length} tag${productTags.length !== 1 ? "s" : ""} linked: ${productTags.map((t) => t.short_id).join(", ")}`
-        : "No tags linked",
+        ? `${keysLabel} linked: ${productTags.map((t) => `${t.short_id} (${t.medium === "card" ? "card" : "tag"})`).join(", ")}`
+        : "No tags or cards linked",
     ],
   });
 
-  // Tag activations (one entry per tag that has been scanned)
+  // Activations (one entry per tag/card that has been scanned)
   for (const t of productTags) {
     if (t.activated_at) {
+      const noun = t.medium === "card" ? "Card" : "Tag";
       timeline.push({
         date: t.activated_at,
         kind: "activated",
         icon: <Tag size={14} />,
         iconBg: "#1D4ED8",
-        title: productTags.length > 1 ? `Tag ${t.short_id} first scanned` : "Tag first scanned",
+        title: productTags.length > 1 ? `${noun} ${t.short_id} first scanned` : `${noun} first scanned`,
         meta: ["Activated by consumer scan"],
       });
     }
@@ -349,23 +360,40 @@ export default async function ProductDetailPage({
         <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-5 sm:grid-cols-3">
           <div>
             <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>
-              {productTags.length !== 1 ? "Tags" : "Tag ID"}
+              {cardCount > 0 && tagCount > 0
+                ? "Tags & Cards"
+                : cardCount > 0
+                  ? (cardCount === 1 ? "Card ID" : "Cards")
+                  : (tagCount === 1 ? "Tag ID" : "Tags")}
             </p>
             {productTags.length === 0 ? (
               <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>—</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                {productTags.map((t) => (
+                {productTags.map((t) => {
+                  const isCard = t.medium === "card";
+                  return (
                   <div key={t.id} style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    <span
+                      className="px-1.5 py-0.5 rounded text-micro font-medium"
+                      style={
+                        isCard
+                          ? { backgroundColor: "#EFF6FF", color: "#1D4ED8" }
+                          : { backgroundColor: "var(--color-linen)", color: "var(--color-graphite)" }
+                      }
+                    >
+                      {isCard ? "Card" : "Tag"}
+                    </span>
                     <span
                       style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-graphite)", letterSpacing: "0.05em" }}
                     >
                       {t.short_id}
                     </span>
-                    {/* Each tag carries its own unique consumer link. */}
+                    {/* Each tag/card carries its own unique consumer link. */}
                     <CopyLinkButton url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${t.token}`} label="Copy link" />
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

@@ -7,14 +7,17 @@ import { Layers, Plus, ChevronRight } from "lucide-react";
 import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
 import FeatureWall from "@/components/company/FeatureWall";
 import { batchQuantityLabel, BATCH_TYPE_BADGE, BATCH_STATUS_STYLES, type BatchRow } from "@/components/company/batch-display";
+import Pagination from "@/components/ui/Pagination";
 import type { BatchType } from "@/types/database";
 
 const TYPE_FILTERS: ("all" | BatchType)[] = ["all", "tags", "cards", "mixed"];
 
+const PER_PAGE = 20;
+
 export default async function BatchesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string }>;
+  searchParams: Promise<{ type?: string; page?: string }>;
 }) {
   const supabase = await createClient();
   const user = await getUser();
@@ -32,17 +35,28 @@ export default async function BatchesPage({
 
   const params = await searchParams;
   const typeFilter = (TYPE_FILTERS as string[]).includes(params.type ?? "") ? params.type! : "all";
+  const page = Math.max(1, parseInt(params.page ?? "1", 10));
+  const from = (page - 1) * PER_PAGE;
 
   let query = supabase
     .from("tag_batches")
-    .select("id, industry, batch_size, cards_quantity, batch_type, batch_name, status, notes, created_at, shipped_at")
+    .select("id, industry, batch_size, cards_quantity, batch_type, batch_name, status, notes, created_at, shipped_at", { count: "exact" })
     .eq("company_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(from, from + PER_PAGE - 1);
 
   if (typeFilter !== "all") query = query.eq("batch_type", typeFilter as BatchType);
 
-  const { data } = await query;
+  const { data, count } = await query;
   const batches = (data ?? []) as BatchRow[];
+  const totalPages = Math.ceil((count ?? 0) / PER_PAGE);
+  const pageHref = (p: number) => {
+    const sp = new URLSearchParams();
+    if (typeFilter !== "all") sp.set("type", typeFilter);
+    if (p > 1) sp.set("page", String(p));
+    const qs = sp.toString();
+    return qs ? `/dashboard/id-keys/batches?${qs}` : "/dashboard/id-keys/batches";
+  };
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
@@ -143,6 +157,7 @@ export default async function BatchesPage({
               </Link>
             );
           })}
+          <Pagination page={page} totalPages={totalPages} makeHref={pageHref} totalLabel={`${count ?? 0} total`} />
         </div>
       )}
     </div>

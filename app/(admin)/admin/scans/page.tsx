@@ -13,7 +13,7 @@ type ScanLog = {
   scan_result: string;
   ip_address: string | null;
   user_agent: string | null;
-  tags: { short_id: string; company_id: string } | null;
+  tags: { short_id: string; company_id: string; medium: string } | null;
 };
 
 const PER_PAGE = 25;
@@ -47,7 +47,7 @@ export default async function AdminScansPage({
 
   let query = supabase
     .from("scan_logs")
-    .select("id, created_at, scan_result, ip_address, user_agent, tags(short_id, company_id)", { count: "exact" })
+    .select("id, created_at, scan_result, ip_address, user_agent, tags(short_id, company_id, medium)", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -131,7 +131,7 @@ export default async function AdminScansPage({
             <table className="w-full">
               <thead>
                 <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
-                  {["Time", "Tag", "Company", "Result", "IP Address", "Client"].map((h) => (
+                  {["Time", "Tag / Card", "Company", "Result", "IP Address", "Client"].map((h) => (
                     <th
                       key={h}
                       className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider"
@@ -164,9 +164,23 @@ export default async function AdminScansPage({
                         </span>
                       </td>
                       <td className="px-5 py-3">
-                        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)", letterSpacing: "0.05em" }}>
-                          {log.tags?.short_id ?? "—"}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {log.tags?.medium && (
+                            <span
+                              className="px-1.5 py-0.5 rounded text-micro font-medium"
+                              style={
+                                log.tags.medium === "card"
+                                  ? { backgroundColor: "#EFF6FF", color: "#1D4ED8" }
+                                  : { backgroundColor: "var(--color-linen)", color: "var(--color-graphite)" }
+                              }
+                            >
+                              {log.tags.medium === "card" ? "Card" : "Tag"}
+                            </span>
+                          )}
+                          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)", letterSpacing: "0.05em" }}>
+                            {log.tags?.short_id ?? "—"}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-5 py-3">
                         <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>

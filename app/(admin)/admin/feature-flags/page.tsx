@@ -4,6 +4,9 @@ import { ToggleLeft } from "lucide-react";
 import { FlagToggle } from "./FlagToggle";
 import { CreateFlagModal } from "./CreateFlagModal";
 import { describeFlagState, type FlagTone } from "@/lib/feature-flags/describe";
+import Pagination from "@/components/ui/Pagination";
+
+const PER_PAGE = 50;
 
 const TONE_DOT: Record<FlagTone, string> = {
   on: "#16A34A",
@@ -22,7 +25,11 @@ type FlagRow = {
   feature_flag_overrides: { id: string }[];
 };
 
-export default async function FeatureFlagsPage() {
+export default async function FeatureFlagsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const admin = createAdminClient();
 
   const { data } = await admin
@@ -30,7 +37,12 @@ export default async function FeatureFlagsPage() {
     .select("id, key, name, description, enabled, rollout_percentage, environments, feature_flag_overrides(id)")
     .order("key");
 
-  const flags = (data ?? []) as FlagRow[];
+  const allFlags = (data ?? []) as FlagRow[];
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10));
+  const totalPages = Math.ceil(allFlags.length / PER_PAGE);
+  const flags = allFlags.slice((page - 1) * PER_PAGE, (page - 1) * PER_PAGE + PER_PAGE);
+  const pageHref = (p: number) => (p > 1 ? `/admin/feature-flags?page=${p}` : "/admin/feature-flags");
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -142,6 +154,7 @@ export default async function FeatureFlagsPage() {
             </tbody>
           </table>
         )}
+        <Pagination page={page} totalPages={totalPages} makeHref={pageHref} totalLabel={`${allFlags.length} total`} />
       </div>
     </div>
   );

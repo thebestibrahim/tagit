@@ -5,6 +5,9 @@ import { format } from "date-fns";
 import { Building2, ChevronRight } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
+import Pagination from "@/components/ui/Pagination";
+
+const PER_PAGE = 25;
 
 type Company = {
   id: string;
@@ -33,9 +36,9 @@ const INDUSTRY_LABELS: Record<Industry, string> = {
 export default async function AdminCompaniesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
 }) {
-  const { status: filterStatus, q: rawQ } = await searchParams;
+  const { status: filterStatus, q: rawQ, page: pageParam } = await searchParams;
   const q = rawQ?.trim() ?? "";
   const supabase = createServiceClient();
 
@@ -68,6 +71,18 @@ export default async function AdminCompaniesPage({
   ];
 
   const activeTab = filterStatus ?? "all";
+
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10));
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const pageRows = filtered.slice((page - 1) * PER_PAGE, (page - 1) * PER_PAGE + PER_PAGE);
+  const pageHref = (p: number) => {
+    const sp = new URLSearchParams();
+    if (activeTab !== "all") sp.set("status", activeTab);
+    if (q) sp.set("q", q);
+    if (p > 1) sp.set("page", String(p));
+    const qs = sp.toString();
+    return qs ? `/admin/companies?${qs}` : "/admin/companies";
+  };
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -134,14 +149,14 @@ export default async function AdminCompaniesPage({
               </tr>
             </thead>
             <tbody>
-              {filtered.map((company, i) => {
+              {pageRows.map((company, i) => {
                 const s = STATUS_STYLES[company.status];
                 return (
                   <tr
                     key={company.id}
                     style={{
                       backgroundColor: "var(--color-pearl)",
-                      borderBottom: i < filtered.length - 1 ? "1px solid var(--color-cream)" : "none",
+                      borderBottom: i < pageRows.length - 1 ? "1px solid var(--color-cream)" : "none",
                     }}
                   >
                     <td className="px-5 py-4">
@@ -185,6 +200,7 @@ export default async function AdminCompaniesPage({
             </tbody>
           </table>
         )}
+        <Pagination page={page} totalPages={totalPages} makeHref={pageHref} totalLabel={`${filtered.length} total`} />
       </div>
     </div>
   );

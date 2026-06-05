@@ -6,6 +6,7 @@ import BatchActions from "./BatchActions";
 import ShipBatchButton from "./ShipBatchButton";
 
 import { batchQuantityLabel, BATCH_TYPE_BADGE } from "@/components/company/batch-display";
+import Pagination from "@/components/ui/Pagination";
 import type { BatchType } from "@/types/database";
 
 type Batch = {
@@ -30,7 +31,13 @@ const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
   shipped:   { bg: "#ECFDF5",                color: "#065F46" },
 };
 
-export default async function AdminBatchesPage() {
+const PER_PAGE = 25;
+
+export default async function AdminBatchesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const supabase = createServiceClient();
 
   const { data } = await supabase
@@ -40,7 +47,14 @@ export default async function AdminBatchesPage() {
 
   const batches = (data ?? []) as Batch[];
   const pending = batches.filter((b) => b.status === "pending");
-  const processed = batches.filter((b) => b.status !== "pending");
+  const allProcessed = batches.filter((b) => b.status !== "pending");
+
+  // Pending requests are always shown (they need action); the generated list is paginated.
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10));
+  const totalPages = Math.ceil(allProcessed.length / PER_PAGE);
+  const processed = allProcessed.slice((page - 1) * PER_PAGE, (page - 1) * PER_PAGE + PER_PAGE);
+  const pageHref = (p: number) => (p > 1 ? `/admin/batches?page=${p}` : "/admin/batches");
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -264,6 +278,7 @@ export default async function AdminBatchesPage() {
               </tbody>
             </table>
           )}
+          <Pagination page={page} totalPages={totalPages} makeHref={pageHref} totalLabel={`${allProcessed.length} total`} />
         </div>
       </div>
     </div>

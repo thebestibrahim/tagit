@@ -7,6 +7,9 @@ import { format } from "date-fns";
 import { Award, CheckCircle, AlertTriangle, Clock, ExternalLink, ArrowRight } from "lucide-react";
 import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
 import FeatureWall from "@/components/company/FeatureWall";
+import Pagination from "@/components/ui/Pagination";
+
+const PER_PAGE = 20;
 
 const admin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,7 +30,11 @@ type Cert = {
 
 type OwnerRecord = { id: string; is_current: boolean };
 
-export default async function CertificatesPage() {
+export default async function CertificatesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const supabase = await createClient();
   const user = await getUser();
   if (!user) redirect("/auth/login");
@@ -108,6 +115,13 @@ export default async function CertificatesPage() {
   const transferred = certRows.filter((r) => r.isTransferred && !r.isProvenance).length;
   const provenance = certRows.filter((r) => r.isProvenance).length;
 
+  // Stats above cover all certs; the list below is paginated.
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page ?? "1", 10));
+  const totalPages = Math.ceil(certRows.length / PER_PAGE);
+  const pageRows = certRows.slice((page - 1) * PER_PAGE, (page - 1) * PER_PAGE + PER_PAGE);
+  const pageHref = (p: number) => (p > 1 ? `/dashboard/certificates?page=${p}` : "/dashboard/certificates");
+
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <div className="page-header mb-8">
@@ -144,7 +158,7 @@ export default async function CertificatesPage() {
         <EmptyState />
       ) : (
         <div className="space-y-2">
-          {certRows.map(({ cert, isProvenance, isTransferred, productName }) => (
+          {pageRows.map(({ cert, isProvenance, isTransferred, productName }) => (
             <Link
               key={cert.id}
               href={`/certificate/${cert.id}`}
@@ -212,6 +226,7 @@ export default async function CertificatesPage() {
               />
             </Link>
           ))}
+          <Pagination page={page} totalPages={totalPages} makeHref={pageHref} totalLabel={`${total} total`} />
         </div>
       )}
     </div>
