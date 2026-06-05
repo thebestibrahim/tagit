@@ -51,7 +51,7 @@ export default async function CompanyOverviewPage() {
   const steps = [
     {
       label: "Request your first tag batch",
-      desc: "Order NFC tags from Tagit to get started",
+      desc: "Order tags or cards from Tagit to get started",
       done: tags.length > 0 || hasBatches,
       href: "/dashboard/batches/request",
     },
@@ -256,7 +256,7 @@ export default async function CompanyOverviewPage() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
-            { title: "Request tag batch",          desc: "Order NFC tags for your next collection",                                                                   href: "/dashboard/batches/request", icon: Layers },
+            { title: "Request tag batch",          desc: "Order tags or cards for your next collection",                                                                   href: "/dashboard/batches/request", icon: Layers },
             { title: "Register a product",         desc: "Link a product record to an unassigned tag",                                                               href: "/dashboard/products/new",    icon: Package },
             { title: "Review ownership claims",    desc: `${pendingClaimsCount ?? 0} pending claim${(pendingClaimsCount ?? 0) !== 1 ? "s" : ""} awaiting your approval`, href: "/dashboard/ownership",    icon: Users },
             { title: "Upload certificate signature", desc: "Add your signature to branded PDF certificates",                                                          href: "/dashboard/customization",   icon: PenLine },

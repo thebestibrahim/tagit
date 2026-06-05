@@ -108,7 +108,7 @@ export default function RegisterForm() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 40 }}>
             {[
-              ["NFC authentication", "Cryptographically signed, tamper-evident"],
+              ["Tag & card authentication", "Cryptographically signed, tamper-evident"],
               ["Ownership ledger", "Append-only, permanent provenance"],
               ["AI voice persona", "Your brand speaks for itself"],
               ["EU DPP compliant", "Ready for 2026–2030 mandates"],

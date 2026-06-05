@@ -224,7 +224,7 @@ export default async function ProductDetailPage({
         icon: <Tag size={14} />,
         iconBg: "#1D4ED8",
         title: productTags.length > 1 ? `Tag ${t.short_id} first scanned` : "Tag first scanned",
-        meta: ["NFC tag activated by consumer"],
+        meta: ["Activated by consumer scan"],
       });
     }
   }

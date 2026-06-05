@@ -32,7 +32,7 @@ export default async function NewBatchPage() {
           Generate tag batch
         </h1>
         <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-          Creates NFC tag tokens with HMAC-signed URLs and unique short IDs.
+          Creates tag tokens with HMAC-signed URLs and unique short IDs.
         </p>
       </div>
 

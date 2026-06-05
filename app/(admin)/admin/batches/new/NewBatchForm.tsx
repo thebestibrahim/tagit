@@ -217,7 +217,7 @@ export default function NewBatchForm({ companies }: { companies: Company[] }) {
           className="rounded-lg px-4 py-3 text-body-sm"
           style={{ backgroundColor: "var(--color-soft-gold)", color: "var(--color-deep-gold)" }}
         >
-          This will generate <strong>{form.batch_size.toLocaleString()}</strong> unique NFC tags, each with a signed HMAC URL token.
+          This will generate <strong>{form.batch_size.toLocaleString()}</strong> unique tags, each with a signed HMAC URL token.
         </div>
       )}
 

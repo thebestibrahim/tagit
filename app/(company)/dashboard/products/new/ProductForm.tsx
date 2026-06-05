@@ -14,22 +14,24 @@ const CURRENCIES = [
   "NGN", "USD", "EUR", "GBP", "AED", "CHF", "JPY", "CAD", "AUD", "CNY",
 ] as const;
 
-type Tag = { id: string; short_id: string; token: string };
+type Item = { id: string; short_id: string; token: string };
 type ImageEntry = { file: File; preview: string };
 
 export default function ProductForm({
   tags,
+  cards,
   industry,
   companyId,
 }: {
-  tags: Tag[];
+  tags: Item[];
+  cards: Item[];
   industry: string;
   companyId: string;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  const [tagSearch, setTagSearch] = useState("");
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState<typeof CURRENCIES[number]>("NGN");
@@ -40,28 +42,12 @@ export default function ProductForm({
   const industryFields = INDUSTRY_FIELDS[industry] ?? [];
   const grouped = groupFields(industryFields);
 
-  const availableTags = useMemo(
-    () => tags.filter((t) => !selectedTagIds.includes(t.id)),
-    [tags, selectedTagIds]
+  // Tag IDs + the (optional) single card ID — both go to the API as tag_ids;
+  // the API/DB enforce at most one card per product.
+  const selectedIds = useMemo(
+    () => [...selectedTagIds, ...(selectedCardId ? [selectedCardId] : [])],
+    [selectedTagIds, selectedCardId]
   );
-  const filteredTags = useMemo(
-    () =>
-      tagSearch
-        ? availableTags.filter((t) =>
-            t.short_id.toLowerCase().includes(tagSearch.toLowerCase())
-          )
-        : availableTags,
-    [availableTags, tagSearch]
-  );
-
-  function addTag(id: string) {
-    setSelectedTagIds((prev) => [...prev, id]);
-    setTagSearch("");
-  }
-
-  function removeTag(id: string) {
-    setSelectedTagIds((prev) => prev.filter((i) => i !== id));
-  }
 
   function setField(key: string, value: string) {
     setFields((f) => ({ ...f, [key]: value }));
@@ -103,7 +89,7 @@ export default function ProductForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (selectedTagIds.length === 0) { toast.error("Select at least one tag to link this product."); return; }
+    if (selectedIds.length === 0) { toast.error("Select at least one tag or card to link this product."); return; }
     setLoading(true);
 
     let photoUrls: string[] = [];
@@ -119,7 +105,7 @@ export default function ProductForm({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        tag_ids: selectedTagIds,
+        tag_ids: selectedIds,
         company_id: companyId,
         name: name.trim(),
         industry_fields: fields,
@@ -202,146 +188,44 @@ export default function ProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Link NFC tags — multi-select with search */}
+      {/* Link tags & cards */}
       <div className="card-raised rounded-xl p-6">
         <h2 className="text-body font-semibold mb-1" style={{ color: "var(--color-charcoal)" }}>
-          Link NFC tags
+          Link tags &amp; cards
         </h2>
-        <p className="text-body-sm mb-4" style={{ color: "var(--color-slate)" }}>
-          Select one or more unassigned tags to link to this product.
+        <p className="text-body-sm mb-5" style={{ color: "var(--color-slate)" }}>
+          Attach one or more tags, and optionally a card, to this product.
         </p>
 
-        {tags.length === 0 ? (
+        {tags.length === 0 && cards.length === 0 ? (
           <p style={{ color: "var(--color-alert)", fontSize: "var(--text-body-sm)" }}>
-            No unassigned tags available. Ask your Tagit admin to generate a batch.
+            No unassigned tags or cards available. Request a batch from the ID Keys section.
           </p>
         ) : (
-          <div>
-            {/* Selected tag pills */}
-            {selectedTagIds.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "12px" }}>
-                {selectedTagIds.map((id) => {
-                  const t = tags.find((x) => x.id === id);
-                  return (
-                    <span
-                      key={id}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "5px",
-                        padding: "4px 10px 4px 12px",
-                        backgroundColor: "var(--color-onyx)",
-                        color: "var(--color-pearl)",
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                        fontFamily: "var(--font-jetbrains-mono)",
-                        letterSpacing: "0.04em",
-                      }}
-                    >
-                      {t?.short_id}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(id)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "rgba(250,250,248,0.55)",
-                          display: "flex",
-                          alignItems: "center",
-                          padding: 0,
-                          lineHeight: 1,
-                        }}
-                      >
-                        <X size={11} />
-                      </button>
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Search input */}
-            <div style={{ position: "relative" }}>
-              <Search
-                size={14}
-                style={{
-                  position: "absolute",
-                  left: "12px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: "var(--color-mist)",
-                  pointerEvents: "none",
-                }}
-              />
-              <input
-                type="text"
-                value={tagSearch}
-                onChange={(e) => setTagSearch(e.target.value)}
-                placeholder="Search tags…"
-                style={{
-                  width: "100%",
-                  border: "1px solid var(--color-stone)",
-                  borderRadius: "var(--radius-sm)",
-                  padding: "9px 12px 9px 34px",
-                  fontSize: "var(--text-body-sm)",
-                  color: "var(--color-onyx)",
-                  backgroundColor: "var(--color-pearl)",
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-
-            {/* Tag list */}
-            {filteredTags.length > 0 ? (
-              <div
-                style={{
-                  marginTop: "6px",
-                  maxHeight: "180px",
-                  overflowY: "auto",
-                  border: "1px solid var(--color-stone)",
-                  borderRadius: "var(--radius-sm)",
-                  backgroundColor: "var(--color-pearl)",
-                }}
-              >
-                {filteredTags.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => addTag(t.id)}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "9px 14px",
-                      fontSize: "13px",
-                      fontFamily: "var(--font-jetbrains-mono)",
-                      letterSpacing: "0.04em",
-                      color: "var(--color-graphite)",
-                      backgroundColor: "transparent",
-                      border: "none",
-                      borderBottom: "1px solid var(--color-cream)",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "var(--color-smoke)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
-                  >
-                    {t.short_id}
-                  </button>
-                ))}
-              </div>
-            ) : tagSearch && availableTags.length > 0 ? (
-              <p style={{ marginTop: "8px", fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
-                No tags match &ldquo;{tagSearch}&rdquo;
-              </p>
-            ) : availableTags.length === 0 && selectedTagIds.length < tags.length ? null : null}
-
-            {selectedTagIds.length === 0 && (
-              <p style={{ marginTop: "8px", fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
-                No tags selected — choose at least one from the list above.
-              </p>
-            )}
+          <div className="space-y-5">
+            <KeyPicker
+              label="Tags"
+              hint="Select one or more to link to this product."
+              items={tags}
+              selected={selectedTagIds}
+              onAdd={(id) => setSelectedTagIds((p) => [...p, id])}
+              onRemove={(id) => setSelectedTagIds((p) => p.filter((i) => i !== id))}
+              searchPlaceholder="Search tags…"
+              emptyText="No unassigned tags available."
+              noneText="No tags selected yet."
+            />
+            <KeyPicker
+              label="Card"
+              hint="A product can have at most one card (optional)."
+              items={cards}
+              selected={selectedCardId ? [selectedCardId] : []}
+              single
+              onAdd={(id) => setSelectedCardId(id)}
+              onRemove={() => setSelectedCardId(null)}
+              searchPlaceholder="Search cards…"
+              emptyText="No unassigned cards available."
+              noneText="No card selected."
+            />
           </div>
         )}
       </div>
@@ -516,18 +400,195 @@ export default function ProductForm({
 
       <button
         type="submit"
-        disabled={loading || selectedTagIds.length === 0}
+        disabled={loading || selectedIds.length === 0}
         className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-body-sm"
         style={{
-          backgroundColor: loading || selectedTagIds.length === 0 ? "var(--color-stone)" : "var(--color-onyx)",
+          backgroundColor: loading || selectedIds.length === 0 ? "var(--color-stone)" : "var(--color-onyx)",
           color: "var(--color-pearl)",
           border: "none",
-          cursor: loading || selectedTagIds.length === 0 ? "not-allowed" : "pointer",
+          cursor: loading || selectedIds.length === 0 ? "not-allowed" : "pointer",
         }}
       >
         {loading && <Loader2 size={14} className="animate-spin" />}
         {loading ? "Registering…" : "Register product"}
       </button>
     </form>
+  );
+}
+
+/**
+ * Search + select picker for tags or cards. `single` makes it a one-pick control
+ * (selecting replaces the current choice) for the one-card-per-product rule.
+ */
+function KeyPicker({
+  label,
+  hint,
+  items,
+  selected,
+  single = false,
+  onAdd,
+  onRemove,
+  searchPlaceholder,
+  emptyText,
+  noneText,
+}: {
+  label: string;
+  hint: string;
+  items: Item[];
+  selected: string[];
+  single?: boolean;
+  onAdd: (id: string) => void;
+  onRemove: (id: string) => void;
+  searchPlaceholder: string;
+  emptyText: string;
+  noneText: string;
+}) {
+  const [search, setSearch] = useState("");
+
+  const available = useMemo(
+    () => items.filter((t) => !selected.includes(t.id)),
+    [items, selected]
+  );
+  const filtered = useMemo(
+    () => (search ? available.filter((t) => t.short_id.toLowerCase().includes(search.toLowerCase())) : available),
+    [available, search]
+  );
+
+  // In single mode, hide the search/list once a choice is made (remove to change).
+  const showList = single ? selected.length === 0 : true;
+
+  return (
+    <div>
+      <div className="flex items-baseline gap-2 mb-2">
+        <span className="text-body-sm font-semibold" style={{ color: "var(--color-charcoal)" }}>{label}</span>
+        <span style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>{hint}</span>
+      </div>
+
+      {items.length === 0 ? (
+        <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>{emptyText}</p>
+      ) : (
+        <div>
+          {selected.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "12px" }}>
+              {selected.map((id) => {
+                const t = items.find((x) => x.id === id);
+                return (
+                  <span
+                    key={id}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      padding: "4px 10px 4px 12px",
+                      backgroundColor: "var(--color-onyx)",
+                      color: "var(--color-pearl)",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      fontFamily: "var(--font-jetbrains-mono)",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {t?.short_id}
+                    <button
+                      type="button"
+                      onClick={() => onRemove(id)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "rgba(250,250,248,0.55)",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: 0,
+                        lineHeight: 1,
+                      }}
+                    >
+                      <X size={11} />
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
+          {showList && (
+            <>
+              <div style={{ position: "relative" }}>
+                <Search
+                  size={14}
+                  style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--color-mist)", pointerEvents: "none" }}
+                />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  style={{
+                    width: "100%",
+                    border: "1px solid var(--color-stone)",
+                    borderRadius: "var(--radius-sm)",
+                    padding: "9px 12px 9px 34px",
+                    fontSize: "var(--text-body-sm)",
+                    color: "var(--color-onyx)",
+                    backgroundColor: "var(--color-pearl)",
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              {filtered.length > 0 ? (
+                <div
+                  style={{
+                    marginTop: "6px",
+                    maxHeight: "180px",
+                    overflowY: "auto",
+                    border: "1px solid var(--color-stone)",
+                    borderRadius: "var(--radius-sm)",
+                    backgroundColor: "var(--color-pearl)",
+                  }}
+                >
+                  {filtered.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => { onAdd(t.id); setSearch(""); }}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "9px 14px",
+                        fontSize: "13px",
+                        fontFamily: "var(--font-jetbrains-mono)",
+                        letterSpacing: "0.04em",
+                        color: "var(--color-graphite)",
+                        backgroundColor: "transparent",
+                        border: "none",
+                        borderBottom: "1px solid var(--color-cream)",
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "var(--color-smoke)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                    >
+                      {t.short_id}
+                    </button>
+                  ))}
+                </div>
+              ) : search ? (
+                <p style={{ marginTop: "8px", fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
+                  No match for &ldquo;{search}&rdquo;
+                </p>
+              ) : null}
+            </>
+          )}
+
+          {selected.length === 0 && (
+            <p style={{ marginTop: "8px", fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
+              {noneText}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
