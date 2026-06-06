@@ -58,12 +58,14 @@ export async function POST(request: Request) {
     });
 
     if (dbError) {
+      console.error("[register] companies insert failed:", dbError);
       await admin.auth.admin.deleteUser(userId);
       return NextResponse.json({ error: "Failed to create company profile." }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (err) {
+    console.error("[register] unexpected error:", err);
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }
