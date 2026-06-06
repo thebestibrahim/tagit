@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { submitBrandInquiry } from "@/app/actions/submit-brand-inquiry";
 
@@ -46,7 +47,7 @@ function RequestAccessModal({ onClose }: Props) {
     });
   }
 
-  return (
+  return createPortal(
     <div
       ref={overlayRef}
       onClick={(e) => e.target === overlayRef.current && onClose()}
@@ -252,7 +253,8 @@ function RequestAccessModal({ onClose }: Props) {
           )}
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
