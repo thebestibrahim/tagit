@@ -1,13 +1,13 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
-import { rateLimit, getIp } from "@/lib/rate-limit";
+import { rateLimitAsync, getIp } from "@/lib/rate-limit";
 import type { Industry } from "@/types/database";
 
 const ALLOWED_INDUSTRIES: Industry[] = ["fashion", "arts", "collectibles"];
 
 export async function POST(request: Request) {
   const ip = getIp(request);
-  if (!rateLimit(`register:${ip}`, 5, 60 * 60 * 1000)) {
+  if (!await rateLimitAsync(`register:${ip}`, 20, 60 * 60 * 1000)) {
     return NextResponse.json(
       { error: "Too many registration attempts. Try again later." },
       { status: 429 }
