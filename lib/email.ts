@@ -207,6 +207,26 @@ export async function sendTransferCompleteEmail(
   });
 }
 
+export async function sendChipReplacedEmail(
+  to: string,
+  opts: { ownerName?: string; productName: string; brandName: string }
+) {
+  const subject = `Your ${opts.productName} chip has been replaced`;
+
+  const greeting = opts.ownerName ? `Hi ${opts.ownerName},` : "Hi,";
+
+  const html = base(`
+    ${heading("Authentication chip replaced")}
+    ${para(greeting)}
+    ${para(`<strong>${opts.brandName}</strong> has replaced the authentication chip on your item. Your ownership record is unaffected.`)}
+    ${para(`If you did not expect this, contact <a href="mailto:hello@tagitlux.com">hello@tagitlux.com</a>.`)}
+  `);
+
+  const text = `${greeting}\n\n${opts.brandName} has replaced the authentication chip on your item. Your ownership record is unaffected.\n\nIf you did not expect this contact hello@tagitlux.com\n\n— Tagit`;
+
+  await resend.emails.send({ from: FROM, to, replyTo: "hello@tagitlux.com", subject, html, text });
+}
+
 export async function sendCompanyApprovedEmail(
   to: string,
   opts: { companyName: string; dashboardUrl: string }

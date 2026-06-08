@@ -433,6 +433,71 @@ export type Database = {
           },
         ]
       }
+      tag_replacements: {
+        Row: {
+          created_at: string
+          id: string
+          initiated_by: string
+          medium: string
+          new_tag_id: string
+          old_tag_id: string
+          owner_notified: boolean
+          product_id: string
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          initiated_by: string
+          medium: string
+          new_tag_id: string
+          old_tag_id: string
+          owner_notified?: boolean
+          product_id: string
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          initiated_by?: string
+          medium?: string
+          new_tag_id?: string
+          old_tag_id?: string
+          owner_notified?: boolean
+          product_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_replacements_initiated_by_fkey"
+            columns: ["initiated_by"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_replacements_new_tag_id_fkey"
+            columns: ["new_tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_replacements_old_tag_id_fkey"
+            columns: ["old_tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tag_replacements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           ai_persona_config: Json | null
@@ -841,6 +906,17 @@ export type Database = {
         Args: { p_transfer_id: string }
         Returns: { new_owner_id: string; old_owner_id: string }[]
       }
+      replace_chip: {
+        Args: {
+          p_product_id: string
+          p_old_tag_id: string
+          p_new_tag_id: string
+          p_medium: string
+          p_reason: string
+          p_initiated_by: string
+        }
+        Returns: { replacement_id: string; new_status: string }[]
+      }
     }
     Enums: {
       [_ in never]: never
@@ -986,8 +1062,13 @@ export type TagStatus =
   | "owned"
   | "transferred"
   | "flagged"
-  | "suspended";
+  | "suspended"
+  | "decommissioned";
 export type TagMedium = "tag" | "card";
 export type BatchType = "tags" | "cards" | "mixed";
 export type ClaimStatus = "pending" | "approved" | "rejected" | "expired";
+export type ReplacementReason =
+  | "not_scanning"
+  | "physically_damaged"
+  | "missing_or_lost";
 export type Industry = "fashion" | "arts" | "collectibles" | "restaurants" | "hotels";

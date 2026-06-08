@@ -14,6 +14,7 @@ export const STATUS_BADGE: Record<TagStatus, { label: string; bg: string; color:
   transferred: { label: "Transferred", bg: "#F5F3FF",            color: "#6D28D9" },
   flagged:     { label: "Flagged",     bg: "#FEF2F2",            color: "#991B1B" },
   suspended:   { label: "Suspended",   bg: "#FEF2F2",            color: "#991B1B" },
+  decommissioned: { label: "Decommissioned", bg: "var(--color-cream)", color: "var(--color-mist)" },
 };
 
 export function statusBadge(status: string): { label: string; bg: string; color: string } {

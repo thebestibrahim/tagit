@@ -9,6 +9,7 @@ import type { CompanyStatus } from "@/types/database";
 import { statusBadge } from "@/lib/tag-status";
 import { INDUSTRY_FIELDS, groupFields } from "@/lib/industry-fields";
 import CopyLinkButton from "@/components/ui/CopyLinkButton";
+import ReplaceChipButton from "./ReplaceChipButton";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -391,6 +392,8 @@ export default async function ProductDetailPage({
                     </span>
                     {/* Each tag/card carries its own unique consumer link. */}
                     <CopyLinkButton url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${t.token}`} label="Copy link" />
+                    {/* Swap a broken/missing chip for a fresh one from inventory. */}
+                    <ReplaceChipButton productId={product.id} chip={{ short_id: t.short_id, medium: t.medium }} />
                   </div>
                   );
                 })}
