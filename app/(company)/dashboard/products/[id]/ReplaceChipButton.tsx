@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw, Loader2, X } from "lucide-react";
+import { RefreshCw, Loader2, X, Search } from "lucide-react";
 import { toast } from "sonner";
 import type { ReplacementReason } from "@/types/database";
 
@@ -28,14 +28,24 @@ export default function ReplaceChipButton({
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<ReplacementReason>("not_scanning");
   const [shortId, setShortId] = useState("");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const filtered = useMemo(
+    () =>
+      search
+        ? available.filter((s) => s.toLowerCase().includes(search.toLowerCase()))
+        : available,
+    [available, search]
+  );
 
   function close() {
     if (loading) return;
     setOpen(false);
     setError(null);
     setShortId("");
+    setSearch("");
     setReason("not_scanning");
   }
 
@@ -195,33 +205,115 @@ export default function ReplaceChipButton({
                 >
                   No unassigned {lower}s in your inventory. Add one before replacing.
                 </p>
+              ) : shortId ? (
+                // A choice is made — show it as a chip with a clear button.
+                <div>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "6px 10px 6px 12px",
+                      backgroundColor: "var(--color-onyx)",
+                      color: "var(--color-pearl)",
+                      borderRadius: "6px",
+                      fontSize: "13px",
+                      fontFamily: "var(--font-jetbrains-mono)",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {shortId}
+                    <button
+                      type="button"
+                      onClick={() => { setShortId(""); setSearch(""); }}
+                      disabled={loading}
+                      aria-label="Clear selection"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: loading ? "not-allowed" : "pointer",
+                        color: "rgba(250,250,248,0.55)",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: 0,
+                        lineHeight: 1,
+                      }}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                </div>
               ) : (
-                <select
-                  id="replacement_short_id"
-                  value={shortId}
-                  onChange={(e) => setShortId(e.target.value)}
-                  disabled={loading}
-                  autoFocus
-                  className="w-full rounded-lg p-3"
-                  style={{
-                    border: "1px solid var(--color-stone)",
-                    fontSize: "var(--text-body-sm)",
-                    color: shortId ? "var(--color-onyx)" : "var(--color-mist)",
-                    backgroundColor: "#fff",
-                    fontFamily: shortId ? "var(--font-jetbrains-mono)" : "inherit",
-                    letterSpacing: shortId ? "0.05em" : "normal",
-                    cursor: loading ? "not-allowed" : "pointer",
-                  }}
-                >
-                  <option value="" disabled>
-                    Select a {lower} from your inventory…
-                  </option>
-                  {available.map((sid) => (
-                    <option key={sid} value={sid} style={{ fontFamily: "var(--font-jetbrains-mono)" }}>
-                      {sid}
-                    </option>
-                  ))}
-                </select>
+                <>
+                  <div style={{ position: "relative" }}>
+                    <Search
+                      size={14}
+                      style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--color-mist)", pointerEvents: "none" }}
+                    />
+                    <input
+                      id="replacement_short_id"
+                      type="text"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      disabled={loading}
+                      autoFocus
+                      placeholder={`Search your ${lower}s…`}
+                      className="w-full rounded-lg"
+                      style={{
+                        border: "1px solid var(--color-stone)",
+                        padding: "11px 12px 11px 34px",
+                        fontSize: "var(--text-body-sm)",
+                        color: "var(--color-onyx)",
+                        backgroundColor: "#fff",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+
+                  {filtered.length > 0 ? (
+                    <div
+                      style={{
+                        marginTop: "6px",
+                        maxHeight: "180px",
+                        overflowY: "auto",
+                        border: "1px solid var(--color-stone)",
+                        borderRadius: "var(--radius-sm, 8px)",
+                        backgroundColor: "#fff",
+                      }}
+                    >
+                      {filtered.map((sid) => (
+                        <button
+                          key={sid}
+                          type="button"
+                          onClick={() => { setShortId(sid); setSearch(""); setError(null); }}
+                          style={{
+                            display: "block",
+                            width: "100%",
+                            textAlign: "left",
+                            padding: "9px 14px",
+                            fontSize: "13px",
+                            fontFamily: "var(--font-jetbrains-mono)",
+                            letterSpacing: "0.04em",
+                            color: "var(--color-graphite)",
+                            backgroundColor: "transparent",
+                            border: "none",
+                            borderBottom: "1px solid var(--color-cream)",
+                            cursor: "pointer",
+                          }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "var(--color-smoke)"; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                        >
+                          {sid}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ marginTop: "8px", fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
+                      No match for &ldquo;{search}&rdquo;
+                    </p>
+                  )}
+                </>
               )}
 
               <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)", marginTop: "8px" }}>
