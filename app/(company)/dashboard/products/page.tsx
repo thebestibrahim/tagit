@@ -6,8 +6,8 @@ import { format } from "date-fns";
 import { Plus, Package } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
-import CopyLinkButton from "@/components/ui/CopyLinkButton";
 import ClickableRow from "./ClickableRow";
+import ProductRowActions from "./ProductRowActions";
 
 const STATUS_FILTERS = ["all", "live", "owned", "transferred", "flagged"];
 
@@ -192,16 +192,8 @@ export default async function ProductsPage({
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          {scanUrl && (
-                            <CopyLinkButton url={scanUrl} label="Copy link" />
-                          )}
-                          <Link
-                            href={`/dashboard/products/${product.id}/edit`}
-                            style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)", textDecoration: "underline" }}
-                          >
-                            Edit
-                          </Link>
+                        <div className="flex items-center justify-end">
+                          <ProductRowActions productId={product.id} scanUrl={scanUrl} />
                         </div>
                       </td>
                     </ClickableRow>
