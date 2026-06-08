@@ -17,27 +17,48 @@ const CURRENCIES = [
 type Item = { id: string; short_id: string; token: string };
 type ImageEntry = { file: File; preview: string };
 
+export type ProductDefaults = {
+  name: string;
+  price: string;
+  currency: string;
+  fields: Record<string, string>;
+  photos: string[];
+};
+
+const MAX_PHOTOS = 5;
+
 export default function ProductForm({
   tags,
   cards,
   industry,
   companyId,
+  defaults,
 }: {
   tags: Item[];
   cards: Item[];
   industry: string;
   companyId: string;
+  defaults?: ProductDefaults;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [currency, setCurrency] = useState<typeof CURRENCIES[number]>("NGN");
-  const [fields, setFields] = useState<Record<string, string>>({});
+  const [name, setName] = useState(defaults?.name ?? "");
+  const [price, setPrice] = useState(defaults?.price ?? "");
+  const [currency, setCurrency] = useState<typeof CURRENCIES[number]>(
+    (CURRENCIES as readonly string[]).includes(defaults?.currency ?? "")
+      ? (defaults!.currency as typeof CURRENCIES[number])
+      : "NGN"
+  );
+  const [fields, setFields] = useState<Record<string, string>>(defaults?.fields ?? {});
+  // Photos already uploaded on the source product (duplicate flow). They reuse
+  // the same storage URLs; new uploads are appended on submit.
+  const [existingPhotos, setExistingPhotos] = useState<string[]>(defaults?.photos ?? []);
   const [images, setImages] = useState<ImageEntry[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const photoCount = existingPhotos.length + images.length;
 
   const industryFields = INDUSTRY_FIELDS[industry] ?? [];
   const grouped = groupFields(industryFields);
@@ -58,10 +79,14 @@ export default function ProductForm({
     const newEntries: ImageEntry[] = [];
     for (const file of Array.from(files)) {
       if (!file.type.startsWith("image/")) continue;
-      if (images.length + newEntries.length >= 5) break;
+      if (existingPhotos.length + images.length + newEntries.length >= MAX_PHOTOS) break;
       newEntries.push({ file, preview: URL.createObjectURL(file) });
     }
     setImages((prev) => [...prev, ...newEntries]);
+  }
+
+  function removeExistingPhoto(index: number) {
+    setExistingPhotos((prev) => prev.filter((_, i) => i !== index));
   }
 
   function removeImage(index: number) {
@@ -111,7 +136,7 @@ export default function ProductForm({
         industry_fields: fields,
         retail_price: price ? parseFloat(price) : null,
         currency,
-        photos: photoUrls,
+        photos: [...existingPhotos, ...photoUrls],
       }),
     });
 
@@ -298,6 +323,47 @@ export default function ProductForm({
         </p>
 
         <div className="flex flex-wrap gap-3">
+          {existingPhotos.map((url, i) => (
+            <div
+              key={`existing-${i}`}
+              style={{
+                position: "relative",
+                width: "96px",
+                height: "96px",
+                borderRadius: "var(--radius-md)",
+                overflow: "hidden",
+                border: "1px solid var(--color-cream)",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- existing public URL carried over from the source product */}
+              <img
+                src={url}
+                alt=""
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+              <button
+                type="button"
+                onClick={() => removeExistingPhoto(i)}
+                style={{
+                  position: "absolute",
+                  top: "4px",
+                  right: "4px",
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "50%",
+                  backgroundColor: "rgba(10,10,11,0.7)",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <X size={11} color="#fff" />
+              </button>
+            </div>
+          ))}
+
           {images.map((img, i) => (
             <div
               key={i}
@@ -339,7 +405,7 @@ export default function ProductForm({
             </div>
           ))}
 
-          {images.length < 5 && (
+          {photoCount < MAX_PHOTOS && (
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}

@@ -4,7 +4,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
-import { ChevronLeft, Pencil, Tag, User, ArrowRightLeft, Award, Package, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, Pencil, Copy, Tag, User, ArrowRightLeft, Award, Package, CheckCircle2 } from "lucide-react";
 import type { CompanyStatus } from "@/types/database";
 import { statusBadge } from "@/lib/tag-status";
 import { INDUSTRY_FIELDS, groupFields } from "@/lib/industry-fields";
@@ -339,14 +339,24 @@ export default async function ProductDetailPage({
           <ChevronLeft size={14} />
           All products
         </Link>
-        <Link
-          href={`/dashboard/products/${id}/edit`}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium"
-          style={{ backgroundColor: "var(--color-onyx)", color: "var(--color-pearl)", textDecoration: "none", fontSize: "var(--text-body-sm)" }}
-        >
-          <Pencil size={13} />
-          Edit product
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/dashboard/products/new?from=${id}`}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium"
+            style={{ backgroundColor: "var(--color-pearl)", color: "var(--color-graphite)", border: "1px solid var(--color-stone)", textDecoration: "none", fontSize: "var(--text-body-sm)" }}
+          >
+            <Copy size={13} />
+            Duplicate
+          </Link>
+          <Link
+            href={`/dashboard/products/${id}/edit`}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium"
+            style={{ backgroundColor: "var(--color-onyx)", color: "var(--color-pearl)", textDecoration: "none", fontSize: "var(--text-body-sm)" }}
+          >
+            <Pencil size={13} />
+            Edit product
+          </Link>
+        </div>
       </div>
 
       {/* ── Product overview card ── */}
