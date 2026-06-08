@@ -111,8 +111,8 @@ export default async function ProductDetailPage({
   const company = companyData as { id: string; industry: string; status: CompanyStatus; name: string } | null;
   if (!company || company.status !== "approved") redirect("/auth/unauthorized");
 
-  // Product + linked tags in parallel
-  const [{ data: productData }, { data: linkedTagsData }] = await Promise.all([
+  // Product + linked tags + unassigned inventory (for the Replace picker) in parallel
+  const [{ data: productData }, { data: linkedTagsData }, { data: availableData }] = await Promise.all([
     supabase
       .from("products")
       .select("id, name, retail_price, currency, industry_fields, photos, created_at")
@@ -124,7 +124,19 @@ export default async function ProductDetailPage({
       .from("tags")
       .select("id, short_id, token, status, medium, created_at, activated_at")
       .eq("product_id", id),
+    // Chips this brand owns that aren't linked to any product yet — the pool a
+    // broken chip can be replaced from (mirrors the new-product picker).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from("tags")
+      .select("short_id, medium")
+      .eq("company_id", user.id)
+      .is("product_id", null)
+      .in("status", ["created", "shipped"])
+      .order("created_at", { ascending: false }),
   ]);
+
+  const availableChips = (availableData ?? []) as { short_id: string; medium: string }[];
 
   if (!productData) notFound();
 
@@ -393,7 +405,11 @@ export default async function ProductDetailPage({
                     {/* Each tag/card carries its own unique consumer link. */}
                     <CopyLinkButton url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${t.token}`} label="Copy link" />
                     {/* Swap a broken/missing chip for a fresh one from inventory. */}
-                    <ReplaceChipButton productId={product.id} chip={{ short_id: t.short_id, medium: t.medium }} />
+                    <ReplaceChipButton
+                      productId={product.id}
+                      chip={{ short_id: t.short_id, medium: t.medium }}
+                      available={availableChips.filter((c) => c.medium === t.medium).map((c) => c.short_id)}
+                    />
                   </div>
                   );
                 })}

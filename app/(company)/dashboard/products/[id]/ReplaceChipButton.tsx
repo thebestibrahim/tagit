@@ -15,9 +15,11 @@ const REASONS: { value: ReplacementReason; label: string }[] = [
 export default function ReplaceChipButton({
   productId,
   chip,
+  available,
 }: {
   productId: string;
   chip: { short_id: string; medium: string };
+  available: string[];
 }) {
   const router = useRouter();
   const noun = chip.medium === "card" ? "Card" : "Tag";
@@ -40,7 +42,7 @@ export default function ReplaceChipButton({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!shortId.trim()) {
-      setError(`Enter the Short ID of the replacement ${lower}.`);
+      setError(`Select a replacement ${lower} from your inventory.`);
       return;
     }
     setLoading(true);
@@ -178,29 +180,52 @@ export default function ReplaceChipButton({
                 className="text-micro font-medium uppercase tracking-wider mb-2 block"
                 style={{ color: "var(--color-slate)" }}
               >
-                Short ID of replacement {lower}
+                Replacement {lower}
               </label>
-              <input
-                id="replacement_short_id"
-                type="text"
-                value={shortId}
-                onChange={(e) => setShortId(e.target.value)}
-                disabled={loading}
-                autoFocus
-                placeholder={`e.g. ${chip.medium === "card" ? "CARD-XXXX" : "TAG-XXXX"}`}
-                className="w-full rounded-lg p-3"
-                style={{
-                  border: "1px solid var(--color-stone)",
-                  fontSize: "var(--text-body-sm)",
-                  color: "var(--color-onyx)",
-                  backgroundColor: "#fff",
-                  fontFamily: "var(--font-jetbrains-mono)",
-                  letterSpacing: "0.05em",
-                }}
-              />
+              {available.length === 0 ? (
+                <p
+                  className="w-full rounded-lg p-3"
+                  style={{
+                    border: "1px dashed var(--color-stone)",
+                    fontSize: "var(--text-body-sm)",
+                    color: "var(--color-slate)",
+                    backgroundColor: "var(--color-smoke)",
+                    margin: 0,
+                  }}
+                >
+                  No unassigned {lower}s in your inventory. Add one before replacing.
+                </p>
+              ) : (
+                <select
+                  id="replacement_short_id"
+                  value={shortId}
+                  onChange={(e) => setShortId(e.target.value)}
+                  disabled={loading}
+                  autoFocus
+                  className="w-full rounded-lg p-3"
+                  style={{
+                    border: "1px solid var(--color-stone)",
+                    fontSize: "var(--text-body-sm)",
+                    color: shortId ? "var(--color-onyx)" : "var(--color-mist)",
+                    backgroundColor: "#fff",
+                    fontFamily: shortId ? "var(--font-jetbrains-mono)" : "inherit",
+                    letterSpacing: shortId ? "0.05em" : "normal",
+                    cursor: loading ? "not-allowed" : "pointer",
+                  }}
+                >
+                  <option value="" disabled>
+                    Select a {lower} from your inventory…
+                  </option>
+                  {available.map((sid) => (
+                    <option key={sid} value={sid} style={{ fontFamily: "var(--font-jetbrains-mono)" }}>
+                      {sid}
+                    </option>
+                  ))}
+                </select>
+              )}
 
               <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)", marginTop: "8px" }}>
-                Note: replacement must be a {lower} from your inventory that is not yet assigned.
+                Note: only unassigned {lower}s from your inventory are shown.
               </p>
 
               {error && (
@@ -234,15 +259,15 @@ export default function ReplaceChipButton({
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || available.length === 0}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium"
                   style={{
                     backgroundColor: "var(--color-onyx)",
                     color: "var(--color-pearl)",
                     border: "none",
-                    cursor: loading ? "not-allowed" : "pointer",
+                    cursor: loading || available.length === 0 ? "not-allowed" : "pointer",
                     fontSize: "var(--text-body-sm)",
-                    opacity: loading ? 0.7 : 1,
+                    opacity: loading || available.length === 0 ? 0.5 : 1,
                   }}
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
