@@ -15,6 +15,7 @@ const h = vi.hoisted(() => {
 
   const state: {
     user: { id: string } | null;
+    tagMigrationFlag: boolean;
     product: { id: string; name: string } | null;
     tags: Record<string, Chip | null>;
     groupTags: { id: string }[];
@@ -24,6 +25,7 @@ const h = vi.hoisted(() => {
     ops: string[];
   } = {
     user: null,
+    tagMigrationFlag: true,
     product: null,
     tags: {},
     groupTags: [],
