@@ -88,6 +88,11 @@ const h = vi.hoisted(() => {
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => h.admin }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: () => Promise.resolve(h.server) }));
 vi.mock("@/lib/email", () => ({ sendChipReplacedEmail: h.sendChipReplacedEmail }));
+// Replace-chip is gated by the tag_migration flag — on by default for these
+// tests; the flag-off case is covered explicitly below.
+vi.mock("@/lib/feature-flags/server", () => ({
+  getFlagsForBrand: vi.fn(() => Promise.resolve({ tag_migration: h.state.tagMigrationFlag ?? true })),
+}));
 
 const { POST } = await import("@/app/api/company/products/[id]/replace-chip/route");
 
@@ -119,6 +124,7 @@ describe("POST /api/company/products/[id]/replace-chip", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     h.state.user = { id: "brand-1" };
+    h.state.tagMigrationFlag = true;
     h.state.product = { id: PRODUCT_ID, name: "Aurora Tote" };
     h.state.tags = {
       "OLD-1": tag({ id: "old-tag", short_id: "OLD-1", medium: "tag", status: "owned", product_id: PRODUCT_ID }),
@@ -141,6 +147,12 @@ describe("POST /api/company/products/[id]/replace-chip", () => {
     expect(json.success).toBe(true);
     expect(json.chip.short_id).toBe("NEW-1");
     expect(h.sendChipReplacedEmail).not.toHaveBeenCalled();
+  });
+
+  it("returns 403 when the tag_migration flag is off for the brand", async () => {
+    h.state.tagMigrationFlag = false;
+    const res = await call(validBody);
+    expect(res.status).toBe(403);
   });
 
   it("replaces a card with another card on unowned product", async () => {
