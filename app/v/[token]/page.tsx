@@ -12,6 +12,7 @@ import ActionShell from "./ActionShell";
 import VoiceWidget from "./VoiceWidget";
 import CollapsibleSection from "./CollapsibleSection";
 import LocalTime from "@/components/ui/LocalTime";
+import ProductGallery from "@/components/consumer/ProductGallery";
 import { getFlagsForConsumerPage } from "@/lib/feature-flags/server";
 import { releaseExpiredClaims } from "@/lib/claims";
 import { getSiblingTagIds } from "@/lib/tags";
@@ -541,18 +542,16 @@ function ProductSection({
   const highlightFields = filledFields.filter((f) => highlight.includes(f.key)).slice(0, 6);
   const detailFields = filledFields.filter((f) => !highlight.includes(f.key) && f.type !== "textarea");
   const storyFields = filledFields.filter((f) => f.type === "textarea" && product.industry_fields[f.key]);
-  const photo = product.photos?.[0];
+  const hasPhotos = (product.photos?.length ?? 0) > 0;
   const industryLabel = effectiveIndustry ? effectiveIndustry.charAt(0).toUpperCase() + effectiveIndustry.slice(1) : "Product";
 
   // ── MINIMAL ───────────────────────────────────────────────────────────────
   if (template === "minimal") {
     return (
       <>
-        {photo && (
+        {hasPhotos && (
           <div style={{ padding: "0 24px" }}>
-            <div style={{ position: "relative", width: "100%", aspectRatio: "1/1", backgroundColor: "#F5F2EC", borderRadius: 16, overflow: "hidden", border: "1px solid #EDE8DF" }}>
-              <Image src={photo} alt={product.name} fill style={{ objectFit: "contain", padding: 20 }} />
-            </div>
+            <ProductGallery photos={product.photos} alt={product.name} accent={accent} frame={{ aspectRatio: "1/1", objectFit: "contain", padding: 20 }} />
           </div>
         )}
         <div style={{ padding: "24px 24px 0" }}>
@@ -601,9 +600,9 @@ function ProductSection({
               {String(product.industry_fields[firstStory.key])}
             </p>
           )}
-          {photo && (
-            <div style={{ position: "relative", width: "100%", height: 280, backgroundColor: "#F5F2EC", borderRadius: 16, overflow: "hidden", border: "1px solid #EDE8DF", marginBottom: 24 }}>
-              <Image src={photo} alt={product.name} fill style={{ objectFit: "cover" }} />
+          {hasPhotos && (
+            <div style={{ marginBottom: 24 }}>
+              <ProductGallery photos={product.photos} alt={product.name} accent={accent} frame={{ height: 280, objectFit: "cover" }} />
             </div>
           )}
           {highlightFields.length > 0 && (
@@ -654,11 +653,9 @@ function ProductSection({
   const hasCollapsible = detailFields.length > 0 || storyFields.length > 0 || ownershipRecords.length > 0;
   return (
     <>
-      {photo && (
+      {hasPhotos && (
         <div style={{ padding: "0 24px" }}>
-          <div style={{ position: "relative", width: "100%", height: 340, backgroundColor: "#F5F2EC", borderRadius: 16, overflow: "hidden", border: "1px solid #EDE8DF" }}>
-            <Image src={photo} alt={product.name} fill style={{ objectFit: "contain", padding: "16px" }} />
-          </div>
+          <ProductGallery photos={product.photos} alt={product.name} accent={accent} frame={{ height: 340, objectFit: "contain", padding: "16px" }} />
         </div>
       )}
       <div style={{ padding: "24px 24px 0" }}>
