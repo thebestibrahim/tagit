@@ -36,7 +36,7 @@ export async function POST(
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Gated by the "Tag Migration Request" feature flag (tag_migration).
+  // Gated by the "Replace Tags and Cards" feature flag (tag_migration).
   const flags = await getFlagsForBrand(user.id);
   if (!flags.tag_migration) {
     return NextResponse.json({ error: "Tag/Card replacement is not enabled for your account." }, { status: 403 });

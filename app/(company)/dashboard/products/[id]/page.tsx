@@ -111,7 +111,7 @@ export default async function ProductDetailPage({
   const company = companyData as { id: string; industry: string; status: CompanyStatus; name: string } | null;
   if (!company || company.status !== "approved") redirect("/auth/unauthorized");
 
-  // Tag/Card replacement is gated by the "Tag Migration Request" flag (tag_migration).
+  // Tag/Card replacement is gated by the "Replace Tags and Cards" flag (tag_migration).
   const flags = await getFlagsForBrand(user.id);
 
   // Product + linked tags + unassigned inventory (for the Replace picker) in parallel
@@ -418,7 +418,7 @@ export default async function ProductDetailPage({
                     {/* Each tag/card carries its own unique consumer link. */}
                     <CopyLinkButton url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${t.token}`} label="Copy link" />
                     {/* Swap a broken/missing chip for a fresh one — gated by the
-                        "Tag Migration Request" feature flag. */}
+                        "Replace Tags and Cards" feature flag. */}
                     {flags.tag_migration && (
                       <ReplaceChipButton
                         productId={product.id}

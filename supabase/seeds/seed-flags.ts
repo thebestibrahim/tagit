@@ -61,8 +61,8 @@ const initialFlags = [
   },
   {
     key: 'tag_migration',
-    name: 'Tag Migration Request',
-    description: 'Allows brands to request tag replacement for damaged or failed tags',
+    name: 'Replace Tags and Cards',
+    description: 'Lets brands swap a damaged, failed, or missing tag or card for a fresh one from inventory',
     enabled: false,
     rollout_percentage: 0,
     environments: ['production', 'staging']
