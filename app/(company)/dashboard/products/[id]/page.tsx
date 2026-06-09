@@ -60,10 +60,8 @@ type Certificate = {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function fmt(date: string) {
-  return format(new Date(date), "MMM d, yyyy 'at' h:mm a");
-}
-
+// Timeline meta annotations (date-only). Live JSX dates use <LocalTime/> for
+// viewer-local rendering; these short labels stay server-formatted.
 function fmtDate(date: string) {
   return format(new Date(date), "MMM d, yyyy");
 }

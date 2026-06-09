@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { format as dfFormat } from "date-fns";
 
 function fmt(iso: string | null | undefined, pattern: string, fallback: string): string {
@@ -9,12 +9,17 @@ function fmt(iso: string | null | undefined, pattern: string, fallback: string):
   return isNaN(d.getTime()) ? fallback : dfFormat(d, pattern);
 }
 
+// No external store to subscribe to — the value only depends on the runtime's
+// timezone, which differs between server (UTC on Vercel) and the viewer's
+// browser. useSyncExternalStore swaps the server snapshot for the client one at
+// hydration, so each viewer sees their own local time — with no setState-in-
+// effect and no hydration warning.
+const noop = () => () => {};
+
 /**
- * Renders a timestamp in the *viewer's* local timezone. Date math/storage stays
- * in UTC; only the display is localised. The server renders it in its own TZ
- * (UTC on Vercel); after hydration a re-render formats it in the browser's TZ,
- * so each viewer sees their own local time. Guards null/invalid → fallback
- * (never "1 Jan 1970"). Use anywhere a stored ISO timestamp is shown to a user.
+ * Renders a stored UTC timestamp in the *viewer's* local timezone. Date math and
+ * storage stay UTC; only the display is localised. Guards null/invalid →
+ * fallback (never "1 Jan 1970").
  */
 export default function LocalTime({
   iso,
@@ -25,11 +30,11 @@ export default function LocalTime({
   pattern?: string;
   fallback?: string;
 }) {
-  const [text, setText] = useState(() => fmt(iso, pattern, fallback));
-
-  useEffect(() => {
-    setText(fmt(iso, pattern, fallback));
-  }, [iso, pattern, fallback]);
+  const text = useSyncExternalStore(
+    noop,
+    () => fmt(iso, pattern, fallback), // client: browser-local timezone
+    () => fmt(iso, pattern, fallback), // server: runtime (UTC) timezone
+  );
 
   return (
     <time dateTime={iso ?? undefined} suppressHydrationWarning>
