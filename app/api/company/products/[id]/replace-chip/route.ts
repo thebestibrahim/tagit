@@ -1,5 +1,6 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getFlagsForBrand } from "@/lib/feature-flags/server";
 import { log } from "@/lib/logger";
 import { sendChipReplacedEmail } from "@/lib/email";
 import { NextResponse } from "next/server";
@@ -34,6 +35,12 @@ export async function POST(
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Gated by the "Tag Migration Request" feature flag (tag_migration).
+  const flags = await getFlagsForBrand(user.id);
+  if (!flags.tag_migration) {
+    return NextResponse.json({ error: "Tag/Card replacement is not enabled for your account." }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => ({}));
   const { reason, replacement_short_id, old_short_id } = body as {

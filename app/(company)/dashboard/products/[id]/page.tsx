@@ -10,6 +10,7 @@ import { statusBadge } from "@/lib/tag-status";
 import { INDUSTRY_FIELDS, groupFields } from "@/lib/industry-fields";
 import CopyLinkButton from "@/components/ui/CopyLinkButton";
 import LocalTime from "@/components/ui/LocalTime";
+import { getFlagsForBrand } from "@/lib/feature-flags/server";
 import ReplaceChipButton from "./ReplaceChipButton";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -111,6 +112,9 @@ export default async function ProductDetailPage({
 
   const company = companyData as { id: string; industry: string; status: CompanyStatus; name: string } | null;
   if (!company || company.status !== "approved") redirect("/auth/unauthorized");
+
+  // Tag/Card replacement is gated by the "Tag Migration Request" flag (tag_migration).
+  const flags = await getFlagsForBrand(user.id);
 
   // Product + linked tags + unassigned inventory (for the Replace picker) in parallel
   const [{ data: productData }, { data: linkedTagsData }, { data: availableData }] = await Promise.all([
@@ -415,12 +419,15 @@ export default async function ProductDetailPage({
                     </span>
                     {/* Each tag/card carries its own unique consumer link. */}
                     <CopyLinkButton url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${t.token}`} label="Copy link" />
-                    {/* Swap a broken/missing chip for a fresh one from inventory. */}
-                    <ReplaceChipButton
-                      productId={product.id}
-                      chip={{ short_id: t.short_id, medium: t.medium }}
-                      available={availableChips.filter((c) => c.medium === t.medium).map((c) => c.short_id)}
-                    />
+                    {/* Swap a broken/missing chip for a fresh one — gated by the
+                        "Tag Migration Request" feature flag. */}
+                    {flags.tag_migration && (
+                      <ReplaceChipButton
+                        productId={product.id}
+                        chip={{ short_id: t.short_id, medium: t.medium }}
+                        available={availableChips.filter((c) => c.medium === t.medium).map((c) => c.short_id)}
+                      />
+                    )}
                   </div>
                   );
                 })}
