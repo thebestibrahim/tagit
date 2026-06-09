@@ -3,11 +3,11 @@ import type { ClaimStatus } from "@/types/database";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { format } from "date-fns";
 import { Users, ChevronRight } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
 import OwnerLedgerTable, { type OwnerRow } from "@/components/OwnerLedgerTable";
+import LocalTime from "@/components/ui/LocalTime";
 
 type Claim = {
   id: string;
@@ -252,7 +252,7 @@ export default async function OwnershipPage({
                     </td>
                     <td className="px-5 py-4">
                       <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                        {format(new Date(claim.created_at), "MMM d, yyyy")}
+                        {<LocalTime iso={claim.created_at} pattern="MMM d, yyyy" />}
                       </span>
                     </td>
                     <td className="px-5 py-4">

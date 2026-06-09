@@ -11,6 +11,7 @@ import ClaimForm from "./ClaimForm";
 import ActionShell from "./ActionShell";
 import VoiceWidget from "./VoiceWidget";
 import CollapsibleSection from "./CollapsibleSection";
+import LocalTime from "@/components/ui/LocalTime";
 import { getFlagsForConsumerPage } from "@/lib/feature-flags/server";
 import { releaseExpiredClaims } from "@/lib/claims";
 import { getSiblingTagIds } from "@/lib/tags";
@@ -492,7 +493,7 @@ function ProvenanceCollapsible({ ownershipRecords, accent }: { ownershipRecords:
               </p>
               <p style={{ margin: 0, fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", letterSpacing: "0.04em" }}>
                 {r.acquisition_type === "origin" ? "Brand origin" : "Transfer"} ·{" "}
-                {new Date(r.acquired_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                <LocalTime iso={r.acquired_at} pattern="d MMM yyyy" />
                 {r.sale_price ? ` · ${r.currency} ${r.sale_price.toLocaleString()}` : ""}
               </p>
             </div>

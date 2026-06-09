@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
-import { format } from "date-fns";
 import Link from "next/link";
 import { ArrowLeft, Award, ExternalLink, ShieldCheck } from "lucide-react";
 import type { CompanyStatus } from "@/types/database";
 import ClaimReviewActions from "./ClaimReviewActions";
+import LocalTime from "@/components/ui/LocalTime";
 
 type ClaimDetail = {
   id: string;
@@ -144,7 +144,7 @@ export default async function ClaimDetailPage({
             {product?.name ?? "Unknown product"}
           </h1>
           <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-            Submitted {format(new Date(claim.created_at), "MMMM d, yyyy 'at' HH:mm")}
+            Submitted {<LocalTime iso={claim.created_at} pattern="MMMM d, yyyy 'at' HH:mm" />}
           </p>
         </div>
         <span
@@ -253,7 +253,7 @@ export default async function ClaimDetailPage({
                 {ownership.acquisition_type}
               </p>
               <p style={{ color: "var(--color-graphite)", fontSize: "var(--text-caption)" }}>
-                {format(new Date(ownership.acquired_at), "MMM d, yyyy")}
+                {<LocalTime iso={ownership.acquired_at} pattern="MMM d, yyyy" />}
               </p>
             </div>
             {ownership.sale_price && (
@@ -306,7 +306,7 @@ export default async function ClaimDetailPage({
             <div>
               <p className="mb-0.5" style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}>Issued</p>
               <p className="font-medium" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>
-                {format(new Date(cert.issued_at), "MMM d, yyyy")}
+                {<LocalTime iso={cert.issued_at} pattern="MMM d, yyyy" />}
               </p>
             </div>
           </div>
@@ -325,14 +325,14 @@ export default async function ClaimDetailPage({
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-graphite)", flexShrink: 0 }} />
             <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
-              Claim submitted — {format(new Date(claim.created_at), "MMM d, yyyy 'at' HH:mm")}
+              Claim submitted — {<LocalTime iso={claim.created_at} pattern="MMM d, yyyy 'at' HH:mm" />}
             </span>
           </div>
           {claim.reviewed_at && (
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
               <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: claim.status === "approved" ? "var(--color-verified)" : "var(--color-alert)", flexShrink: 0 }} />
               <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
-                {claim.status === "approved" ? "Approved" : "Rejected"} — {format(new Date(claim.reviewed_at), "MMM d, yyyy 'at' HH:mm")}
+                {claim.status === "approved" ? "Approved" : "Rejected"} — {<LocalTime iso={claim.reviewed_at} pattern="MMM d, yyyy 'at' HH:mm" />}
               </span>
             </div>
           )}
@@ -340,7 +340,7 @@ export default async function ClaimDetailPage({
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
               <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-gold)", flexShrink: 0 }} />
               <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
-                Certificate issued ({cert.cert_number}) — {format(new Date(cert.issued_at), "MMM d, yyyy 'at' HH:mm")}
+                Certificate issued ({cert.cert_number}) — {<LocalTime iso={cert.issued_at} pattern="MMM d, yyyy 'at' HH:mm" />}
               </span>
             </div>
           )}
@@ -350,8 +350,8 @@ export default async function ClaimDetailPage({
               <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)" }}>
                 {claim.expires_at
                   ? expired
-                    ? <>Review window closed {format(new Date(claim.expires_at), "MMM d, yyyy 'at' HH:mm")} — this claim has expired and can no longer be approved.</>
-                    : <>Approve or reject before {format(new Date(claim.expires_at), "MMM d, yyyy 'at' HH:mm")} — the claim expires after that.</>
+                    ? <>Review window closed {<LocalTime iso={claim.expires_at} pattern="MMM d, yyyy 'at' HH:mm" />} — this claim has expired and can no longer be approved.</>
+                    : <>Approve or reject before {<LocalTime iso={claim.expires_at} pattern="MMM d, yyyy 'at' HH:mm" />} — the claim expires after that.</>
                   : "Approve or reject this claim."}
               </span>
             </div>

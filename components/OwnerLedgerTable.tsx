@@ -1,5 +1,5 @@
-import { format } from "date-fns";
 import { Users } from "lucide-react";
+import LocalTime from "@/components/ui/LocalTime";
 
 export type OwnerRow = {
   id: string;
@@ -114,7 +114,7 @@ export default function OwnerLedgerTable({
             </td>
             <td className="px-5 py-4">
               <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                {row.acquiredAt ? format(new Date(row.acquiredAt), "MMM d, yyyy") : "—"}
+                {row.acquiredAt ? <LocalTime iso={row.acquiredAt} pattern="MMM d, yyyy" /> : "—"}
               </span>
             </td>
           </tr>

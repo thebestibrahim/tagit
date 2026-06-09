@@ -2,10 +2,10 @@ export const dynamic = "force-dynamic";
 
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { format } from "date-fns";
 import { ScanLine, Globe } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
+import LocalTime from "@/components/ui/LocalTime";
 
 type ScanLog = {
   id: string;
@@ -160,7 +160,7 @@ export default async function AdminScansPage({
                     >
                       <td className="px-5 py-3">
                         <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)" }}>
-                          {format(new Date(log.created_at), "MMM d, HH:mm")}
+                          {<LocalTime iso={log.created_at} pattern="MMM d, HH:mm" />}
                         </span>
                       </td>
                       <td className="px-5 py-3">

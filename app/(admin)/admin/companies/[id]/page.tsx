@@ -1,11 +1,11 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { format } from "date-fns";
 import { ChevronLeft, Package } from "lucide-react";
 import Image from "next/image";
 import type { CompanyStatus, Industry } from "@/types/database";
 import ReviewActions from "./ReviewActions";
+import LocalTime from "@/components/ui/LocalTime";
 
 type Company = {
   id: string;
@@ -114,10 +114,10 @@ export default async function CompanyDetailPage({
             { label: "Contact phone", value: company.contact_phone ?? "—" },
             { label: "Email",         value: company.email },
             { label: "Industry",      value: INDUSTRY_LABELS[company.industry] },
-            { label: "Applied",       value: format(new Date(company.created_at), "MMMM d, yyyy 'at' HH:mm") },
+            { label: "Applied",       value: <LocalTime iso={company.created_at} pattern="MMMM d, yyyy 'at' HH:mm" /> },
             { label: "Company ID",    value: company.id },
             ...(company.approved_at
-              ? [{ label: "Approved", value: format(new Date(company.approved_at), "MMMM d, yyyy") }]
+              ? [{ label: "Approved", value: <LocalTime iso={company.approved_at} pattern="MMMM d, yyyy" /> }]
               : []),
           ].map(({ label, value }) => (
             <div key={label} className="flex gap-4">
@@ -203,7 +203,7 @@ export default async function CompanyDetailPage({
                     {p.retail_price ? `${p.currency} ${p.retail_price.toLocaleString()}` : "—"}
                   </td>
                   <td className="px-5 py-3" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)" }}>
-                    {format(new Date(p.created_at), "MMM d, yyyy")}
+                    {<LocalTime iso={p.created_at} pattern="MMM d, yyyy" />}
                   </td>
                 </tr>
               ))}

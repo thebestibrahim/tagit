@@ -2,13 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { format } from "date-fns";
 import { Layers, Plus, ChevronRight } from "lucide-react";
 import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
 import FeatureWall from "@/components/company/FeatureWall";
 import { batchQuantityLabel, BATCH_TYPE_BADGE, BATCH_STATUS_STYLES, type BatchRow } from "@/components/company/batch-display";
 import Pagination from "@/components/ui/Pagination";
 import type { BatchType } from "@/types/database";
+import LocalTime from "@/components/ui/LocalTime";
 
 const TYPE_FILTERS: ("all" | BatchType)[] = ["all", "tags", "cards", "mixed"];
 
@@ -149,8 +149,8 @@ export default async function BatchesPage({
                     </span>
                   </div>
                   <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>
-                    {batchQuantityLabel(batch)} · Ordered {format(new Date(batch.created_at), "MMM d, yyyy")}
-                    {batch.shipped_at ? ` · Shipped ${format(new Date(batch.shipped_at), "MMM d")}` : ""}
+                    {batchQuantityLabel(batch)} · Ordered {<LocalTime iso={batch.created_at} pattern="MMM d, yyyy" />}
+                    {batch.shipped_at ? ` · Shipped ${<LocalTime iso={batch.shipped_at} pattern="MMM d" />}` : ""}
                   </p>
                 </div>
                 <ChevronRight size={16} style={{ color: "var(--color-mist)" }} className="shrink-0" />

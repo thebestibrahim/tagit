@@ -1,11 +1,11 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import type { CompanyStatus, Industry } from "@/types/database";
-import { format } from "date-fns";
 import { Building2, ChevronRight } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
 import Pagination from "@/components/ui/Pagination";
+import LocalTime from "@/components/ui/LocalTime";
 
 const PER_PAGE = 25;
 
@@ -182,7 +182,7 @@ export default async function AdminCompaniesPage({
                     </td>
                     <td className="px-5 py-4">
                       <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                        {format(new Date(company.created_at), "MMM d, yyyy")}
+                        {<LocalTime iso={company.created_at} pattern="MMM d, yyyy" />}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-right">

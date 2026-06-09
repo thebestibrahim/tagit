@@ -1,6 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { format } from "date-fns";
 import { Plus, Package, Inbox, Layers } from "lucide-react";
 import BatchActions from "./BatchActions";
 import ShipBatchButton from "./ShipBatchButton";
@@ -8,6 +7,7 @@ import ShipBatchButton from "./ShipBatchButton";
 import { batchQuantityLabel, BATCH_TYPE_BADGE } from "@/components/company/batch-display";
 import Pagination from "@/components/ui/Pagination";
 import type { BatchType } from "@/types/database";
+import LocalTime from "@/components/ui/LocalTime";
 
 type Batch = {
   id: string;
@@ -151,7 +151,7 @@ export default async function AdminBatchesPage({
                         <span className="font-semibold" style={{ color: "var(--color-charcoal)" }}>
                           {batchQuantityLabel(batch)}
                         </span>
-                        {" · "}requested {format(new Date(batch.created_at), "MMM d, yyyy")}
+                        {" · "}requested {<LocalTime iso={batch.created_at} pattern="MMM d, yyyy" />}
                       </p>
                       {batch.notes && (
                         <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)", fontStyle: "italic", marginTop: 2 }}>
@@ -261,12 +261,12 @@ export default async function AdminBatchesPage({
                       </td>
                       <td className="px-4 py-3">
                         <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                          {format(new Date(batch.created_at), "MMM d, yyyy")}
+                          {<LocalTime iso={batch.created_at} pattern="MMM d, yyyy" />}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                          {batch.shipped_at ? format(new Date(batch.shipped_at), "MMM d, yyyy") : "—"}
+                          {batch.shipped_at ? <LocalTime iso={batch.shipped_at} pattern="MMM d, yyyy" /> : "—"}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">

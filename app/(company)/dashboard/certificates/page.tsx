@@ -3,11 +3,11 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import Link from "next/link";
-import { format } from "date-fns";
 import { Award, CheckCircle, AlertTriangle, Clock, ExternalLink, ArrowRight } from "lucide-react";
 import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
 import FeatureWall from "@/components/company/FeatureWall";
 import Pagination from "@/components/ui/Pagination";
+import LocalTime from "@/components/ui/LocalTime";
 
 const PER_PAGE = 20;
 
@@ -215,7 +215,7 @@ export default async function CertificatesPage({
                   {cert.cert_number}
                 </p>
                 <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
-                  {format(new Date(cert.issued_at), "dd MMM yyyy")}
+                  {<LocalTime iso={cert.issued_at} pattern="dd MMM yyyy" />}
                 </p>
               </div>
 

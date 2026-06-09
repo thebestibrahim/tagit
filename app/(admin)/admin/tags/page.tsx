@@ -1,8 +1,8 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import { format } from "date-fns";
 import { Tag } from "lucide-react";
 import type { TagStatus } from "@/types/database";
 import { statusBadge } from "@/lib/tag-status";
+import LocalTime from "@/components/ui/LocalTime";
 
 type TagRow = {
   id: string;
@@ -197,7 +197,7 @@ export default async function AdminTagsPage({
                     </td>
                     <td className="px-5 py-3">
                       <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                        {format(new Date(tag.created_at), "MMM d, yyyy")}
+                        {<LocalTime iso={tag.created_at} pattern="MMM d, yyyy" />}
                       </span>
                     </td>
                   </tr>

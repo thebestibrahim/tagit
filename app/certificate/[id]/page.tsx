@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
-import { format } from "date-fns";
 import { Shield, CheckCircle, AlertTriangle, Tag, Calendar, Award, ArrowRight, Clock } from "lucide-react";
+import LocalTime from "@/components/ui/LocalTime";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -216,7 +216,7 @@ export default async function CertificatePage({
           {/* Details grid */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
             {[
-              { icon: <Calendar size={13} color="#9E9EA3" />, label: "Date Issued", value: format(new Date(cert.issued_at), "dd MMMM yyyy") },
+              { icon: <Calendar size={13} color="#9E9EA3" />, label: "Date Issued", value: <LocalTime iso={cert.issued_at} pattern="dd MMMM yyyy" /> },
               { icon: <Shield size={13} color="#9E9EA3" />, label: "Certificate Type", value: ownershipTypeLabel },
             ].map(({ icon, label, value }) => (
               <div key={label}>

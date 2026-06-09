@@ -2,12 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { format } from "date-fns";
 import { Plus, Package } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
 import ClickableRow from "./ClickableRow";
 import ProductRowActions from "./ProductRowActions";
+import LocalTime from "@/components/ui/LocalTime";
 
 const STATUS_FILTERS = ["all", "live", "owned", "transferred", "flagged"];
 
@@ -188,7 +188,7 @@ export default async function ProductsPage({
                       </td>
                       <td className="px-5 py-4">
                         <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                          {format(new Date(product.created_at), "MMM d, yyyy")}
+                          {<LocalTime iso={product.created_at} pattern="MMM d, yyyy" />}
                         </span>
                       </td>
                       <td className="px-5 py-4">

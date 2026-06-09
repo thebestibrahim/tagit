@@ -2,10 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { format } from "date-fns";
 import { ArrowLeft, Layers } from "lucide-react";
 import IDKeyTable, { type IDKeyRow } from "@/components/company/IDKeyTable";
 import { batchQuantityLabel, BATCH_TYPE_BADGE, BATCH_STATUS_STYLES, BATCH_STATUS_LABELS, type BatchRow } from "@/components/company/batch-display";
+import LocalTime from "@/components/ui/LocalTime";
 
 export default async function BatchDetailPage({
   params,
@@ -71,8 +71,8 @@ export default async function BatchDetailPage({
             {batchQuantityLabel(batch)} · {BATCH_STATUS_LABELS[batch.status] ?? batch.status}
           </p>
           <p className="mt-1" style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
-            Ordered {format(new Date(batch.created_at), "MMM d, yyyy")}
-            {batch.shipped_at ? ` · Shipped ${format(new Date(batch.shipped_at), "MMM d, yyyy")}` : ""}
+            Ordered {<LocalTime iso={batch.created_at} pattern="MMM d, yyyy" />}
+            {batch.shipped_at ? ` · Shipped ${<LocalTime iso={batch.shipped_at} pattern="MMM d, yyyy" />}` : ""}
           </p>
           {batch.notes && (
             <p className="mt-2" style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)", fontStyle: "italic" }}>

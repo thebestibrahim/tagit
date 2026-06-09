@@ -1,8 +1,8 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import { format } from "date-fns";
 import { Inbox } from "lucide-react";
 import InquiryActions from "./InquiryActions";
 import Pagination from "@/components/ui/Pagination";
+import LocalTime from "@/components/ui/LocalTime";
 
 const PER_PAGE = 25;
 
@@ -124,7 +124,7 @@ export default async function InquiriesPage({
                     </td>
                     <td className="px-5 py-4">
                       <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                        {format(new Date(inquiry.created_at), "MMM d, yyyy")}
+                        {<LocalTime iso={inquiry.created_at} pattern="MMM d, yyyy" />}
                       </span>
                     </td>
                     <td className="px-5 py-4">

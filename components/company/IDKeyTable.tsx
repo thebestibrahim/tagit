@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { format } from "date-fns";
 import { Tag, CreditCard } from "lucide-react";
 import { statusBadge } from "@/lib/tag-status";
 import type { TagMedium } from "@/types/database";
+import LocalTime from "@/components/ui/LocalTime";
 
 export type IDKeyRow = {
   id: string;
@@ -77,7 +77,7 @@ export default function IDKeyTable({ rows, medium }: { rows: IDKeyRow[]; medium:
               </td>
               <td className="px-5 py-4">
                 <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                  {format(new Date(row.created_at), "MMM d, yyyy")}
+                  {<LocalTime iso={row.created_at} pattern="MMM d, yyyy" />}
                 </span>
               </td>
               <td className="px-5 py-4">

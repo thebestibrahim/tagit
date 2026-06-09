@@ -2,8 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ToggleLeft } from "lucide-react";
-import { format } from "date-fns";
 import { GlobalSettings, OverridesCard } from "./FlagDetailClient";
+import LocalTime from "@/components/ui/LocalTime";
 
 type Override = {
   id: string;
@@ -151,7 +151,7 @@ export default async function FlagDetailPage({
                         {formatAction(entry.action)}
                       </p>
                       <p className="text-caption shrink-0" style={{ color: "var(--color-mist)" }}>
-                        {format(new Date(entry.performed_at), "MMM d, HH:mm")}
+                        {<LocalTime iso={entry.performed_at} pattern="MMM d, HH:mm" />}
                       </p>
                     </div>
                     {entry.performed_by_email && (

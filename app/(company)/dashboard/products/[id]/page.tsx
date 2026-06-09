@@ -9,6 +9,7 @@ import type { CompanyStatus } from "@/types/database";
 import { statusBadge } from "@/lib/tag-status";
 import { INDUSTRY_FIELDS, groupFields } from "@/lib/industry-fields";
 import CopyLinkButton from "@/components/ui/CopyLinkButton";
+import LocalTime from "@/components/ui/LocalTime";
 import ReplaceChipButton from "./ReplaceChipButton";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -435,7 +436,7 @@ export default async function ProductDetailPage({
           <div>
             <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>Registered</p>
             <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
-              {fmtDate(product.created_at)}
+              <LocalTime iso={product.created_at} pattern="MMM d, yyyy" />
             </p>
           </div>
           {currentOwner && (
@@ -448,7 +449,7 @@ export default async function ProductDetailPage({
           {primaryTag?.activated_at && (
             <div>
               <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>First scanned</p>
-              <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>{fmtDate(primaryTag.activated_at)}</p>
+              <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}><LocalTime iso={primaryTag.activated_at} pattern="MMM d, yyyy" /></p>
             </div>
           )}
         </div>
@@ -531,7 +532,7 @@ export default async function ProductDetailPage({
                       {cert.cert_number}
                     </p>
                     <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>
-                      {cert.cert_type === "ownership" ? "Ownership" : "Transfer"} · Issued to {cert.issued_to_name} · {fmtDate(cert.issued_at)}
+                      {cert.cert_type === "ownership" ? "Ownership" : "Transfer"} · Issued to {cert.issued_to_name} · <LocalTime iso={cert.issued_at} pattern="MMM d, yyyy" />
                     </p>
                   </div>
                 </div>
@@ -617,7 +618,7 @@ export default async function ProductDetailPage({
                           </span>
                         )}
                         <span style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)", whiteSpace: "nowrap" }}>
-                          {fmt(item.date)}
+                          <LocalTime iso={item.date} pattern="MMM d, yyyy 'at' h:mm a" />
                         </span>
                       </div>
                     </div>
