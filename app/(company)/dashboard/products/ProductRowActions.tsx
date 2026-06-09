@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, Eye, Pencil, Copy, Link2, Check } from "lucide-react";
 
@@ -14,11 +15,47 @@ export default function ProductRowActions({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Fixed-position coords for the portalled menu (set from the button's rect).
+  const [coords, setCoords] = useState<{ top: number; right: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   function stop(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
   }
+
+  function toggle(e: React.MouseEvent) {
+    stop(e);
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    const r = btnRef.current?.getBoundingClientRect();
+    if (!r) return;
+    const itemCount = scanUrl ? 4 : 3;
+    const menuH = itemCount * 36 + 8;
+    const below = r.bottom + 4;
+    // Flip above the trigger if it would overflow the viewport bottom.
+    const flipUp = below + menuH > window.innerHeight && r.top - menuH > 8;
+    setCoords({
+      top: flipUp ? r.top - menuH - 4 : below,
+      right: window.innerWidth - r.right,
+    });
+    setOpen(true);
+  }
+
+  // The menu is portalled to <body> with position: fixed, so a scroll or resize
+  // would detach it — close on either.
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [open]);
 
   function go(href: string) {
     return (e: React.MouseEvent) => {
@@ -65,9 +102,10 @@ export default function ProductRowActions({
   return (
     <div style={{ position: "relative", display: "inline-block" }}>
       <button
+        ref={btnRef}
         type="button"
         aria-label="More options"
-        onClick={(e) => { stop(e); setOpen((o) => !o); }}
+        onClick={toggle}
         className="rounded-md"
         style={{
           display: "inline-flex",
@@ -84,21 +122,21 @@ export default function ProductRowActions({
         <MoreHorizontal size={16} />
       </button>
 
-      {open && (
+      {open && coords && createPortal(
         <>
           {/* Outside-click catcher */}
           <div
             onClick={(e) => { stop(e); setOpen(false); }}
-            style={{ position: "fixed", inset: 0, zIndex: 40 }}
+            style={{ position: "fixed", inset: 0, zIndex: 9998 }}
           />
           <div
             onClick={stop}
             role="menu"
             style={{
-              position: "absolute",
-              right: 0,
-              top: "calc(100% + 4px)",
-              zIndex: 41,
+              position: "fixed",
+              top: coords.top,
+              right: coords.right,
+              zIndex: 9999,
               minWidth: "168px",
               backgroundColor: "var(--color-pearl)",
               border: "1px solid var(--color-cream)",
@@ -148,7 +186,8 @@ export default function ProductRowActions({
               </button>
             )}
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );
