@@ -293,6 +293,40 @@ export async function sendChipReplacedEmail(
   await resend.emails.send({ from: FROM, to, replyTo: "info@tagitlux.com", subject, html, text });
 }
 
+export async function sendInquiryReceivedEmail(
+  to: string,
+  opts: { name: string; company: string }
+) {
+  const firstName = opts.name.split(" ")[0];
+
+  const html = base(
+    `
+    ${eyebrow("Application Received")}
+    ${heading("Your request is being reviewed")}
+    ${para(`Thank you for your interest in Tagit, ${firstName}. We have received your request to bring <strong style="color:${INK};font-weight:600">${opts.company}</strong> onto the platform.`)}
+    ${para("Tagit is the identity layer for the world’s finest physical goods. Every piece a house creates gains a permanent, verifiable identity that travels with it forever, through every owner, for the life of the object.")}
+    ${para("Access is considered, and every brand is reviewed personally. We will be in touch within 48 hours with your next step.")}
+    <table role="presentation" width="100%" style="margin:22px 0 4px"><tr><td style="padding:16px 18px;background:${PAPER};border:1px solid ${LINE};border-radius:10px">
+      <p style="margin:0;font-family:${MONO};font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:${GOLD}">What happens next</p>
+      <p style="margin:8px 0 0;font-family:${SANS};font-size:14px;line-height:1.6;color:${BODY}">We review your brand, then send a private invitation to set up your account. You will be among a small, considered group of houses building the future of provenance.</p>
+    </td></tr></table>
+    <p style="margin:22px 0 0;font-family:${SANS};font-size:13px;line-height:1.6;color:${MUTE}">Any questions in the meantime? Simply reply to this email.</p>
+  `,
+    { preheader: "Your request to join Tagit is being reviewed. We will be in touch within 48 hours." }
+  );
+
+  const text = `Hi ${firstName},\n\nThank you for your interest in Tagit. We have received your request to bring ${opts.company} onto the platform.\n\nTagit is the identity layer for the world's finest physical goods. Every piece a house creates gains a permanent, verifiable identity that travels with it forever, through every owner, for the life of the object.\n\nAccess is considered, and every brand is reviewed personally. We will be in touch within 48 hours with your next step.\n\nAny questions in the meantime? Simply reply to this email.\n\nTagit`;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    replyTo: "business@tagitlux.com",
+    subject: "We’ve received your request to join Tagit",
+    html,
+    text,
+  });
+}
+
 export async function sendCompanyApprovedEmail(
   to: string,
   opts: { companyName: string; dashboardUrl: string }
@@ -357,33 +391,33 @@ export async function sendBrandInvitationEmail(
 ) {
   const firstName = opts.name.split(" ")[0];
 
-  // Plain, conversational HTML. No headers, no promotional elements, no unsubscribe.
-  // Signed as a person rather than a brand blast. This keeps it out of Gmail Promotions.
-  const html = `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:32px 24px;font-family:system-ui,-apple-system,sans-serif;background:#ffffff;color:#1F1F22;max-width:560px">
-  <p style="margin:0 0 20px;font-size:15px;line-height:1.6">Hi ${firstName},</p>
-  <p style="margin:0 0 16px;font-size:15px;line-height:1.6">I'm Fawaz, founder of Tagit. I personally reviewed your application and I'm glad to let you know that <strong>${opts.company}</strong> has been approved.</p>
-  <p style="margin:0 0 16px;font-size:15px;line-height:1.6">We built Tagit because luxury goods deserve an identity layer that lasts forever, travels with every product, and gives your customers ownership records they can verify themselves.</p>
-  <p style="margin:0 0 16px;font-size:15px;line-height:1.6">You can now sign in to your dashboard, register products, assign tags, and start building provenance for your brand.</p>
-  <p style="margin:0 0 24px;font-size:15px;line-height:1.6">Sign in here:</p>
-  <p style="margin:0 0 8px"><a href="${opts.loginUrl}" style="display:inline-block;padding:11px 22px;background:#0A0A0B;color:#FAFAF8;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600">Sign in to Tagit</a></p>
-  <p style="margin:16px 0 0;font-size:13px;color:#6E6E73">Or: <a href="${opts.loginUrl}" style="color:#0A0A0B">${opts.loginUrl}</a></p>
-  <p style="margin:28px 0 4px;font-size:15px;line-height:1.6;color:#1F1F22">Looking forward to having you on board.</p>
-  <p style="margin:0 0 4px;font-size:14px;color:#4A4A4F">Fawaz Ibrahim</p>
-  <p style="margin:0;font-size:13px;color:#9E9EA3">Founder, Tagit</p>
-  <p style="margin:20px 0 0;font-size:13px;color:#B0B0B5">Reply to this email if you have any questions. I read every reply.</p>
-</body>
-</html>`;
+  const html = base(
+    `
+    ${eyebrow("Welcome to Tagit")}
+    ${heading(`Welcome, ${opts.company}`)}
+    ${para(`${firstName}, I’m Fawaz, founder of Tagit. I reviewed your application personally, and it is my pleasure to welcome you in.`)}
+    ${para("You are joining a small, considered group of houses building something rare: a permanent identity for every piece they create. From today, your products can carry proof of their origin, their craftsmanship, and their ownership, verifiable by anyone, for the life of the object.")}
+    ${para("Your dashboard is ready. Register your first products, assign their Tagit identities, and begin building provenance for your brand.")}
+    ${button("Enter your dashboard", opts.loginUrl)}
+    <p style="margin:18px 0 0;font-family:${SANS};font-size:13px;color:${MUTE}">Or sign in at <a href="${opts.loginUrl}" style="color:${INK}">${opts.loginUrl}</a></p>
 
-  const text = `Hi ${firstName},\n\nI'm Fawaz, founder of Tagit. I personally reviewed your application and I'm glad to let you know that ${opts.company} has been approved.\n\nWe built Tagit because luxury goods deserve an identity layer that lasts forever, travels with every product, and gives your customers ownership records they can verify themselves.\n\nYou can now sign in to your dashboard, register products, assign tags, and start building provenance for your brand.\n\nSign in here:\n${opts.loginUrl}\n\nLooking forward to having you on board.\n\nFawaz Ibrahim\nFounder, Tagit\n\nReply to this email if you have any questions. I read every reply.`;
+    <table role="presentation" width="100%" style="margin:30px 0 0"><tr><td style="border-top:1px solid ${LINE};padding-top:24px">
+      <p style="margin:0 0 4px;font-family:${SANS};font-size:15px;line-height:1.6;color:${INK}">We are honored to have you.</p>
+      <p style="margin:14px 0 2px;font-family:${SERIF};font-style:italic;font-size:19px;color:${INK}">Fawaz Ibrahim</p>
+      <p style="margin:0;font-family:${MONO};font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:${MUTE}">Founder, Tagit</p>
+      <p style="margin:16px 0 0;font-family:${SANS};font-size:13px;line-height:1.6;color:${MUTE}">Reply to this note anytime. I read every one.</p>
+    </td></tr></table>
+  `,
+    { preheader: `Welcome to Tagit, ${opts.company}. Your dashboard is ready.` }
+  );
+
+  const text = `${firstName}, I'm Fawaz, founder of Tagit. I reviewed your application personally, and it is my pleasure to welcome you in.\n\nYou are joining a small, considered group of houses building something rare: a permanent identity for every piece they create. From today, your products can carry proof of their origin, their craftsmanship, and their ownership, verifiable by anyone, for the life of the object.\n\nYour dashboard is ready. Register your first products, assign their Tagit identities, and begin building provenance for your brand.\n\nEnter your dashboard:\n${opts.loginUrl}\n\nWe are honored to have you.\n\nFawaz Ibrahim\nFounder, Tagit\n\nReply to this note anytime. I read every one.`;
 
   await resend.emails.send({
     from: FROM,
     to,
     replyTo: "info@tagitlux.com",
-    subject: `Your Tagit account is ready, ${firstName}`,
+    subject: `Welcome to Tagit, ${opts.company}`,
     html,
     text,
     headers: {

@@ -2,6 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import type { Database } from "@/types/database";
+import { sendInquiryReceivedEmail } from "@/lib/email";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "Tagit <info@tagitlux.com>";
@@ -28,13 +29,13 @@ export async function submitBrandInquiry(data: {
     status: "new",
   });
 
-  // Send emails (best-effort — don't throw if Resend isn't configured)
+  // Send emails (best-effort; don't throw if Resend isn't configured)
   if (process.env.RESEND_API_KEY) {
     await Promise.allSettled([
       resend.emails.send({
         from: FROM,
         to: "business@tagitlux.com",
-        subject: `New brand access request — ${company}`,
+        subject: `New brand access request from ${company}`,
         html: `
           <div style="font-family:system-ui,sans-serif;padding:32px;background:#FAFAF8;max-width:520px">
             <h2 style="margin:0 0 24px;font-size:20px;color:#0A0A0B">New brand access request</h2>
@@ -49,28 +50,7 @@ export async function submitBrandInquiry(data: {
         `,
         replyTo: email,
       }),
-      resend.emails.send({
-        from: FROM,
-        to: email,
-        subject: "We've received your request — Tagit",
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head><meta charset="utf-8"></head>
-          <body style="margin:0;padding:32px 24px;font-family:system-ui,-apple-system,sans-serif;background:#ffffff;color:#1F1F22;max-width:520px">
-            <p style="margin:0 0 8px;font-size:15px;line-height:1.6">Hi ${name},</p>
-            <p style="margin:0 0 16px;font-size:15px;line-height:1.6">
-              Thank you for your interest in Tagit. We've received your access request for <strong>${company}</strong> and will be in touch within 48 hours.
-            </p>
-            <p style="margin:0 0 16px;font-size:15px;line-height:1.6">
-              In the meantime, feel free to reply to this email with any questions.
-            </p>
-            <p style="margin:0;font-size:13px;color:#9E9EA3">— The Tagit Team</p>
-            <p style="margin:24px 0 0;font-size:13px;color:#C7C7CC">business@tagitlux.com</p>
-          </body>
-          </html>
-        `,
-      }),
+      sendInquiryReceivedEmail(email, { name, company }),
     ]);
   }
 }
