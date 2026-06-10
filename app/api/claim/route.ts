@@ -5,13 +5,14 @@ import { NextResponse } from "next/server";
 import { sendClaimNotificationEmail, APP_URL } from "@/lib/email";
 import { claimExpiresAt, releaseExpiredClaims } from "@/lib/claims";
 import { getSiblingTagIds } from "@/lib/tags";
+import { normalizeEmail } from "@/lib/utils";
 import { headers } from "next/headers";
 
 const admin = createAdminClient();
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
-  const { tag_id, claimant_name, claimant_email, claim_location, otp_code } = body as {
+  const { tag_id, claimant_name, claimant_email: rawClaimantEmail, claim_location, otp_code } = body as {
     tag_id?: string;
     claimant_name?: string;
     claimant_email?: string;
@@ -19,9 +20,11 @@ export async function POST(request: Request) {
     otp_code?: string;
   };
 
-  if (!tag_id || !claimant_name || !claimant_email || !otp_code) {
+  if (!tag_id || !claimant_name || !rawClaimantEmail || !otp_code) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
+
+  const claimant_email = normalizeEmail(rawClaimantEmail);
 
   // Verify OTP server-side before creating any claim
   const now = new Date().toISOString();

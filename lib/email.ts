@@ -4,65 +4,124 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "Tagit <info@tagitlux.com>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-function base(content: string) {
+// ── Design tokens ────────────────────────────────────────────────────────────
+// Mirrors the scan/certificate pages so email feels like the product, not a
+// generic transactional template. Serif (Instrument Serif) renders in Apple
+// Mail and degrades to Georgia elsewhere; both read as luxury, neither as SaaS.
+const INK = "#0A0A0B";
+const PAPER = "#FAFAF8";
+const LINE = "#E8E2D5";
+const GOLD = "#B8945D";
+const BODY = "#55555B";
+const MUTE = "#9E9EA3";
+const SERIF = "'Instrument Serif', Georgia, 'Times New Roman', serif";
+const MONO = "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace";
+const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif";
+
+// Hidden inbox-preview line that controls the grey snippet shown next to the subject.
+function preheader(text: string) {
+  return `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;opacity:0;color:transparent;height:0;width:0">${text}</div>`;
+}
+
+function base(content: string, opts: { preheader?: string } = {}) {
   return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#FAFAF8;font-family:system-ui,-apple-system,sans-serif">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 16px">
-<table width="100%" style="max-width:520px;background:#fff;border:1px solid #E8E2D5;border-radius:12px;overflow:hidden">
-<tr><td style="padding:32px 32px 0;background:#FAFAF8;border-bottom:1px solid #E8E2D5">
-  <span style="font-size:22px;font-weight:700;color:#0A0A0B;letter-spacing:-0.02em">Tagit</span>
-</td></tr>
-<tr><td style="padding:32px">${content}</td></tr>
-<tr><td style="padding:16px 32px 24px;border-top:1px solid #E8E2D5">
-  <p style="margin:0;font-size:12px;color:#9E9EA3">© ${new Date().getFullYear()} Tagit. Identity infrastructure for luxury.</p>
-</td></tr>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light">
+</head>
+<body style="margin:0;padding:0;background:${PAPER}">
+${opts.preheader ? preheader(opts.preheader) : ""}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAPER}">
+<tr><td align="center" style="padding:48px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px">
+
+  <!-- wordmark -->
+  <tr><td style="padding:0 6px 22px">
+    <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${GOLD};vertical-align:middle;margin-right:8px"></span>
+    <span style="font-family:${SERIF};font-style:italic;font-size:25px;color:${INK};letter-spacing:-0.02em;vertical-align:middle">Tagit</span>
+  </td></tr>
+
+  <!-- card -->
+  <tr><td>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid ${LINE};border-radius:14px;overflow:hidden">
+      <tr><td height="3" style="background:${GOLD};font-size:0;line-height:3px">&nbsp;</td></tr>
+      <tr><td style="padding:38px 38px 34px">${content}</td></tr>
+    </table>
+  </td></tr>
+
+  <!-- footer -->
+  <tr><td style="padding:26px 8px 0;text-align:center">
+    <p style="margin:0 0 7px;font-family:${MONO};font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:#BFBAAE">Identity Infrastructure for Physical Luxury</p>
+    <p style="margin:0;font-family:${SANS};font-size:11px;color:#BFBAAE">© ${new Date().getFullYear()} Tagit · <a href="mailto:info@tagitlux.com" style="color:#BFBAAE;text-decoration:none">info@tagitlux.com</a></p>
+  </td></tr>
+
 </table>
 </td></tr></table>
 </body></html>`;
 }
 
+// Mono uppercase gold label: the editorial "eyebrow" above a headline.
+function eyebrow(text: string) {
+  return `<p style="margin:0 0 14px;font-family:${MONO};font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${GOLD}">${text}</p>`;
+}
+
 function heading(text: string) {
-  return `<h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1F1F22;letter-spacing:-0.015em">${text}</h1>`;
+  return `<h1 style="margin:0 0 18px;font-family:${SERIF};font-style:italic;font-weight:400;font-size:30px;line-height:1.12;letter-spacing:-0.02em;color:${INK}">${text}</h1>`;
 }
 
 function para(text: string) {
-  return `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4A4A4F">${text}</p>`;
+  return `<p style="margin:0 0 16px;font-family:${SANS};font-size:15px;line-height:1.7;color:${BODY}">${text}</p>`;
 }
 
+// Bulletproof-ish button: table cell carries the fill so it survives Outlook.
 function button(text: string, url: string) {
-  return `<a href="${url}" style="display:inline-block;padding:12px 24px;background:#0A0A0B;color:#FAFAF8;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600">${text}</a>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 2px"><tr>
+    <td style="border-radius:8px;background:${INK}">
+      <a href="${url}" style="display:inline-block;padding:14px 30px;font-family:${SANS};font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${PAPER};text-decoration:none;border-radius:8px">${text}</a>
+    </td>
+  </tr></table>`;
 }
 
 function keyVal(label: string, value: string) {
   return `<tr>
-    <td style="padding:6px 0;font-size:13px;color:#9E9EA3;width:40%">${label}</td>
-    <td style="padding:6px 0;font-size:13px;color:#1F1F22;font-weight:500">${value}</td>
+    <td style="padding:11px 0;border-top:1px solid ${LINE};font-family:${MONO};font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:${MUTE};vertical-align:top">${label}</td>
+    <td style="padding:11px 0;border-top:1px solid ${LINE};font-family:${SANS};font-size:14px;color:${INK};font-weight:500;text-align:right;vertical-align:top">${value}</td>
   </tr>`;
 }
 
 export async function sendOtpEmail(to: string, code: string, purpose: "claim" | "transfer") {
-  const subject = `${code} is your Tagit verification code`;
+  // The code is deliberately NOT in the subject. A code in the subject line is
+  // exposed in lock-screen / notification previews (shoulder-surfing) and in
+  // any system that logs subjects. Keep it inside the body only.
+  const subject = "Your Tagit verification code";
 
   const action =
     purpose === "claim"
-      ? "verify your email and submit your ownership claim"
-      : "verify your identity and initiate the ownership transfer";
+      ? "confirm your email and submit your ownership claim"
+      : "confirm your identity and continue the ownership transfer";
 
-  // Minimal HTML — no tables, no colored blocks, no headers. Keeps it out of Promotions.
-  const html = `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="margin:0;padding:32px 24px;font-family:system-ui,-apple-system,sans-serif;background:#ffffff;color:#1F1F22">
-  <p style="margin:0 0 24px;font-size:15px;line-height:1.6">Use the code below to ${action}. It expires in 10 minutes.</p>
-  <p style="margin:0 0 24px;font-size:40px;font-weight:700;letter-spacing:0.12em;font-family:monospace">${code}</p>
-  <p style="margin:0;font-size:13px;color:#6E6E73">If you didn't request this, you can safely ignore this email.</p>
-  <p style="margin:24px 0 0;font-size:13px;color:#9E9EA3">— Tagit</p>
-</body>
-</html>`;
+  const html = base(
+    `
+    ${eyebrow("Verification")}
+    ${heading("Confirm it’s you")}
+    ${para(`Enter this code to ${action}.`)}
 
-  const text = `Your Tagit verification code: ${code}\n\nUse this code to ${action}. It expires in 10 minutes.\n\nIf you didn't request this, ignore this email.\n\n— Tagit`;
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 8px">
+      <tr><td align="center" style="padding:22px;background:${PAPER};border:1px solid ${LINE};border-radius:12px">
+        <div style="font-family:${MONO};font-size:34px;font-weight:600;letter-spacing:0.34em;color:${INK};padding-left:0.34em">${code}</div>
+        <div style="margin-top:10px;font-family:${MONO};font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:${MUTE}">Expires in 10 minutes</div>
+      </td></tr>
+    </table>
+
+    ${para(`<span style="font-size:13px;color:${MUTE}">For your security, Tagit will never ask you for this code. If you didn’t request it, you can safely ignore this email.</span>`)}
+  `,
+    { preheader: "Your one-time verification code. Expires in 10 minutes." }
+  );
+
+  const text = `Confirm it's you\n\nEnter this code to ${action}:\n\n${code}\n\nThis code expires in 10 minutes. For your security, Tagit will never ask you for this code. If you didn't request it, you can safely ignore this email.\n\nTagit`;
 
   await resend.emails.send({ from: FROM, to, subject, html, text });
 }
@@ -78,21 +137,22 @@ export async function sendClaimNotificationEmail(
   }
 ) {
   const html = base(`
-    ${heading("New ownership claim")}
-    ${para(`A verified ownership claim has been submitted for one of your products on Tagit.`)}
-    <table style="width:100%;border-collapse:collapse;margin:16px 0">
+    ${eyebrow("Ownership Claim")}
+    ${heading("A new claim awaits your review")}
+    ${para(`A verified ownership claim has been submitted for one of your pieces on Tagit.`)}
+    <table role="presentation" style="width:100%;border-collapse:collapse;margin:22px 0 24px">
       ${keyVal("Product", opts.productName)}
       ${keyVal("Claimant", opts.claimantName)}
       ${keyVal("Email", opts.claimantEmail)}
     </table>
-    <div style="margin:24px 0">${button("Review claim", opts.claimUrl)}</div>
-    ${para('<span style="color:#9E9EA3;font-size:13px">You have 7 days to approve or reject this claim before it expires.</span>')}
+    ${button("Review claim", opts.claimUrl)}
+    <p style="margin:22px 0 0;font-family:${SANS};font-size:13px;line-height:1.6;color:${MUTE}">You have 7 days to approve or reject this claim before it expires.</p>
   `);
 
   await resend.emails.send({
     from: FROM,
     to,
-    subject: `New ownership claim — ${opts.productName}`,
+    subject: `New ownership claim for ${opts.productName}`,
     html,
   });
 }
@@ -107,16 +167,17 @@ export async function sendClaimApprovedEmail(
   }
 ) {
   const html = base(`
-    ${heading("Ownership confirmed")}
-    ${para(`Congratulations, ${opts.claimantName}. Your ownership of <strong>${opts.productName}</strong> by ${opts.companyName} has been verified and recorded on Tagit.`)}
-    ${para("Your ownership is now part of the permanent provenance record for this item.")}
-    <div style="margin:24px 0">${button("View your item", opts.tagUrl)}</div>
+    ${eyebrow("Ownership Confirmed")}
+    ${heading("The piece is yours")}
+    ${para(`Congratulations, ${opts.claimantName}. Your ownership of <strong style="color:${INK};font-weight:600">${opts.productName}</strong> by ${opts.companyName} has been verified and recorded on Tagit.`)}
+    ${para("It now forms part of the permanent provenance record for this item, a history that travels with it forever.")}
+    ${button("View your item", opts.tagUrl)}
   `);
 
   await resend.emails.send({
     from: FROM,
     to,
-    subject: `Ownership confirmed — ${opts.productName}`,
+    subject: `Your ownership of ${opts.productName} is confirmed`,
     html,
   });
 }
@@ -130,16 +191,17 @@ export async function sendClaimRejectedEmail(
   }
 ) {
   const html = base(`
-    ${heading("Ownership claim not approved")}
-    ${para(`Hi ${opts.claimantName}, your ownership claim for <strong>${opts.productName}</strong> was not approved.`)}
-    ${opts.reason ? `<div style="padding:12px 16px;background:#F9DDDD;border-radius:8px;margin:16px 0"><p style="margin:0;font-size:14px;color:#B85C5C">${opts.reason}</p></div>` : ""}
+    ${eyebrow("Claim Update")}
+    ${heading("Your claim wasn’t approved")}
+    ${para(`Hi ${opts.claimantName}, your ownership claim for <strong style="color:${INK};font-weight:600">${opts.productName}</strong> was not approved.`)}
+    ${opts.reason ? `<table role="presentation" width="100%" style="margin:18px 0"><tr><td style="padding:14px 18px;background:${PAPER};border-left:2px solid ${GOLD};border-radius:0 8px 8px 0"><p style="margin:0;font-family:${SANS};font-size:14px;line-height:1.6;color:${BODY}">${opts.reason}</p></td></tr></table>` : ""}
     ${para("If you believe this is an error, please contact the brand directly.")}
   `);
 
   await resend.emails.send({
     from: FROM,
     to,
-    subject: `Ownership claim update — ${opts.productName}`,
+    subject: `An update on your claim for ${opts.productName}`,
     html,
   });
 }
@@ -156,28 +218,30 @@ export async function sendTransferAcceptanceEmail(
     currency?: string;
   }
 ) {
-  const priceLine = opts.salePrice
-    ? `\nSale price: ${opts.currency || "NGN"} ${opts.salePrice.toLocaleString()}`
+  const priceText = opts.salePrice
+    ? `${opts.currency || "NGN"} ${opts.salePrice.toLocaleString()}`
     : "";
 
   const subject = `${opts.fromName} is transferring ${opts.productName} to you`;
 
-  const html = `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="margin:0;padding:32px 24px;font-family:system-ui,-apple-system,sans-serif;background:#ffffff;color:#1F1F22;max-width:520px">
-  <p style="margin:0 0 16px;font-size:15px;line-height:1.6">Hi ${opts.recipientName},</p>
-  <p style="margin:0 0 16px;font-size:15px;line-height:1.6"><strong>${opts.fromName}</strong> is transferring ownership of <strong>${opts.productName}</strong> by ${opts.companyName} to you on Tagit.</p>
-  <p style="margin:0 0 4px;font-size:13px;color:#6E6E73">Item: ${opts.productName}</p>
-  <p style="margin:0 0 4px;font-size:13px;color:#6E6E73">From: ${opts.fromName}${priceLine}</p>
-  <p style="margin:24px 0;font-size:15px;line-height:1.6">Click the link below to accept and become the verified owner. This link expires in 24 hours.</p>
-  <p style="margin:0 0 24px"><a href="${opts.acceptanceUrl}" style="font-size:15px;color:#0A0A0B;font-weight:600">${opts.acceptanceUrl}</a></p>
-  <p style="margin:0;font-size:13px;color:#6E6E73">If you weren't expecting this, you can ignore this email. The transfer will expire automatically.</p>
-  <p style="margin:24px 0 0;font-size:13px;color:#9E9EA3">— Tagit</p>
-</body>
-</html>`;
+  const html = base(
+    `
+    ${eyebrow("Ownership Transfer")}
+    ${heading("An item is being transferred to you")}
+    ${para(`Hi ${opts.recipientName}, <strong style="color:${INK};font-weight:600">${opts.fromName}</strong> is transferring ownership of <strong style="color:${INK};font-weight:600">${opts.productName}</strong> by ${opts.companyName} to you on Tagit.`)}
+    <table role="presentation" style="width:100%;border-collapse:collapse;margin:22px 0 24px">
+      ${keyVal("Item", opts.productName)}
+      ${keyVal("From", opts.fromName)}
+      ${priceText ? keyVal("Sale price", priceText) : ""}
+    </table>
+    ${para("Accept to become the verified owner and receive your certificate. This link expires in 24 hours.")}
+    ${button("Accept ownership", opts.acceptanceUrl)}
+    <p style="margin:22px 0 0;font-family:${SANS};font-size:13px;line-height:1.6;color:${MUTE}">If you weren’t expecting this, you can ignore this email. The transfer will expire automatically.</p>
+  `,
+    { preheader: `${opts.fromName} is transferring ${opts.productName} to you. Accept within 24 hours.` }
+  );
 
-  const text = `Hi ${opts.recipientName},\n\n${opts.fromName} is transferring ownership of ${opts.productName} by ${opts.companyName} to you on Tagit.\n\nItem: ${opts.productName}\nFrom: ${opts.fromName}${priceLine}\n\nAccept ownership here (expires in 24 hours):\n${opts.acceptanceUrl}\n\nIf you weren't expecting this, ignore this email.\n\n— Tagit`;
+  const text = `Hi ${opts.recipientName},\n\n${opts.fromName} is transferring ownership of ${opts.productName} by ${opts.companyName} to you on Tagit.\n\nItem: ${opts.productName}\nFrom: ${opts.fromName}${priceText ? `\nSale price: ${priceText}` : ""}\n\nAccept ownership here (expires in 24 hours):\n${opts.acceptanceUrl}\n\nIf you weren't expecting this, ignore this email.\n\nTagit`;
 
   await resend.emails.send({ from: FROM, to, subject, html, text });
 }
@@ -192,17 +256,18 @@ export async function sendTransferCompleteEmail(
   }
 ) {
   const html = base(`
-    ${heading(opts.role === "recipient" ? "Ownership transfer complete" : "Transfer complete")}
+    ${eyebrow("Transfer Complete")}
+    ${heading(opts.role === "recipient" ? "Welcome, new owner" : "Transfer complete")}
     ${opts.role === "recipient"
-      ? para(`You are now the verified owner of <strong>${opts.productName}</strong> on Tagit.`)
-      : para(`Ownership of <strong>${opts.productName}</strong> has been successfully transferred.`)}
-    <div style="margin:24px 0">${button("View item", opts.tagUrl)}</div>
+      ? para(`You are now the verified owner of <strong style="color:${INK};font-weight:600">${opts.productName}</strong> on Tagit. Your ownership is recorded on the permanent provenance ledger.`)
+      : para(`Ownership of <strong style="color:${INK};font-weight:600">${opts.productName}</strong> has been successfully transferred. Your stewardship now lives on as part of its provenance.`)}
+    ${button("View item", opts.tagUrl)}
   `);
 
   await resend.emails.send({
     from: FROM,
     to,
-    subject: `Transfer complete — ${opts.productName}`,
+    subject: `Transfer complete for ${opts.productName}`,
     html,
   });
 }
@@ -216,13 +281,14 @@ export async function sendChipReplacedEmail(
   const greeting = opts.ownerName ? `Hi ${opts.ownerName},` : "Hi,";
 
   const html = base(`
-    ${heading("Authentication chip replaced")}
+    ${eyebrow("Authentication Chip")}
+    ${heading("Your item’s chip has been replaced")}
     ${para(greeting)}
-    ${para(`<strong>${opts.brandName}</strong> has replaced the authentication chip on your item. Your ownership record is unaffected.`)}
-    ${para(`If you did not expect this, contact <a href="mailto:info@tagitlux.com">info@tagitlux.com</a>.`)}
+    ${para(`<strong style="color:${INK};font-weight:600">${opts.brandName}</strong> has replaced the authentication chip on your item. Your ownership record is fully intact and unaffected.`)}
+    ${para(`If you did not expect this, contact <a href="mailto:info@tagitlux.com" style="color:${INK}">info@tagitlux.com</a>.`)}
   `);
 
-  const text = `${greeting}\n\n${opts.brandName} has replaced the authentication chip on your item. Your ownership record is unaffected.\n\nIf you did not expect this contact info@tagitlux.com\n\n— Tagit`;
+  const text = `${greeting}\n\n${opts.brandName} has replaced the authentication chip on your item. Your ownership record is unaffected.\n\nIf you did not expect this contact info@tagitlux.com\n\nTagit`;
 
   await resend.emails.send({ from: FROM, to, replyTo: "info@tagitlux.com", subject, html, text });
 }
@@ -269,10 +335,11 @@ export async function sendCompanyRejectedEmail(
   opts: { companyName: string; reason?: string }
 ) {
   const html = base(`
-    ${heading("Application update")}
+    ${eyebrow("Application Update")}
+    ${heading("About your application")}
     ${para(`Thank you for applying to join Tagit, ${opts.companyName}.`)}
-    ${para("After reviewing your application, we're unable to approve your account at this time.")}
-    ${opts.reason ? `<div style="padding:12px 16px;background:#F5F2EC;border-radius:8px;margin:16px 0"><p style="margin:0;font-size:14px;color:#4A4A4F">${opts.reason}</p></div>` : ""}
+    ${para("After reviewing your application, we’re unable to approve your account at this time.")}
+    ${opts.reason ? `<table role="presentation" width="100%" style="margin:18px 0"><tr><td style="padding:14px 18px;background:${PAPER};border-left:2px solid ${GOLD};border-radius:0 8px 8px 0"><p style="margin:0;font-family:${SANS};font-size:14px;line-height:1.6;color:${BODY}">${opts.reason}</p></td></tr></table>` : ""}
     ${para("If you believe this is a mistake or would like to reapply, please reply to this email.")}
   `);
 
@@ -342,26 +409,27 @@ export async function sendCertificateEmail(
   const isTransfer = opts.certType === "transfer";
 
   const subject = isProvenance
-    ? `Your provenance record — ${opts.productName}`
+    ? `Your provenance record for ${opts.productName}`
     : isTransfer
-    ? `Your Certificate of Transfer — ${opts.productName}`
-    : `Your Certificate of Authenticity — ${opts.productName}`;
+    ? `Your Certificate of Transfer for ${opts.productName}`
+    : `Your Certificate of Authenticity for ${opts.productName}`;
 
   const html = base(`
-    ${heading(isProvenance ? "Provenance Record" : isTransfer ? "Certificate of Transfer" : "Certificate of Authenticity")}
+    ${eyebrow(isProvenance ? "Provenance Record" : isTransfer ? "Certificate of Transfer" : "Certificate of Authenticity")}
+    ${heading(isProvenance ? "A record of your stewardship" : "Your certificate is ready")}
     ${isProvenance
-      ? `${para(`${opts.ownerName}, the ownership of <strong>${opts.productName}</strong> has been successfully transferred.`)}
-         ${para("Your provenance record is attached — it permanently confirms your previous ownership and is part of the item's immutable history on the Tagit Ownership Ledger.")}`
-      : `${para(`Congratulations, ${opts.ownerName}. Your ownership of <strong>${opts.productName}</strong> by ${opts.companyName} has been recorded on Tagit.`)}
-         ${para("Your certificate is attached to this email as a PDF. It is your legal proof of ownership — keep it safe.")}`
+      ? `${para(`${opts.ownerName}, the ownership of <strong style="color:${INK};font-weight:600">${opts.productName}</strong> has been successfully transferred.`)}
+         ${para("Your provenance record is attached. It permanently confirms your previous ownership and is part of the item’s immutable history on the Tagit Ownership Ledger.")}`
+      : `${para(`Congratulations, ${opts.ownerName}. Your ownership of <strong style="color:${INK};font-weight:600">${opts.productName}</strong> by ${opts.companyName} has been recorded on Tagit.`)}
+         ${para("Your certificate is attached as a PDF. It is your proof of ownership, so keep it safe.")}`
     }
-    <table style="width:100%;border-collapse:collapse;margin:16px 0">
+    <table role="presentation" style="width:100%;border-collapse:collapse;margin:22px 0 24px">
       ${keyVal("Certificate no.", opts.certNumber)}
       ${keyVal("Item", opts.productName)}
       ${keyVal("Brand", opts.companyName)}
     </table>
-    ${!isProvenance ? `<div style="margin:24px 0">${button("View your item", opts.tagUrl)}</div>` : ""}
-    ${para('<span style="color:#9E9EA3;font-size:13px">Scan the QR code on your certificate to verify authenticity at any time.</span>')}
+    ${!isProvenance ? button("View your item", opts.tagUrl) : ""}
+    <p style="margin:22px 0 0;font-family:${SANS};font-size:13px;line-height:1.6;color:${MUTE}">Scan the QR code on your certificate to verify authenticity at any time.</p>
   `);
 
   await resend.emails.send({

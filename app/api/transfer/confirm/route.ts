@@ -3,20 +3,23 @@ import { log } from "@/lib/logger";
 import { compare } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { sendTransferAcceptanceEmail, APP_URL } from "@/lib/email";
+import { normalizeEmail } from "@/lib/utils";
 
 const admin = createAdminClient();
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
-  const { transfer_id, email, code } = body as {
+  const { transfer_id, email: rawEmail, code } = body as {
     transfer_id?: string;
     email?: string;
     code?: string;
   };
 
-  if (!transfer_id || !email || !code) {
+  if (!transfer_id || !rawEmail || !code) {
     return NextResponse.json({ error: "transfer_id, email and code required" }, { status: 400 });
   }
+
+  const email = normalizeEmail(rawEmail);
 
   // Verify OTP server-side before doing anything with the transfer
   const now = new Date().toISOString();

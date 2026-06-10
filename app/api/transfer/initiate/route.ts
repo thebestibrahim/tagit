@@ -5,12 +5,13 @@ import { sendOtpEmail } from "@/lib/email";
 import { hash } from "bcryptjs";
 import { log } from "@/lib/logger";
 import { getSiblingTagIds } from "@/lib/tags";
+import { normalizeEmail } from "@/lib/utils";
 
 const admin = createAdminClient();
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
-  const { tag_id, owner_email, recipient_name, recipient_email, sale_price, currency } = body as {
+  const { tag_id, owner_email: rawOwnerEmail, recipient_name, recipient_email: rawRecipientEmail, sale_price, currency } = body as {
     tag_id?: string;
     owner_email?: string;
     recipient_name?: string;
@@ -19,9 +20,12 @@ export async function POST(request: Request) {
     currency?: string;
   };
 
-  if (!tag_id || !owner_email || !recipient_name || !recipient_email) {
+  if (!tag_id || !rawOwnerEmail || !recipient_name || !rawRecipientEmail) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
+
+  const owner_email = normalizeEmail(rawOwnerEmail);
+  const recipient_email = normalizeEmail(rawRecipientEmail);
 
   // Rate limit: max 3 transfer initiations per email in 15 minutes
   const windowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();

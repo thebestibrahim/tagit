@@ -3,16 +3,19 @@ import { hash } from "bcryptjs";
 import { randomInt } from "crypto";
 import { NextResponse } from "next/server";
 import { sendOtpEmail } from "@/lib/email";
+import { normalizeEmail } from "@/lib/utils";
 
 const admin = createAdminClient();
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
-  const { email, purpose } = body as { email?: string; purpose?: string };
+  const { email: rawEmail, purpose } = body as { email?: string; purpose?: string };
 
-  if (!email || !purpose) {
+  if (!rawEmail || !purpose) {
     return NextResponse.json({ error: "email and purpose required" }, { status: 400 });
   }
+
+  const email = normalizeEmail(rawEmail);
 
   if (!["claim", "transfer"].includes(purpose)) {
     return NextResponse.json({ error: "invalid purpose" }, { status: 400 });
