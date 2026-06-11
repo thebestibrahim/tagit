@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { CompanySidebar } from "@/components/company/Sidebar";
+import { SuspensionGuard } from "@/components/company/SuspensionGuard";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { CompanyStatus } from "@/types/database";
 import { getFlagsForBrand } from "@/lib/feature-flags/server";
 import { FlagProvider } from "@/lib/feature-flags/client";
@@ -29,8 +31,18 @@ export default async function CompanyLayout({ children }: { children: React.Reac
 
   const flags: FlagMap = await getFlagsForBrand(user.id);
 
+  // Suspended for non-payment? Every dashboard page bounces to billing. Chip
+  // scanning (/v/[token]) is a separate route group and is never affected.
+  const { data: sub } = await createAdminClient()
+    .from("subscriptions")
+    .select("status")
+    .eq("company_id", user.id)
+    .maybeSingle();
+  const suspended = sub?.status === "suspended";
+
   return (
     <FlagProvider flags={flags}>
+      <SuspensionGuard suspended={suspended} />
       <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#1C1A14" }}>
         <CompanySidebar companyName={company.name} logoUrl={company.logo_url} />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden rounded-tl-xl rounded-bl-xl" style={{ backgroundColor: "var(--color-smoke)" }}>

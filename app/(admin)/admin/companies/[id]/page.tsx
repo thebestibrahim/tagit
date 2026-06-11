@@ -5,6 +5,7 @@ import { ChevronLeft, Package } from "lucide-react";
 import Image from "next/image";
 import type { CompanyStatus, Industry } from "@/types/database";
 import ReviewActions from "./ReviewActions";
+import { BillingConfig } from "./BillingConfig";
 import LocalTime from "@/components/ui/LocalTime";
 
 type Company = {
@@ -210,6 +211,18 @@ export default async function CompanyDetailPage({
             </tbody>
           </table>
         )}
+      </div>
+
+      {/* Billing */}
+      <div
+        id="billing"
+        className="rounded-xl p-6 mb-6 scroll-mt-8"
+        style={{ backgroundColor: "var(--color-pearl)", border: "1px solid var(--color-cream)", boxShadow: "var(--shadow-sm)" }}
+      >
+        <h2 className="text-body font-semibold mb-5" style={{ color: "var(--color-charcoal)" }}>
+          Billing
+        </h2>
+        <BillingConfig companyId={company.id} />
       </div>
 
       {/* Actions */}

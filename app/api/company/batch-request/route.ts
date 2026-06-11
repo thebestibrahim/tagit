@@ -2,6 +2,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { log } from "@/lib/logger";
 import { isBrandFlagEnabled } from "@/lib/feature-flags/server";
+import { createBatchInvoice, sendInvoiceEmail } from "@/lib/billing/invoices";
 import { NextResponse } from "next/server";
 import type { BatchType } from "@/types/database";
 
@@ -40,19 +41,33 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
 
-  const { error } = await admin.from("tag_batches").insert({
-    company_id: user.id,
-    industry,
-    batch_size: tagsQty,
-    cards_quantity: cardsQty,
-    batch_type: batchType,
-    status: "pending",
-    notes: notes?.trim() || null,
-    batch_name: batch_name?.trim() || null,
-    created_by: user.id,
-  });
+  const { data: batch, error } = await admin
+    .from("tag_batches")
+    .insert({
+      company_id: user.id,
+      industry,
+      batch_size: tagsQty,
+      cards_quantity: cardsQty,
+      batch_type: batchType,
+      status: "pending",
+      notes: notes?.trim() || null,
+      batch_name: batch_name?.trim() || null,
+      created_by: user.id,
+    })
+    .select("id")
+    .single();
 
-  if (error) { log.error("company/batch-request", "Insert failed", error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+  if (error || !batch) { log.error("company/batch-request", "Insert failed", error); return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+
+  // Auto-invoice the chip order: price from the brand's volume tiers, apply any
+  // active BATCH discount, generate a Paystack link, set 'awaiting_payment'.
+  // Best-effort — a billing failure must not lose the brand's order.
+  try {
+    const invoice = await createBatchInvoice(admin, batch.id, user.id);
+    await sendInvoiceEmail(admin, invoice.id, "batch");
+  } catch (err) {
+    log.error("company/batch-request", "Batch invoicing failed", err);
+  }
 
   return NextResponse.json({ success: true });
 }

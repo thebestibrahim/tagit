@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { formatNaira } from "@/lib/billing/pricing";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "Tagit <info@tagitlux.com>";
@@ -478,6 +479,243 @@ export async function sendCertificateEmail(
       },
     ],
   });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BILLING EMAILS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function fmtDate(d: string | null | undefined): string {
+  if (!d) return "";
+  return new Date(d).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+interface InvoiceEmailOpts {
+  companyName: string;
+  invoiceNumber: string;
+  subtotal: number;
+  discountAmount: number;
+  discountPercentage: number | null;
+  amount: number;
+  dueDate: string;
+  payUrl: string | null;
+  paid: boolean;
+  lineItems: { description: string; total: number }[];
+}
+
+// Renders the line items, totals and (when unpaid) the Pay Now button.
+function invoiceTable(opts: InvoiceEmailOpts): string {
+  const rows = opts.lineItems
+    .filter((i) => i.total >= 0) // discount shown separately below
+    .map(
+      (i) => `<tr>
+        <td style="padding:11px 0;border-top:1px solid ${LINE};font-family:${SANS};font-size:14px;color:${INK};vertical-align:top">${i.description}</td>
+        <td style="padding:11px 0;border-top:1px solid ${LINE};font-family:${SANS};font-size:14px;color:${INK};font-weight:500;text-align:right;vertical-align:top">${formatNaira(i.total)}</td>
+      </tr>`
+    )
+    .join("");
+
+  const discountRow =
+    opts.discountAmount > 0
+      ? `<tr>
+          <td style="padding:11px 0;border-top:1px solid ${LINE};font-family:${SANS};font-size:14px;color:${GOLD};vertical-align:top">Discount${opts.discountPercentage ? ` (${opts.discountPercentage}% off)` : ""}</td>
+          <td style="padding:11px 0;border-top:1px solid ${LINE};font-family:${SANS};font-size:14px;color:${GOLD};font-weight:500;text-align:right;vertical-align:top">−${formatNaira(opts.discountAmount)}</td>
+        </tr>`
+      : "";
+
+  const totalRow = `<tr>
+      <td style="padding:13px 0 0;border-top:2px solid ${INK};font-family:${MONO};font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:${INK};font-weight:600;vertical-align:top">Total</td>
+      <td style="padding:13px 0 0;border-top:2px solid ${INK};font-family:${SANS};font-size:18px;color:${INK};font-weight:700;text-align:right;vertical-align:top">${formatNaira(opts.amount)}</td>
+    </tr>`;
+
+  const paidBadge = opts.paid
+    ? `<table role="presentation" width="100%" style="margin:18px 0 0"><tr><td align="center" style="padding:12px;background:#DCFCE7;border-radius:8px;font-family:${MONO};font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#166534;font-weight:600">● Paid</td></tr></table>`
+    : opts.payUrl
+    ? button(`Pay ${formatNaira(opts.amount)} now`, opts.payUrl)
+    : "";
+
+  return `
+    <table role="presentation" style="width:100%;border-collapse:collapse;margin:8px 0 8px">
+      ${rows}
+      ${discountRow}
+      ${totalRow}
+    </table>
+    ${paidBadge}`;
+}
+
+export async function sendTrialWelcomeEmail(
+  to: string,
+  opts: { companyName: string; planName: string; trialDays: number; trialEndsAt: string; firstInvoiceAmount: number; dashboardUrl: string }
+) {
+  const html = base(
+    `
+    ${eyebrow("Welcome to Tagit")}
+    ${heading(`Your ${opts.trialDays}-day trial has started`)}
+    ${para(`Welcome, ${opts.companyName}. Your <strong style="color:${INK};font-weight:600">${opts.planName}</strong> plan is live and your trial runs until <strong style="color:${INK};font-weight:600">${fmtDate(opts.trialEndsAt)}</strong>.`)}
+    ${para(`Explore everything your plan offers. When your trial ends, your first invoice of <strong style="color:${INK};font-weight:600">${formatNaira(opts.firstInvoiceAmount)}</strong> will be issued automatically with a secure payment link.`)}
+    ${button("Open your dashboard", opts.dashboardUrl)}
+  `,
+    { preheader: `Your Tagit ${opts.trialDays}-day trial has started.` }
+  );
+  await resend.emails.send({ from: FROM, to, subject: `Welcome to Tagit — your ${opts.trialDays}-day trial has started`, html });
+}
+
+export async function sendTrialEnding7Email(
+  to: string,
+  opts: { companyName: string; trialEndsAt: string; firstInvoiceAmount: number; payUrl?: string | null }
+) {
+  const html = base(
+    `
+    ${eyebrow("Trial Reminder")}
+    ${heading("Your trial ends in 7 days")}
+    ${para(`Hi ${opts.companyName}, your Tagit trial ends on <strong style="color:${INK};font-weight:600">${fmtDate(opts.trialEndsAt)}</strong>.`)}
+    ${para(`Your first invoice of <strong style="color:${INK};font-weight:600">${formatNaira(opts.firstInvoiceAmount)}</strong> will be issued then. No action is needed today.`)}
+    ${opts.payUrl ? button("Review billing", opts.payUrl) : ""}
+  `,
+    { preheader: "Your Tagit trial ends in 7 days." }
+  );
+  await resend.emails.send({ from: FROM, to, subject: "Your Tagit trial ends in 7 days", html });
+}
+
+export async function sendTrialEndingTomorrowEmail(
+  to: string,
+  opts: { companyName: string; trialEndsAt: string; firstInvoiceAmount: number; payUrl?: string | null }
+) {
+  const html = base(
+    `
+    ${eyebrow("Trial Reminder")}
+    ${heading("Your trial ends tomorrow")}
+    ${para(`Hi ${opts.companyName}, your Tagit trial ends tomorrow, <strong style="color:${INK};font-weight:600">${fmtDate(opts.trialEndsAt)}</strong>.`)}
+    ${para(`Your first invoice of <strong style="color:${INK};font-weight:600">${formatNaira(opts.firstInvoiceAmount)}</strong> will be issued to keep your dashboard active.`)}
+    ${opts.payUrl ? button(`Pay ${formatNaira(opts.firstInvoiceAmount)} now`, opts.payUrl) : ""}
+  `,
+    { preheader: "Your Tagit trial ends tomorrow." }
+  );
+  await resend.emails.send({ from: FROM, to, subject: "Your Tagit trial ends tomorrow", html });
+}
+
+export async function sendTrialEndedInvoiceEmail(to: string, opts: InvoiceEmailOpts) {
+  const html = base(
+    `
+    ${eyebrow("Trial Ended")}
+    ${heading("Your trial has ended — invoice enclosed")}
+    ${para(`Your trial period is complete. Here is your first invoice (${opts.invoiceNumber}). Pay below to keep your dashboard active.`)}
+    ${invoiceTable(opts)}
+    <p style="margin:20px 0 0;font-family:${SANS};font-size:13px;color:${MUTE}">Due ${fmtDate(opts.dueDate)}.</p>
+  `,
+    { preheader: "Your Tagit trial has ended. Your first invoice is enclosed." }
+  );
+  await resend.emails.send({ from: FROM, to, subject: "Your Tagit trial has ended — invoice enclosed", html });
+}
+
+export async function sendSubscriptionInvoiceEmail(
+  to: string,
+  opts: InvoiceEmailOpts & { periodStart: string | null; periodEnd: string | null }
+) {
+  const period = opts.periodStart && opts.periodEnd ? `${fmtDate(opts.periodStart)} — ${fmtDate(opts.periodEnd)}` : "";
+  const html = base(
+    `
+    ${eyebrow(`Invoice ${opts.invoiceNumber}`)}
+    ${heading(opts.paid ? "Invoice — paid" : "Your Tagit invoice")}
+    ${para(`${opts.companyName}, here is your subscription invoice${period ? ` for <strong style="color:${INK};font-weight:600">${period}</strong>` : ""}.`)}
+    ${invoiceTable(opts)}
+    <p style="margin:20px 0 0;font-family:${SANS};font-size:13px;color:${MUTE}">${opts.paid ? "Thank you for your payment." : `Due ${fmtDate(opts.dueDate)}.`}</p>
+  `,
+    { preheader: `Your Tagit invoice — ${formatNaira(opts.amount)}` }
+  );
+  await resend.emails.send({ from: FROM, to, subject: `Your Tagit invoice ${opts.invoiceNumber} — ${formatNaira(opts.amount)}`, html });
+}
+
+export async function sendBatchInvoiceEmail(to: string, opts: InvoiceEmailOpts) {
+  const html = base(
+    `
+    ${eyebrow(`Invoice ${opts.invoiceNumber}`)}
+    ${heading("Invoice for your chip order")}
+    ${para(`${opts.companyName}, here is the invoice for your chip order. Your batch will be produced and dispatched once payment is received.`)}
+    ${invoiceTable(opts)}
+    <p style="margin:20px 0 0;font-family:${SANS};font-size:13px;color:${MUTE}">Please pay by ${fmtDate(opts.dueDate)} so we can ship your chips.</p>
+  `,
+    { preheader: `Invoice for your chip order — ${formatNaira(opts.amount)}` }
+  );
+  await resend.emails.send({ from: FROM, to, subject: `Invoice for your chip order — ${formatNaira(opts.amount)}`, html });
+}
+
+export async function sendPaymentConfirmedEmail(
+  to: string,
+  opts: { companyName: string; amount: number; invoiceNumber: string; type: "subscription" | "batch"; periodLabel?: string }
+) {
+  const what =
+    opts.type === "batch"
+      ? "Your chip order is now approved and will be processed."
+      : opts.periodLabel
+      ? `Your subscription is active for ${opts.periodLabel}.`
+      : "Your subscription is active.";
+  const html = base(
+    `
+    ${eyebrow("Payment Received")}
+    ${heading("Payment received")}
+    ${para(`Thank you, ${opts.companyName}. We have received your payment of <strong style="color:${INK};font-weight:600">${formatNaira(opts.amount)}</strong> for invoice ${opts.invoiceNumber}.`)}
+    ${para(what)}
+  `,
+    { preheader: `Payment received — ${formatNaira(opts.amount)}` }
+  );
+  await resend.emails.send({ from: FROM, to, subject: `Payment received — ${formatNaira(opts.amount)}`, html });
+}
+
+export async function sendDiscountAppliedEmail(
+  to: string,
+  opts: { companyName: string; percentage: number; duration: number; type: "subscription" | "batch" }
+) {
+  const unit = opts.type === "subscription" ? "billing cycles" : "chip orders";
+  const html = base(
+    `
+    ${eyebrow("A Discount For You")}
+    ${heading("You have a discount on your account")}
+    ${para(`Good news, ${opts.companyName}. We have applied a <strong style="color:${INK};font-weight:600">${opts.percentage}% discount</strong> to your account for the next <strong style="color:${INK};font-weight:600">${opts.duration} ${unit}</strong>.`)}
+    ${para(`It starts from your next ${opts.type === "subscription" ? "invoice" : "chip order"} and will be shown clearly on every invoice during the discount period.`)}
+  `,
+    { preheader: `You have a ${opts.percentage}% discount on your Tagit account.` }
+  );
+  await resend.emails.send({ from: FROM, to, subject: "Good news — you have a discount on your Tagit account", html });
+}
+
+// Delinquency reminders — day 3, 7 and 14.
+export async function sendInvoiceReminderEmail(
+  to: string,
+  opts: { companyName: string; invoiceNumber: string; amount: number; daysOverdue: number; payUrl: string | null; finalWarning: boolean }
+) {
+  const html = base(
+    `
+    ${eyebrow(opts.finalWarning ? "Final Notice" : "Payment Reminder")}
+    ${heading(opts.finalWarning ? "Final notice — action required" : "Your invoice is overdue")}
+    ${para(`${opts.companyName}, invoice ${opts.invoiceNumber} for <strong style="color:${INK};font-weight:600">${formatNaira(opts.amount)}</strong> is now ${opts.daysOverdue} days overdue.`)}
+    ${para(opts.finalWarning ? "If this invoice is not settled, your dashboard access will be suspended. Your customers can always verify their items — only your dashboard is affected." : "Please settle it to keep your account in good standing.")}
+    ${opts.payUrl ? button(`Pay ${formatNaira(opts.amount)} now`, opts.payUrl) : ""}
+  `,
+    { preheader: `Invoice ${opts.invoiceNumber} is ${opts.daysOverdue} days overdue.` }
+  );
+  await resend.emails.send({ from: FROM, to, subject: opts.finalWarning ? `Final notice — invoice ${opts.invoiceNumber} overdue` : `Reminder — invoice ${opts.invoiceNumber} overdue`, html });
+}
+
+export async function sendAccountSuspendedEmail(
+  to: string,
+  opts: { companyName: string; invoiceNumber: string; amount: number; payUrl: string | null }
+) {
+  const html = base(
+    `
+    ${eyebrow("Account Suspended")}
+    ${heading("Your dashboard access is suspended")}
+    ${para(`${opts.companyName}, because invoice ${opts.invoiceNumber} for <strong style="color:${INK};font-weight:600">${formatNaira(opts.amount)}</strong> remains unpaid, your dashboard access has been suspended.`)}
+    ${para("Pay your outstanding balance to restore access immediately. Your customers can still verify their items at any time — chip scanning is never affected.")}
+    ${opts.payUrl ? button(`Pay ${formatNaira(opts.amount)} now`, opts.payUrl) : ""}
+  `,
+    { preheader: "Your Tagit dashboard access is suspended." }
+  );
+  await resend.emails.send({ from: FROM, to, subject: "Your Tagit account is suspended", html });
 }
 
 export { APP_URL };

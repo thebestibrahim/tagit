@@ -132,6 +132,355 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          id: string
+          name: string
+          monthly_price: number
+          included_chips: number
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          monthly_price?: number
+          included_chips?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          monthly_price?: number
+          included_chips?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          id: string
+          company_id: string
+          plan_id: string
+          status: "trialing" | "active" | "past_due" | "suspended" | "cancelled"
+          billing_interval: "monthly" | "quarterly" | "annually"
+          custom_monthly_price: number | null
+          trial_starts_at: string | null
+          trial_ends_at: string | null
+          current_period_start: string | null
+          current_period_end: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          plan_id: string
+          status?: "trialing" | "active" | "past_due" | "suspended" | "cancelled"
+          billing_interval?: "monthly" | "quarterly" | "annually"
+          custom_monthly_price?: number | null
+          trial_starts_at?: string | null
+          trial_ends_at?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          plan_id?: string
+          status?: "trialing" | "active" | "past_due" | "suspended" | "cancelled"
+          billing_interval?: "monthly" | "quarterly" | "annually"
+          custom_monthly_price?: number | null
+          trial_starts_at?: string | null
+          trial_ends_at?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discounts: {
+        Row: {
+          id: string
+          company_id: string
+          type: "subscription" | "batch"
+          percentage: number
+          duration: number
+          used: number
+          is_active: boolean
+          note: string | null
+          created_by: string | null
+          starts_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          type: "subscription" | "batch"
+          percentage: number
+          duration: number
+          used?: number
+          is_active?: boolean
+          note?: string | null
+          created_by?: string | null
+          starts_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          type?: "subscription" | "batch"
+          percentage?: number
+          duration?: number
+          used?: number
+          is_active?: boolean
+          note?: string | null
+          created_by?: string | null
+          starts_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discounts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_pricing: {
+        Row: {
+          id: string
+          company_id: string
+          tag_tiers: Json
+          card_tiers: Json
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          tag_tiers?: Json
+          card_tiers?: Json
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          tag_tiers?: Json
+          card_tiers?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_pricing_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          id: string
+          company_id: string
+          type: "subscription" | "batch"
+          status: "draft" | "sent" | "paid" | "overdue" | "cancelled"
+          subtotal: number
+          discount_amount: number
+          amount: number
+          discount_id: string | null
+          discount_percentage: number | null
+          due_date: string
+          paid_at: string | null
+          paystack_payment_link: string | null
+          paystack_reference: string | null
+          batch_id: string | null
+          subscription_id: string | null
+          period_start: string | null
+          period_end: string | null
+          reminder_3_sent_at: string | null
+          reminder_7_sent_at: string | null
+          reminder_14_sent_at: string | null
+          suspended_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          type: "subscription" | "batch"
+          status?: "draft" | "sent" | "paid" | "overdue" | "cancelled"
+          subtotal: number
+          discount_amount?: number
+          amount: number
+          discount_id?: string | null
+          discount_percentage?: number | null
+          due_date: string
+          paid_at?: string | null
+          paystack_payment_link?: string | null
+          paystack_reference?: string | null
+          batch_id?: string | null
+          subscription_id?: string | null
+          period_start?: string | null
+          period_end?: string | null
+          reminder_3_sent_at?: string | null
+          reminder_7_sent_at?: string | null
+          reminder_14_sent_at?: string | null
+          suspended_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          type?: "subscription" | "batch"
+          status?: "draft" | "sent" | "paid" | "overdue" | "cancelled"
+          subtotal?: number
+          discount_amount?: number
+          amount?: number
+          discount_id?: string | null
+          discount_percentage?: number | null
+          due_date?: string
+          paid_at?: string | null
+          paystack_payment_link?: string | null
+          paystack_reference?: string | null
+          batch_id?: string | null
+          subscription_id?: string | null
+          period_start?: string | null
+          period_end?: string | null
+          reminder_3_sent_at?: string | null
+          reminder_7_sent_at?: string | null
+          reminder_14_sent_at?: string | null
+          suspended_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "tag_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_line_items: {
+        Row: {
+          id: string
+          invoice_id: string
+          description: string
+          quantity: number
+          unit_price: number
+          total: number
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          invoice_id: string
+          description: string
+          quantity?: number
+          unit_price: number
+          total: number
+          sort_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          invoice_id?: string
+          description?: string
+          quantity?: number
+          unit_price?: number
+          total?: number
+          sort_order?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          id: string
+          invoice_id: string
+          paystack_reference: string
+          amount: number
+          paid_at: string
+          paystack_payload: Json | null
+        }
+        Insert: {
+          id?: string
+          invoice_id: string
+          paystack_reference: string
+          amount: number
+          paid_at?: string
+          paystack_payload?: Json | null
+        }
+        Update: {
+          id?: string
+          invoice_id?: string
+          paystack_reference?: string
+          amount?: number
+          paid_at?: string
+          paystack_payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           ai_enabled: boolean
@@ -1072,3 +1421,22 @@ export type ReplacementReason =
   | "physically_damaged"
   | "missing_or_lost";
 export type Industry = "fashion" | "arts" | "collectibles" | "restaurants" | "hotels";
+
+// ── Billing ───────────────────────────────────────────────────────────────────
+export type Plan = Database["public"]["Tables"]["plans"]["Row"];
+export type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+export type Discount = Database["public"]["Tables"]["discounts"]["Row"];
+export type BrandPricing = Database["public"]["Tables"]["brand_pricing"]["Row"];
+export type Invoice = Database["public"]["Tables"]["invoices"]["Row"];
+export type InvoiceLineItem = Database["public"]["Tables"]["invoice_line_items"]["Row"];
+export type Payment = Database["public"]["Tables"]["payments"]["Row"];
+export type SubscriptionStatus = Subscription["status"];
+export type BillingInterval = Subscription["billing_interval"];
+export type DiscountType = Discount["type"];
+export type InvoiceType = Invoice["type"];
+export type InvoiceStatus = Invoice["status"];
+export interface VolumeTier {
+  min: number;
+  max: number | null;
+  price_per_unit: number; // kobo
+}
