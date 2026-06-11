@@ -14,7 +14,8 @@ import {
   consumeDiscount,
 } from "@/lib/billing/discounts";
 import { initializeTransaction, buildReference } from "@/lib/paystack";
-import { sendBatchInvoiceEmail, sendSubscriptionInvoiceEmail } from "@/lib/email";
+import { sendBatchInvoiceEmail, sendSubscriptionInvoiceEmail, sendTrialEndedInvoiceEmail } from "@/lib/email";
+import { generateInvoicePdf } from "@/lib/billing/invoice-pdf";
 import { log } from "@/lib/logger";
 
 type DB = SupabaseClient<Database>;
@@ -289,11 +290,15 @@ async function generatePaystackLinkForInvoice(
 
   try {
     const reference = buildReference(invoice.id);
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
     const result = await initializeTransaction({
       email: company.email,
       amount: invoice.amount,
       reference,
       metadata: { invoice_id: invoice.id, type: invoice.type, company_id: companyId },
+      // After payment Paystack redirects here; the callback verifies + settles
+      // so the brand gets immediate feedback even without the dashboard webhook.
+      callbackUrl: appUrl ? `${appUrl}/api/billing/paystack/callback` : undefined,
     });
     await supabase
       .from("invoices")
@@ -311,6 +316,8 @@ async function generatePaystackLinkForInvoice(
 
 export interface InvoiceEmailPayload {
   email: string;
+  type: InvoiceType;
+  issuedAt: string;
   periodStart: string | null;
   periodEnd: string | null;
   common: {
@@ -354,6 +361,8 @@ export async function loadInvoiceEmailPayload(
 
   return {
     email: company.email,
+    type: invoice.type,
+    issuedAt: invoice.created_at,
     periodStart: invoice.period_start,
     periodEnd: invoice.period_end,
     common: {
@@ -371,7 +380,32 @@ export async function loadInvoiceEmailPayload(
   };
 }
 
-// ── Send the invoice email (Resend) with payment link ────────────────────────
+// Render the invoice PDF for a loaded payload (best-effort; null on failure so
+// a PDF problem never blocks the email).
+async function buildInvoicePdf(payload: InvoiceEmailPayload): Promise<Buffer | undefined> {
+  try {
+    return await generateInvoicePdf({
+      invoiceNumber: payload.common.invoiceNumber,
+      companyName: payload.common.companyName,
+      type: payload.type,
+      periodStart: payload.periodStart,
+      periodEnd: payload.periodEnd,
+      issuedAt: payload.issuedAt,
+      dueDate: payload.common.dueDate,
+      paid: payload.common.paid,
+      lineItems: payload.common.lineItems,
+      subtotal: payload.common.subtotal,
+      discountAmount: payload.common.discountAmount,
+      discountPercentage: payload.common.discountPercentage,
+      amount: payload.common.amount,
+    });
+  } catch (err) {
+    log.error("billing/invoices", "Invoice PDF generation failed", err);
+    return undefined;
+  }
+}
+
+// ── Send the invoice email (Resend) with payment link + PDF attachment ───────
 export async function sendInvoiceEmail(
   supabase: DB,
   invoiceId: string,
@@ -379,16 +413,28 @@ export async function sendInvoiceEmail(
 ): Promise<void> {
   const payload = await loadInvoiceEmailPayload(supabase, invoiceId);
   if (!payload) return;
+  const pdf = await buildInvoicePdf(payload);
 
   if (type === "subscription") {
     await sendSubscriptionInvoiceEmail(payload.email, {
       ...payload.common,
       periodStart: payload.periodStart,
       periodEnd: payload.periodEnd,
+      pdf,
     }).catch((err) => log.error("billing/invoices", "Subscription invoice email failed", err));
   } else {
-    await sendBatchInvoiceEmail(payload.email, payload.common).catch((err) =>
+    await sendBatchInvoiceEmail(payload.email, { ...payload.common, pdf }).catch((err) =>
       log.error("billing/invoices", "Batch invoice email failed", err)
     );
   }
+}
+
+// Trial-ended first invoice email, with PDF. Called by the cron.
+export async function sendTrialEndedInvoice(supabase: DB, invoiceId: string): Promise<void> {
+  const payload = await loadInvoiceEmailPayload(supabase, invoiceId);
+  if (!payload) return;
+  const pdf = await buildInvoicePdf(payload);
+  await sendTrialEndedInvoiceEmail(payload.email, { ...payload.common, pdf }).catch((err) =>
+    log.error("billing/invoices", "Trial ended invoice email failed", err)
+  );
 }

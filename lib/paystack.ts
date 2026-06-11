@@ -64,6 +64,26 @@ export async function initializeTransaction(
   return json.data;
 }
 
+// Verify a transaction by reference via the Paystack API. Used by the payment
+// callback as a synchronous fallback so payment feedback never depends on the
+// dashboard webhook being configured.
+export async function verifyTransaction(
+  reference: string
+): Promise<{ status: string; amount: number } | null> {
+  const res = await fetch(`${PAYSTACK_BASE}/transaction/verify/${encodeURIComponent(reference)}`, {
+    headers: { Authorization: `Bearer ${secretKey()}` },
+  });
+  const json = (await res.json()) as {
+    status: boolean;
+    data?: { status: string; amount: number };
+  };
+  if (!res.ok || !json.status || !json.data) {
+    log.error("paystack", "verifyTransaction failed", json);
+    return null;
+  }
+  return { status: json.data.status, amount: json.data.amount };
+}
+
 // Verify a Paystack webhook signature. Paystack signs the raw request body with
 // HMAC SHA512 using the secret key; the digest is sent in x-paystack-signature.
 export function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {

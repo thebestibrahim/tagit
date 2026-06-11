@@ -4,14 +4,13 @@ import { NextResponse } from "next/server";
 import {
   createSubscriptionInvoice,
   sendInvoiceEmail,
-  loadInvoiceEmailPayload,
+  sendTrialEndedInvoice,
   invoiceNumber,
 } from "@/lib/billing/invoices";
 import { getEffectivePrice } from "@/lib/billing/pricing";
 import {
   sendTrialEnding7Email,
   sendTrialEndingTomorrowEmail,
-  sendTrialEndedInvoiceEmail,
   sendInvoiceReminderEmail,
   sendAccountSuspendedEmail,
 } from "@/lib/email";
@@ -64,14 +63,9 @@ export async function GET(request: Request) {
           firstInvoiceAmount: firstAmount,
         }).catch((e) => log.error("cron/billing", "1-day trial email", e));
       } else if (endsAt <= today) {
-        // Trial over: first invoice + activate.
+        // Trial over: first invoice (with PDF) + activate.
         const invoice = await createSubscriptionInvoice(admin, s.id);
-        const payload = await loadInvoiceEmailPayload(admin, invoice.id);
-        if (payload) {
-          await sendTrialEndedInvoiceEmail(payload.email, payload.common).catch((e) =>
-            log.error("cron/billing", "Trial ended invoice email", e)
-          );
-        }
+        await sendTrialEndedInvoice(admin, invoice.id);
         await admin.from("subscriptions").update({ status: "active" }).eq("id", s.id);
         result.trials += 1;
         result.invoices += 1;

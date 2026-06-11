@@ -505,6 +505,14 @@ interface InvoiceEmailOpts {
   payUrl: string | null;
   paid: boolean;
   lineItems: { description: string; total: number }[];
+  pdf?: Buffer;
+}
+
+// Build the optional PDF attachment array for an invoice email.
+function invoiceAttachments(opts: InvoiceEmailOpts) {
+  return opts.pdf
+    ? [{ filename: `tagit-invoice-${opts.invoiceNumber}.pdf`, content: opts.pdf }]
+    : undefined;
 }
 
 // Renders the line items, totals and (when unpaid) the Pay Now button.
@@ -609,7 +617,7 @@ export async function sendTrialEndedInvoiceEmail(to: string, opts: InvoiceEmailO
   `,
     { preheader: "Your Tagit trial has ended. Your first invoice is enclosed." }
   );
-  await resend.emails.send({ from: FROM, to, subject: "Your Tagit trial has ended — invoice enclosed", html });
+  await resend.emails.send({ from: FROM, to, subject: "Your Tagit trial has ended — invoice enclosed", html, attachments: invoiceAttachments(opts) });
 }
 
 export async function sendSubscriptionInvoiceEmail(
@@ -627,7 +635,7 @@ export async function sendSubscriptionInvoiceEmail(
   `,
     { preheader: `Your Tagit invoice — ${formatNaira(opts.amount)}` }
   );
-  await resend.emails.send({ from: FROM, to, subject: `Your Tagit invoice ${opts.invoiceNumber} — ${formatNaira(opts.amount)}`, html });
+  await resend.emails.send({ from: FROM, to, subject: `Your Tagit invoice ${opts.invoiceNumber} — ${formatNaira(opts.amount)}`, html, attachments: invoiceAttachments(opts) });
 }
 
 export async function sendBatchInvoiceEmail(to: string, opts: InvoiceEmailOpts) {
@@ -641,7 +649,7 @@ export async function sendBatchInvoiceEmail(to: string, opts: InvoiceEmailOpts) 
   `,
     { preheader: `Invoice for your chip order — ${formatNaira(opts.amount)}` }
   );
-  await resend.emails.send({ from: FROM, to, subject: `Invoice for your chip order — ${formatNaira(opts.amount)}`, html });
+  await resend.emails.send({ from: FROM, to, subject: `Invoice for your chip order — ${formatNaira(opts.amount)}`, html, attachments: invoiceAttachments(opts) });
 }
 
 export async function sendPaymentConfirmedEmail(
