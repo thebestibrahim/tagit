@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronRight, CreditCard } from "lucide-react";
 import { formatNaira } from "@/lib/billing/pricing";
 import type { SubscriptionStatus } from "@/types/database";
+
+type RowStatus = SubscriptionStatus | "unconfigured";
 
 export interface BrandRow {
   company_id: string;
   company_name: string;
   plan_name: string;
-  status: SubscriptionStatus;
+  status: RowStatus;
   billing_interval: string;
   next_billing_date: string | null;
   monthly_value: number;
@@ -17,81 +20,117 @@ export interface BrandRow {
   overdue_amount: number;
 }
 
-const FILTERS: { key: "all" | SubscriptionStatus; label: string }[] = [
+const FILTERS: { key: "all" | RowStatus; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "active", label: "Active" },
+  { key: "unconfigured", label: "Not set up" },
   { key: "trialing", label: "Trial" },
+  { key: "active", label: "Active" },
   { key: "past_due", label: "Past Due" },
   { key: "suspended", label: "Suspended" },
 ];
 
-const STATUS_STYLE: Record<SubscriptionStatus, { dot: string; color: string; label: string }> = {
-  trialing: { dot: "#B8945D", color: "var(--color-deep-gold)", label: "Trial" },
-  active: { dot: "#16A34A", color: "#166534", label: "Active" },
-  past_due: { dot: "#DC2626", color: "#991B1B", label: "Past due" },
-  suspended: { dot: "#6B7280", color: "#374151", label: "Suspended" },
-  cancelled: { dot: "#9CA3AF", color: "#6B7280", label: "Cancelled" },
+const STATUS_STYLE: Record<RowStatus, { bg: string; color: string; label: string }> = {
+  unconfigured: { bg: "var(--color-cream)", color: "var(--color-slate)", label: "Not set up" },
+  trialing: { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)", label: "Trial" },
+  active: { bg: "#ECFDF5", color: "#065F46", label: "Active" },
+  past_due: { bg: "#FEF2F2", color: "#991B1B", label: "Past due" },
+  suspended: { bg: "#F3F4F6", color: "#374151", label: "Suspended" },
+  cancelled: { bg: "#F3F4F6", color: "#6B7280", label: "Cancelled" },
 };
 
 function fmtDate(d: string | null): string {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
 export function BrandsTable({ brands }: { brands: BrandRow[] }) {
   const router = useRouter();
-  const [filter, setFilter] = useState<"all" | SubscriptionStatus>("all");
+  const [filter, setFilter] = useState<"all" | RowStatus>("all");
 
   const rows = brands.filter((b) => filter === "all" || b.status === filter);
 
   return (
     <div>
-      <div className="flex gap-1 mb-4">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className="text-micro font-semibold px-3 py-1.5 rounded-full transition-colors"
-            style={{
-              backgroundColor: filter === f.key ? "var(--color-charcoal)" : "var(--color-pearl)",
-              color: filter === f.key ? "var(--color-pearl)" : "var(--color-slate)",
-              border: "1px solid var(--color-cream)",
-            }}
-          >
-            {f.label}
-          </button>
-        ))}
+      {/* Filter — pill group, matching the Companies page */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="flex gap-1 p-1 rounded-lg" style={{ backgroundColor: "var(--color-cream)" }}>
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className="px-4 py-1.5 rounded-md text-body-sm font-medium transition-colors"
+              style={{
+                backgroundColor: filter === f.key ? "var(--color-pearl)" : "transparent",
+                color: filter === f.key ? "var(--color-charcoal)" : "var(--color-slate)",
+                fontSize: "var(--text-body-sm)",
+                boxShadow: filter === f.key ? "var(--shadow-sm)" : "none",
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--color-cream)" }}>
-        <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_0.8fr] gap-3 px-5 py-3 text-micro font-semibold uppercase tracking-wider" style={{ backgroundColor: "var(--color-smoke)", color: "var(--color-mist)" }}>
-          <span>Brand</span><span>Plan</span><span>Status</span><span>Next invoice</span><span>Value</span><span>Discount</span>
-        </div>
+      {/* Table */}
+      <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--color-cream)", boxShadow: "var(--shadow-sm)" }}>
         {rows.length === 0 ? (
-          <p className="px-5 py-8 text-center text-body-sm" style={{ color: "var(--color-mist)", backgroundColor: "var(--color-pearl)" }}>No brands in this view.</p>
+          <div className="py-16 text-center" style={{ color: "var(--color-mist)" }}>
+            <CreditCard size={32} className="mx-auto mb-3 opacity-30" />
+            <p style={{ fontSize: "var(--text-body-sm)" }}>No brands in this view.</p>
+          </div>
         ) : (
-          rows.map((b) => {
-            const st = STATUS_STYLE[b.status];
-            return (
-              <button
-                key={b.company_id}
-                onClick={() => router.push(`/admin/companies/${b.company_id}#billing`)}
-                className="w-full grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_0.8fr] gap-3 px-5 py-3.5 items-center text-left hover:bg-[var(--color-smoke)] transition-colors"
-                style={{ borderTop: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)" }}
-              >
-                <span className="font-medium truncate" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>{b.company_name}</span>
-                <span className="truncate" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>{b.plan_name}</span>
-                <span className="inline-flex items-center gap-1.5" style={{ color: st.color, fontSize: "var(--text-body-sm)" }}>
-                  <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: st.dot }} />{st.label}
-                </span>
-                <span style={{ color: b.overdue_amount > 0 ? "#991B1B" : "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                  {b.overdue_amount > 0 ? `Overdue ${formatNaira(b.overdue_amount)}` : fmtDate(b.next_billing_date)}
-                </span>
-                <span className="tabular-nums" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>{formatNaira(b.monthly_value)}</span>
-                <span style={{ color: b.has_discount ? "var(--color-gold)" : "var(--color-mist)", fontSize: "var(--text-body-sm)" }}>{b.has_discount ? "Yes" : "—"}</span>
-              </button>
-            );
-          })
+          <table className="w-full">
+            <thead>
+              <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
+                {["Brand", "Plan", "Status", "Next invoice", "Value", "Discount", ""].map((h, i) => (
+                  <th key={i} className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((b, i) => {
+                const st = STATUS_STYLE[b.status];
+                const isOverdue = b.overdue_amount > 0;
+                return (
+                  <tr
+                    key={b.company_id}
+                    onClick={() => router.push(`/admin/companies/${b.company_id}#billing`)}
+                    className="cursor-pointer hover:brightness-[0.985] transition"
+                    style={{ backgroundColor: "var(--color-pearl)", borderBottom: i < rows.length - 1 ? "1px solid var(--color-cream)" : "none" }}
+                  >
+                    <td className="px-5 py-4">
+                      <p className="font-medium" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>{b.company_name}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>{b.plan_name}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="px-2.5 py-1 rounded-full text-micro font-medium whitespace-nowrap" style={{ backgroundColor: st.bg, color: st.color }}>{st.label}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span style={{ color: isOverdue ? "#991B1B" : "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+                        {isOverdue ? `Overdue ${formatNaira(b.overdue_amount)}` : fmtDate(b.next_billing_date)}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="tabular-nums" style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+                        {b.status === "unconfigured" ? "—" : formatNaira(b.monthly_value)}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span style={{ color: b.has_discount ? "var(--color-deep-gold)" : "var(--color-mist)", fontSize: "var(--text-body-sm)" }}>{b.has_discount ? "Yes" : "—"}</span>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <span className="inline-flex items-center gap-1" style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+                        {b.status === "unconfigured" ? "Set up" : "Manage"} <ChevronRight size={14} />
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         )}
       </div>
     </div>

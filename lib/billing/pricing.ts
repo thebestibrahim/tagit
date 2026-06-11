@@ -36,13 +36,24 @@ export function applyDiscount(
   return { discountAmount, finalAmount: subtotal - discountAmount };
 }
 
-// Format kobo to an NGN currency string.
-export function formatNaira(kobo: number): string {
-  return new Intl.NumberFormat("en-NG", {
+// Tagit bills in Naira only today. This is the single switch point: when other
+// currencies are supported, thread a currency code through and the formatter
+// (and the /100 minor-unit divisor) adapt without touching call sites.
+export type CurrencyCode = "NGN";
+
+// Format a minor-unit amount (kobo for NGN) into a currency string.
+export function formatMoney(minorUnits: number, currency: CurrencyCode = "NGN"): string {
+  const locale = currency === "NGN" ? "en-NG" : "en-NG";
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "NGN",
+    currency,
     minimumFractionDigits: 0,
-  }).format(kobo / 100);
+  }).format(minorUnits / 100);
+}
+
+// Convenience alias — Naira is the only supported currency for now.
+export function formatNaira(kobo: number): string {
+  return formatMoney(kobo, "NGN");
 }
 
 // Calculate the next billing date from a given date.
