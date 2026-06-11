@@ -25,7 +25,7 @@ export const env = {
   appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   groqApiKey: process.env.GROQ_API_KEY,
   elevenLabsApiKey: process.env.ELEVENLABS_API_KEY,
-  upstashRedisUrl: process.env.UPSTASH_REDIS_REST_URL,
-  upstashRedisToken: process.env.UPSTASH_REDIS_REST_TOKEN,
+  upstashRedisUrl: process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL,
+  upstashRedisToken: process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN,
   sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 } as const;

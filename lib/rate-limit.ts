@@ -21,8 +21,11 @@ function memoryRateLimit(key: string, limit: number, windowMs: number): boolean 
   return true;
 }
 
-const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
-const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+// Vercel's Upstash integration injects KV_REST_API_*; a standalone Upstash
+// project uses UPSTASH_REDIS_REST_*. Accept either so the limiter activates
+// regardless of how Redis was provisioned.
+const upstashUrl = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
+const upstashToken = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
 const redis = upstashUrl && upstashToken
   ? new Redis({ url: upstashUrl, token: upstashToken })
   : null;
