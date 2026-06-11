@@ -2,7 +2,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Plus, Package, Inbox, Layers } from "lucide-react";
 import BatchActions from "./BatchActions";
-import ShipBatchButton from "./ShipBatchButton";
+import BatchRowActions from "./BatchRowActions";
 
 import { batchQuantityLabel, BATCH_TYPE_BADGE, prettyBatchStatus } from "@/components/company/batch-display";
 import Pagination from "@/components/ui/Pagination";
@@ -17,7 +17,7 @@ type Batch = {
   cards_quantity: number;
   batch_type: BatchType;
   batch_name: string | null;
-  status: "pending" | "generated" | "written" | "shipped";
+  status: "pending" | "awaiting_payment" | "processing" | "generated" | "written" | "shipped";
   notes: string | null;
   created_at: string;
   shipped_at: string | null;
@@ -272,7 +272,7 @@ export default async function AdminBatchesPage({
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {batch.status === "generated" && <ShipBatchButton batchId={batch.id} />}
+                        <BatchRowActions batchId={batch.id} status={batch.status} batchSize={(batch.batch_size ?? 0) + (batch.cards_quantity ?? 0)} />
                       </td>
                     </tr>
                   );

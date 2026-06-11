@@ -34,7 +34,9 @@ export async function POST(
     batch_size: number; cards_quantity: number; batch_type: BatchType; status: string;
   };
 
-  if (batch.status !== "pending") {
+  // Tags are generated from a fresh request (pending) or, in the billing flow,
+  // once the order is paid (processing). Anything further along is already done.
+  if (batch.status !== "pending" && batch.status !== "processing") {
     return NextResponse.json({ error: "This batch has already been processed." }, { status: 400 });
   }
 

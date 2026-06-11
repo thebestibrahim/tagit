@@ -635,7 +635,7 @@ export async function sendSubscriptionInvoiceEmail(
   `,
     { preheader: `Your Tagit invoice — ${formatNaira(opts.amount)}` }
   );
-  await resend.emails.send({ from: FROM, to, subject: `Your Tagit invoice ${opts.invoiceNumber} — ${formatNaira(opts.amount)}`, html, attachments: invoiceAttachments(opts) });
+  await resend.emails.send({ from: FROM, to, subject: `Your Tagit invoice ${opts.invoiceNumber}`, html, attachments: invoiceAttachments(opts) });
 }
 
 export async function sendBatchInvoiceEmail(to: string, opts: InvoiceEmailOpts) {
@@ -649,7 +649,7 @@ export async function sendBatchInvoiceEmail(to: string, opts: InvoiceEmailOpts) 
   `,
     { preheader: `Invoice for your chip order — ${formatNaira(opts.amount)}` }
   );
-  await resend.emails.send({ from: FROM, to, subject: `Invoice for your chip order — ${formatNaira(opts.amount)}`, html, attachments: invoiceAttachments(opts) });
+  await resend.emails.send({ from: FROM, to, subject: `Invoice for your chip order — ${opts.invoiceNumber}`, html, attachments: invoiceAttachments(opts) });
 }
 
 export async function sendPaymentConfirmedEmail(

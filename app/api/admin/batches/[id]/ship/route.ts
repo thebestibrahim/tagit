@@ -29,10 +29,10 @@ export async function POST(
 
   const batch = batchData as { id: string; status: string };
 
-  // Only a generated batch can be shipped (tags must exist first).
-  if (batch.status !== "generated") {
+  // Only a batch whose chips exist (generated or programmed) can be shipped.
+  if (batch.status !== "generated" && batch.status !== "written") {
     return NextResponse.json(
-      { error: "Only a generated batch can be marked shipped." },
+      { error: "Generate the chips before marking the batch shipped." },
       { status: 409 }
     );
   }
