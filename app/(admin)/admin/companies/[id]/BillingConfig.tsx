@@ -60,8 +60,15 @@ function SubscriptionForm({ companyId, data, onSaved }: { companyId: string; dat
   const [planId, setPlanId] = useState(sub?.plan_id ?? data.plans[0]?.id ?? "");
   const [interval, setInterval] = useState<BillingInterval>(sub?.billing_interval ?? "monthly");
   const [customNaira, setCustomNaira] = useState(sub?.custom_monthly_price ? String(sub.custom_monthly_price / 100) : "");
+  const [tagOverride, setTagOverride] = useState(sub?.tag_limit_override != null ? String(sub.tag_limit_override) : "");
+  const [cardOverride, setCardOverride] = useState(sub?.card_limit_override != null ? String(sub.card_limit_override) : "");
   const [trialDays, setTrialDays] = useState("0");
   const [saving, setSaving] = useState(false);
+
+  const selectedPlan = data.plans.find((p) => p.id === planId);
+  const planTagLimit = selectedPlan?.tag_limit;
+  const planCardLimit = selectedPlan?.card_limit;
+  const limitHint = (v: number | null | undefined) => (v == null ? "unlimited (Bespoke)" : `${v} lifetime`);
 
   async function save() {
     setSaving(true);
@@ -72,6 +79,8 @@ function SubscriptionForm({ companyId, data, onSaved }: { companyId: string; dat
         plan_id: planId,
         billing_interval: interval,
         custom_monthly_price: customNaira ? Math.round(parseFloat(customNaira) * 100) : null,
+        tag_limit_override: tagOverride.trim() === "" ? null : parseInt(tagOverride, 10),
+        card_limit_override: cardOverride.trim() === "" ? null : parseInt(cardOverride, 10),
         trial_days: parseInt(trialDays, 10) || 0,
       }),
     });
@@ -100,6 +109,25 @@ function SubscriptionForm({ companyId, data, onSaved }: { companyId: string; dat
           <input value={trialDays} onChange={(e) => setTrialDays(e.target.value)} className="w-full px-3 py-2 rounded-lg text-body-sm" style={fieldStyle()} />
         </Labeled>
       </div>
+
+      {/* Lifetime chip limits */}
+      <div className="mt-4">
+        <p className="text-micro font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-mist)" }}>Lifetime chip limits</p>
+        <div className="grid grid-cols-2 gap-4">
+          <Labeled label={`Tag limit override (plan: ${limitHint(planTagLimit)})`}>
+            <input value={tagOverride} onChange={(e) => setTagOverride(e.target.value)} placeholder="Blank = plan default" className="w-full px-3 py-2 rounded-lg text-body-sm" style={fieldStyle()} />
+          </Labeled>
+          <Labeled label={`Card limit override (plan: ${limitHint(planCardLimit)})`}>
+            <input value={cardOverride} onChange={(e) => setCardOverride(e.target.value)} placeholder="Blank = plan default" className="w-full px-3 py-2 rounded-lg text-body-sm" style={fieldStyle()} />
+          </Labeled>
+        </div>
+        {sub && (
+          <p className="text-caption mt-2" style={{ color: "var(--color-mist)" }}>
+            Ordered so far: {sub.tags_ordered_total} tags · {sub.cards_ordered_total} cards (lifetime, never resets)
+          </p>
+        )}
+      </div>
+
       {sub && <p className="text-caption mt-3" style={{ color: "var(--color-mist)" }}>Current status: {sub.status}</p>}
       <SaveButton onClick={save} saving={saving}>Save configuration</SaveButton>
     </Block>

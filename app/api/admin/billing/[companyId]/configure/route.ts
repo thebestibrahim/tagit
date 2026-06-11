@@ -28,6 +28,8 @@ export async function POST(
     plan_id,
     billing_interval,
     custom_monthly_price,
+    tag_limit_override,
+    card_limit_override,
     trial_days,
     tag_tiers,
     card_tiers,
@@ -35,6 +37,8 @@ export async function POST(
     plan_id: string;
     billing_interval: BillingInterval;
     custom_monthly_price?: number | null;
+    tag_limit_override?: number | null;
+    card_limit_override?: number | null;
     trial_days?: number;
     tag_tiers?: VolumeTier[];
     card_tiers?: VolumeTier[];
@@ -70,12 +74,18 @@ export async function POST(
   const isNewTrial = trialProvided && trialDays > 0 && (!existing || existing.status !== "trialing");
   const trialEndsAt = trialDays > 0 ? new Date(now.getTime() + trialDays * 86400000).toISOString() : null;
 
+  // Blank override → null (fall back to the plan's lifetime limit).
+  const normLimit = (v: number | null | undefined) =>
+    v === undefined || v === null || (v as unknown) === "" ? null : Math.max(0, Math.floor(Number(v)));
+
   // Base fields always written.
   const subPayload: Record<string, unknown> = {
     company_id: companyId,
     plan_id,
     billing_interval,
     custom_monthly_price: customPrice,
+    tag_limit_override: normLimit(tag_limit_override),
+    card_limit_override: normLimit(card_limit_override),
     updated_at: now.toISOString(),
   };
 

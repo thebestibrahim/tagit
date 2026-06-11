@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Layers, Package, Shirt, Palette, Watch, Cpu } from "lucide-react";
+import { Loader2, ArrowLeft, Layers, Package, Shirt, Palette, Watch, Cpu, ArrowRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { MINIMUM_ORDER, type ChipUsage } from "@/lib/billing/limits";
 
 const INDUSTRIES = [
   { value: "fashion",      label: "Fashion",      desc: "Bags, shoes, garments, accessories",   icon: Shirt },
@@ -27,10 +28,27 @@ export default function BatchRequestPage() {
   const [cardsQuantity, setCardsQuantity] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [chips, setChips] = useState<{ tags: ChipUsage; cards: ChipUsage } | null>(null);
+  const [upgradeMsg, setUpgradeMsg] = useState<string | null>(null);
+
+  // Load the brand's lifetime chip allowance so we can show remaining counts
+  // and stop an order the server would reject anyway.
+  useEffect(() => {
+    fetch("/api/company/billing")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.chips) setChips(d.chips); })
+      .catch(() => {});
+  }, []);
 
   const needsTags = batchType === "tags" || batchType === "mixed";
   const needsCards = batchType === "cards" || batchType === "mixed";
   const canSubmit = !!industry && (!needsTags || !!quantity) && (!needsCards || !!cardsQuantity);
+
+  const tagUse = chips?.tags ?? null;
+  const cardUse = chips?.cards ?? null;
+  // A type with a finite limit and < one minimum order left cannot be ordered.
+  const tagsBlocked = !!(needsTags && tagUse && tagUse.exhausted);
+  const cardsBlocked = !!(needsCards && cardUse && cardUse.exhausted);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,6 +64,19 @@ export default function BatchRequestPage() {
       toast.error("Enter a card quantity between 10 and 10,000."); return;
     }
 
+    // Lifetime allowance guard (the server enforces this too).
+    if (tagsBlocked || cardsBlocked) {
+      setUpgradeMsg("You have reached your lifetime chip allowance. Contact Tagit to upgrade your plan to order more.");
+      return;
+    }
+    if (needsTags && tagUse && !tagUse.unlimited && tagUse.remaining !== null && tagsQty > tagUse.remaining) {
+      toast.error(`You can only order ${tagUse.remaining} more tags on your plan.`); return;
+    }
+    if (needsCards && cardUse && !cardUse.unlimited && cardUse.remaining !== null && cardsQty > cardUse.remaining) {
+      toast.error(`You can only order ${cardUse.remaining} more cards on your plan.`); return;
+    }
+
+    setUpgradeMsg(null);
     setLoading(true);
     const res = await fetch("/api/company/batch-request", {
       method: "POST",
@@ -63,6 +94,7 @@ export default function BatchRequestPage() {
     setLoading(false);
 
     if (!res.ok) {
+      if (json.upgrade_required) setUpgradeMsg(json.error);
       toast.error(json.error ?? "Failed to submit request.");
       return;
     }
@@ -191,12 +223,25 @@ export default function BatchRequestPage() {
         {/* Quantity — one field per medium in the batch */}
         <div className={needsTags && needsCards ? "grid grid-cols-1 gap-6 sm:grid-cols-2" : ""}>
           {needsTags && (
-            <QtyField label="How many tags do you need?" value={quantity} onChange={setQuantity} />
+            <QtyField label="How many tags do you need?" value={quantity} onChange={setQuantity} hint={<AllowanceHint usage={tagUse} noun="tag" />} />
           )}
           {needsCards && (
-            <QtyField label="How many cards do you need?" value={cardsQuantity} onChange={setCardsQuantity} />
+            <QtyField label="How many cards do you need?" value={cardsQuantity} onChange={setCardsQuantity} hint={<AllowanceHint usage={cardUse} noun="card" />} />
           )}
         </div>
+
+        {/* Upgrade nudge */}
+        {upgradeMsg && (
+          <div className="flex items-start gap-3 rounded-xl px-4 py-4" style={{ backgroundColor: "#FEF2F2", border: "1px solid #FECACA" }}>
+            <div className="flex-1">
+              <p className="font-medium mb-1" style={{ color: "#7F1D1D", fontSize: "var(--text-body-sm)" }}>Plan limit reached</p>
+              <p style={{ color: "#991B1B", fontSize: "var(--text-caption)", lineHeight: 1.6 }}>{upgradeMsg}</p>
+            </div>
+            <Link href="/dashboard/features" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-micro font-semibold" style={{ backgroundColor: "#B91C1C", color: "#fff", textDecoration: "none" }}>
+              View billing <ArrowRight size={12} />
+            </Link>
+          </div>
+        )}
 
         {/* Notes */}
         <div className="space-y-1.5">
@@ -237,21 +282,37 @@ export default function BatchRequestPage() {
 
         <button
           type="submit"
-          disabled={loading || !canSubmit}
+          disabled={loading || !canSubmit || tagsBlocked || cardsBlocked}
           className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium w-full justify-center"
           style={{
             fontSize: "var(--text-body-sm)",
-            backgroundColor: !canSubmit || loading ? "var(--color-stone)" : "var(--color-onyx)",
+            backgroundColor: !canSubmit || loading || tagsBlocked || cardsBlocked ? "var(--color-stone)" : "var(--color-onyx)",
             color: "var(--color-pearl)",
             border: "none",
-            cursor: !canSubmit || loading ? "not-allowed" : "pointer",
+            cursor: !canSubmit || loading || tagsBlocked || cardsBlocked ? "not-allowed" : "pointer",
           }}
         >
           {loading && <Loader2 size={14} className="animate-spin" />}
-          {loading ? "Submitting…" : "Submit batch request"}
+          {loading ? "Submitting…" : tagsBlocked || cardsBlocked ? "Plan limit reached" : "Submit batch request"}
         </button>
       </form>
     </div>
+  );
+}
+
+function AllowanceHint({ usage, noun }: { usage: ChipUsage | null; noun: "tag" | "card" }) {
+  if (!usage || usage.unlimited) return null;
+  if (usage.exhausted) {
+    return (
+      <span style={{ color: "#B45309", fontSize: "var(--text-caption)" }}>
+        {usage.remaining} {noun}{usage.remaining === 1 ? "" : "s"} remaining — minimum order is {MINIMUM_ORDER}. Upgrade to order more.
+      </span>
+    );
+  }
+  return (
+    <span style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}>
+      {usage.remaining?.toLocaleString()} of {usage.limit?.toLocaleString()} {noun}s remaining on your plan
+    </span>
   );
 }
 
@@ -259,16 +320,19 @@ function QtyField({
   label,
   value,
   onChange,
+  hint,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  hint?: React.ReactNode;
 }) {
   return (
     <div className="space-y-3">
       <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
         {label}
       </Label>
+      {hint && <div className="-mt-1.5">{hint}</div>}
       <div className="flex flex-wrap gap-2 mb-3">
         {SUGGESTED_QTY.map((q) => (
           <button

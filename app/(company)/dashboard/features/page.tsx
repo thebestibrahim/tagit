@@ -7,6 +7,7 @@ import { CheckCircle2, Clock, CreditCard, ArrowRight, AlertTriangle } from "luci
 import type { FlagKey } from "@/lib/feature-flags/types";
 import type { Invoice, Subscription, Discount, Plan } from "@/types/database";
 import { formatNaira, getEffectivePrice } from "@/lib/billing/pricing";
+import { chipUsage, MINIMUM_ORDER, type ChipUsage } from "@/lib/billing/limits";
 import { invoiceNumber } from "@/lib/billing/invoices";
 
 const FEATURE_DISPLAY: { key: FlagKey; name: string; description: string }[] = [
@@ -27,7 +28,7 @@ function daysUntil(d: string): number {
   return Math.max(0, Math.ceil((new Date(d).getTime() - Date.now()) / 86400000));
 }
 
-type SubWithPlan = Subscription & { plans: Pick<Plan, "name" | "monthly_price"> | null };
+type SubWithPlan = Subscription & { plans: Pick<Plan, "name" | "monthly_price" | "tag_limit" | "card_limit"> | null };
 
 export default async function BillingPage() {
   const user = await getUser();
@@ -37,7 +38,7 @@ export default async function BillingPage() {
 
   const [{ data: company }, { data: subData }, { data: discountData }, { data: invoiceData }, flags] = await Promise.all([
     supabase.from("companies").select("name").eq("id", user.id).single(),
-    supabase.from("subscriptions").select("*, plans(name, monthly_price)").eq("company_id", user.id).maybeSingle(),
+    supabase.from("subscriptions").select("*, plans(name, monthly_price, tag_limit, card_limit)").eq("company_id", user.id).maybeSingle(),
     supabase.from("discounts").select("*").eq("company_id", user.id).eq("is_active", true),
     supabase.from("invoices").select("*").eq("company_id", user.id).order("created_at", { ascending: false }),
     getFlagsForBrand(user.id),
@@ -53,6 +54,9 @@ export default async function BillingPage() {
 
   const planPrice = sub?.plans?.monthly_price ?? 0;
   const nextAmount = sub ? getEffectivePrice(planPrice, sub.custom_monthly_price, sub.billing_interval) : 0;
+
+  const tagUse = sub ? chipUsage(sub.tag_limit_override, sub.plans?.tag_limit, sub.tags_ordered_total) : null;
+  const cardUse = sub ? chipUsage(sub.card_limit_override, sub.plans?.card_limit, sub.cards_ordered_total) : null;
   const discountedNext = subDiscount ? Math.round(nextAmount * (1 - subDiscount.percentage / 100)) : nextAmount;
 
   // Most recent unpaid invoice drives the Pay Now banners.
@@ -90,6 +94,30 @@ export default async function BillingPage() {
             {subDiscount && <Row label="Subscription discount" value={`${subDiscount.percentage}% off — ${subDiscount.duration - subDiscount.used} cycles left`} />}
             {batchDiscount && <Row label="Batch discount" value={`${batchDiscount.percentage}% off — ${batchDiscount.duration - batchDiscount.used} orders left`} />}
           </dl>
+
+          {/* Chip usage — lifetime limits */}
+          {(tagUse || cardUse) && (
+            <div className="mt-6 pt-6" style={{ borderTop: "1px solid var(--color-cream)" }}>
+              <p className="text-micro font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--color-mist)" }}>Chip allowance (lifetime)</p>
+              <div className="space-y-5">
+                {tagUse && <ChipUsageRow label="Tags" usage={tagUse} />}
+                {cardUse && <ChipUsageRow label="Cards" usage={cardUse} />}
+              </div>
+              {((tagUse && tagUse.exhausted) || (cardUse && cardUse.exhausted)) && (
+                <div className="mt-5 rounded-xl px-4 py-3 flex items-start gap-2.5" style={{ backgroundColor: "var(--color-soft-gold)", border: "1px solid var(--color-champagne)" }}>
+                  <AlertTriangle size={16} style={{ color: "var(--color-deep-gold)" }} className="mt-0.5 shrink-0" />
+                  <p style={{ color: "var(--color-deep-gold)", fontSize: "var(--text-caption)", lineHeight: 1.6 }}>
+                    {tagUse?.exhausted && cardUse?.exhausted
+                      ? `You have ${tagUse.remaining} tags and ${cardUse.remaining} cards remaining.`
+                      : tagUse?.exhausted
+                      ? `You have ${tagUse.remaining} tag${tagUse.remaining === 1 ? "" : "s"} remaining.`
+                      : `You have ${cardUse?.remaining} card${cardUse?.remaining === 1 ? "" : "s"} remaining.`}{" "}
+                    Minimum order is {MINIMUM_ORDER}. Contact Tagit to upgrade your plan to order more.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </section>
       )}
 
@@ -171,6 +199,35 @@ function Row({ label, value }: { label: string; value: string }) {
     <div>
       <dt className="text-caption" style={{ color: "var(--color-mist)" }}>{label}</dt>
       <dd className="mt-0.5 font-medium" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>{value}</dd>
+    </div>
+  );
+}
+
+function ChipUsageRow({ label, usage }: { label: string; usage: ChipUsage }) {
+  if (usage.unlimited) {
+    return (
+      <div className="flex items-center justify-between">
+        <span className="font-medium" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>{label}</span>
+        <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>{usage.used.toLocaleString()} ordered · Unlimited</span>
+      </div>
+    );
+  }
+  const pct = usage.limit ? Math.min(100, Math.round((usage.used / usage.limit) * 100)) : 0;
+  const barColor = usage.exhausted ? "#B45309" : pct >= 80 ? "var(--color-gold)" : "var(--color-verified)";
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="font-medium" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>{label}</span>
+        <span className="tabular-nums" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+          {usage.used.toLocaleString()} used of {usage.limit?.toLocaleString()} lifetime
+        </span>
+      </div>
+      <div className="rounded-full overflow-hidden" style={{ height: 6, backgroundColor: "var(--color-cream)" }}>
+        <div style={{ height: "100%", width: `${pct}%`, backgroundColor: barColor, borderRadius: 99, transition: "width 0.3s ease" }} />
+      </div>
+      <p className="mt-1 text-caption" style={{ color: usage.exhausted ? "#B45309" : "var(--color-mist)" }}>
+        {usage.remaining?.toLocaleString()} remaining
+      </p>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { getFlagsForBrand } from "@/lib/feature-flags/server";
 import { getEffectivePrice } from "@/lib/billing/pricing";
+import { chipUsage } from "@/lib/billing/limits";
 
 // GET /api/company/billing — data for the combined Billing page (the page
 // formerly called Features). Brand reads its own billing only.
@@ -16,7 +17,7 @@ export async function GET() {
   const [{ data: sub }, { data: discounts }, { data: invoices }, flags] = await Promise.all([
     admin
       .from("subscriptions")
-      .select("*, plans(name, monthly_price)")
+      .select("*, plans(name, monthly_price, tag_limit, card_limit)")
       .eq("company_id", user.id)
       .maybeSingle(),
     admin.from("discounts").select("*").eq("company_id", user.id).eq("is_active", true),
@@ -29,8 +30,11 @@ export async function GET() {
   ]);
 
   let subscription = null;
+  let chips = null;
   if (sub) {
-    const s = sub as typeof sub & { plans: { name: string; monthly_price: number } | null };
+    const s = sub as typeof sub & {
+      plans: { name: string; monthly_price: number; tag_limit: number | null; card_limit: number | null } | null;
+    };
     subscription = {
       status: s.status,
       plan_name: s.plans?.name ?? "—",
@@ -42,6 +46,10 @@ export async function GET() {
         s.custom_monthly_price,
         s.billing_interval
       ),
+    };
+    chips = {
+      tags: chipUsage(s.tag_limit_override, s.plans?.tag_limit, s.tags_ordered_total),
+      cards: chipUsage(s.card_limit_override, s.plans?.card_limit, s.cards_ordered_total),
     };
   }
 
@@ -58,6 +66,7 @@ export async function GET() {
       ? { percentage: batchDiscount.percentage, orders_remaining: batchDiscount.duration - batchDiscount.used }
       : null,
     invoices: invoices ?? [],
+    chips,
     features: flags,
   });
 }

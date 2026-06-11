@@ -138,6 +138,8 @@ export type Database = {
           name: string
           monthly_price: number
           included_chips: number
+          tag_limit: number | null
+          card_limit: number | null
           is_active: boolean
           created_at: string
         }
@@ -146,6 +148,8 @@ export type Database = {
           name: string
           monthly_price?: number
           included_chips?: number
+          tag_limit?: number | null
+          card_limit?: number | null
           is_active?: boolean
           created_at?: string
         }
@@ -154,6 +158,8 @@ export type Database = {
           name?: string
           monthly_price?: number
           included_chips?: number
+          tag_limit?: number | null
+          card_limit?: number | null
           is_active?: boolean
           created_at?: string
         }
@@ -167,6 +173,10 @@ export type Database = {
           status: "trialing" | "active" | "past_due" | "suspended" | "cancelled"
           billing_interval: "monthly" | "quarterly" | "annually"
           custom_monthly_price: number | null
+          tag_limit_override: number | null
+          card_limit_override: number | null
+          tags_ordered_total: number
+          cards_ordered_total: number
           trial_starts_at: string | null
           trial_ends_at: string | null
           current_period_start: string | null
@@ -181,6 +191,10 @@ export type Database = {
           status?: "trialing" | "active" | "past_due" | "suspended" | "cancelled"
           billing_interval?: "monthly" | "quarterly" | "annually"
           custom_monthly_price?: number | null
+          tag_limit_override?: number | null
+          card_limit_override?: number | null
+          tags_ordered_total?: number
+          cards_ordered_total?: number
           trial_starts_at?: string | null
           trial_ends_at?: string | null
           current_period_start?: string | null
@@ -195,6 +209,10 @@ export type Database = {
           status?: "trialing" | "active" | "past_due" | "suspended" | "cancelled"
           billing_interval?: "monthly" | "quarterly" | "annually"
           custom_monthly_price?: number | null
+          tag_limit_override?: number | null
+          card_limit_override?: number | null
+          tags_ordered_total?: number
+          cards_ordered_total?: number
           trial_starts_at?: string | null
           trial_ends_at?: string | null
           current_period_start?: string | null
