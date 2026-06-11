@@ -2,7 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Tag, Package, Users, AlertCircle, CheckCircle2, Circle, Layers, PenLine } from "lucide-react";
+import { ArrowRight, Tag, Package, Users, AlertCircle, CheckCircle2, Circle, Layers, PenLine, CreditCard, AlertTriangle } from "lucide-react";
+import { formatNaira, getEffectivePrice } from "@/lib/billing/pricing";
+import type { Subscription, Discount, Plan } from "@/types/database";
+
+type SubWithPlan = Subscription & { plans: Pick<Plan, "name" | "monthly_price"> | null };
 
 export default async function CompanyOverviewPage() {
   const user = await getUser();
@@ -15,12 +19,23 @@ export default async function CompanyOverviewPage() {
     { data: rawProducts },
     { data: companyData },
     { data: batchData },
+    { data: subData },
+    { data: discountData },
+    { data: openInvoiceData },
   ] = await Promise.all([
     supabase.from("tags").select("id, status").eq("company_id", user.id),
     supabase.from("products").select("id").eq("company_id", user.id),
     supabase.from("companies").select("brand_story, custom_header_text, ai_enabled, ai_persona_name, ai_persona_prompt, logo_url, signature_url").eq("id", user.id).single(),
     supabase.from("tag_batches").select("id", { count: "exact", head: true }).eq("company_id", user.id),
+    supabase.from("subscriptions").select("*, plans(name, monthly_price)").eq("company_id", user.id).maybeSingle(),
+    supabase.from("discounts").select("*").eq("company_id", user.id).eq("is_active", true),
+    supabase.from("invoices").select("id, amount, status, paystack_payment_link, due_date").eq("company_id", user.id).in("status", ["sent", "overdue"]).order("created_at", { ascending: false }).limit(1),
   ]);
+
+  const sub = (subData as SubWithPlan | null) ?? null;
+  const discounts = (discountData ?? []) as Discount[];
+  const subDiscount = discounts.find((d) => d.type === "subscription");
+  const openInvoice = (openInvoiceData?.[0] as { id: string; amount: number; status: string; paystack_payment_link: string | null; due_date: string } | undefined) ?? undefined;
 
   const tags = (rawTags ?? []) as { id: string; status: string }[];
   const tagIds = tags.map((t) => t.id);
@@ -105,6 +120,9 @@ export default async function CompanyOverviewPage() {
           Your brand&apos;s tag and ownership activity
         </p>
       </div>
+
+      {/* ── Plan / billing status ── */}
+      <PlanStatus sub={sub} subDiscount={subDiscount} openInvoice={openInvoice} />
 
       {/* ── Get started checklist (hide when all done) ── */}
       {!allDone && (
@@ -294,5 +312,115 @@ export default async function CompanyOverviewPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ── Plan / billing status banner shown at the top of the Overview ────────────
+function fmtDate(d: string | null | undefined): string {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+function daysUntil(d: string): number {
+  return Math.max(0, Math.ceil((new Date(d).getTime() - Date.now()) / 86400000));
+}
+
+function PlanStatus({
+  sub,
+  subDiscount,
+  openInvoice,
+}: {
+  sub: SubWithPlan | null;
+  subDiscount?: Discount;
+  openInvoice?: { id: string; amount: number; status: string; paystack_payment_link: string | null; due_date: string };
+}) {
+  // Nothing to show until Tagit configures billing for this brand.
+  if (!sub) return null;
+
+  const planName = sub.plans?.name ?? "Plan";
+  const baseNext = getEffectivePrice(sub.plans?.monthly_price ?? 0, sub.custom_monthly_price, sub.billing_interval);
+  const nextAmount = subDiscount ? Math.round(baseNext * (1 - subDiscount.percentage / 100)) : baseNext;
+
+  // Overdue / suspended — red, with a Pay action.
+  if (sub.status === "past_due" || sub.status === "suspended") {
+    const amount = openInvoice?.amount ?? nextAmount;
+    const suspended = sub.status === "suspended";
+    return (
+      <div className="rounded-2xl p-5 mb-10 flex items-start gap-3" style={{ border: "1px solid #FECACA", backgroundColor: "#FEF2F2" }}>
+        <AlertTriangle size={20} style={{ color: "#B91C1C" }} className="mt-0.5 shrink-0" />
+        <div className="flex-1">
+          <p className="font-semibold" style={{ color: "#7F1D1D", fontSize: "var(--text-body-sm)" }}>
+            {suspended ? "Your account is suspended" : `You have an overdue invoice of ${formatNaira(amount)}`}
+          </p>
+          <p className="mt-0.5" style={{ color: "#991B1B", fontSize: "var(--text-caption)" }}>
+            {suspended ? "Pay your outstanding balance to restore dashboard access. Chip scanning is never affected." : "Pay now to avoid account suspension."}
+          </p>
+        </div>
+        {openInvoice?.paystack_payment_link ? (
+          <a href={openInvoice.paystack_payment_link} target="_blank" rel="noopener noreferrer" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-micro font-semibold" style={{ backgroundColor: "#B91C1C", color: "#fff" }}>
+            Pay {formatNaira(amount)} <ArrowRight size={12} />
+          </a>
+        ) : (
+          <Link href="/dashboard/features" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-micro font-semibold" style={{ backgroundColor: "#B91C1C", color: "#fff" }}>
+            View billing <ArrowRight size={12} />
+          </Link>
+        )}
+      </div>
+    );
+  }
+
+  // Trialing — gold.
+  if (sub.status === "trialing" && sub.trial_ends_at) {
+    return (
+      <BannerShell tone="gold">
+        <CreditCard size={18} style={{ color: "var(--color-gold)" }} className="mt-0.5 shrink-0" />
+        <div className="flex-1">
+          <p className="font-semibold" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>
+            Free trial · {planName} — {daysUntil(sub.trial_ends_at)} days remaining
+          </p>
+          <p className="mt-0.5" style={{ color: "var(--color-deep-gold)", fontSize: "var(--text-caption)" }}>
+            First invoice of {formatNaira(nextAmount)} on {fmtDate(sub.trial_ends_at)}.
+          </p>
+        </div>
+        <ManageLink />
+      </BannerShell>
+    );
+  }
+
+  // Active — neutral.
+  return (
+    <BannerShell tone="default">
+      <span className="inline-block w-2 h-2 rounded-full mt-2 shrink-0" style={{ backgroundColor: "#16A34A" }} />
+      <div className="flex-1">
+        <p className="font-semibold" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>
+          {planName} · Active — next invoice {formatNaira(nextAmount)}{sub.current_period_end ? ` on ${fmtDate(sub.current_period_end)}` : ""}
+        </p>
+        {subDiscount && (
+          <p className="mt-0.5" style={{ color: "var(--color-deep-gold)", fontSize: "var(--text-caption)" }}>
+            {subDiscount.percentage}% off — {subDiscount.duration - subDiscount.used} cycles remaining
+          </p>
+        )}
+      </div>
+      <ManageLink />
+    </BannerShell>
+  );
+}
+
+function BannerShell({ tone, children }: { tone: "gold" | "default"; children: React.ReactNode }) {
+  const style =
+    tone === "gold"
+      ? { border: "1px solid var(--color-champagne)", backgroundColor: "var(--color-soft-gold)" }
+      : { border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)" };
+  return (
+    <div className="rounded-2xl p-5 mb-10 flex items-start gap-3" style={style}>
+      {children}
+    </div>
+  );
+}
+
+function ManageLink() {
+  return (
+    <Link href="/dashboard/features" className="shrink-0 inline-flex items-center gap-1 text-micro font-semibold mt-0.5" style={{ color: "var(--color-graphite)" }}>
+      Manage <ArrowRight size={12} />
+    </Link>
   );
 }
