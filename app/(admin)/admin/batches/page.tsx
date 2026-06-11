@@ -4,7 +4,7 @@ import { Plus, Package, Inbox, Layers } from "lucide-react";
 import BatchActions from "./BatchActions";
 import ShipBatchButton from "./ShipBatchButton";
 
-import { batchQuantityLabel, BATCH_TYPE_BADGE } from "@/components/company/batch-display";
+import { batchQuantityLabel, BATCH_TYPE_BADGE, prettyBatchStatus } from "@/components/company/batch-display";
 import Pagination from "@/components/ui/Pagination";
 import type { BatchType } from "@/types/database";
 import LocalTime from "@/components/ui/LocalTime";
@@ -25,10 +25,12 @@ type Batch = {
 };
 
 const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
-  pending:   { bg: "var(--color-cream)",     color: "var(--color-slate)" },
-  generated: { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" },
-  written:   { bg: "#EFF6FF",                color: "#1D4ED8" },
-  shipped:   { bg: "#ECFDF5",                color: "#065F46" },
+  pending:          { bg: "var(--color-cream)",     color: "var(--color-slate)" },
+  awaiting_payment: { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" },
+  processing:       { bg: "#EFF6FF",                color: "#1D4ED8" },
+  generated:        { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" },
+  written:          { bg: "#EFF6FF",                color: "#1D4ED8" },
+  shipped:          { bg: "#ECFDF5",                color: "#065F46" },
 };
 
 const PER_PAGE = 25;
@@ -253,10 +255,10 @@ export default async function AdminBatchesPage({
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className="px-2.5 py-1 rounded-full text-micro font-medium capitalize"
+                          className="px-2.5 py-1 rounded-full text-micro font-medium"
                           style={{ backgroundColor: s.bg, color: s.color }}
                         >
-                          {batch.status}
+                          {prettyBatchStatus(batch.status)}
                         </span>
                       </td>
                       <td className="px-4 py-3">

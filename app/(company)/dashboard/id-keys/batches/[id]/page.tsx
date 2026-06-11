@@ -4,7 +4,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Layers } from "lucide-react";
 import IDKeyTable, { type IDKeyRow } from "@/components/company/IDKeyTable";
-import { batchQuantityLabel, BATCH_TYPE_BADGE, BATCH_STATUS_STYLES, BATCH_STATUS_LABELS, type BatchRow } from "@/components/company/batch-display";
+import { batchQuantityLabel, BATCH_TYPE_BADGE, BATCH_STATUS_STYLES, BATCH_STATUS_LABELS, prettyBatchStatus, type BatchRow } from "@/components/company/batch-display";
 import LocalTime from "@/components/ui/LocalTime";
 
 export default async function BatchDetailPage({
@@ -63,16 +63,18 @@ export default async function BatchDetailPage({
             <span className="px-2 py-0.5 rounded-full text-micro font-medium" style={{ backgroundColor: typeBadge.bg, color: typeBadge.color }}>
               {typeBadge.label}
             </span>
-            <span className="px-2 py-0.5 rounded-full text-micro font-medium capitalize" style={{ backgroundColor: s.bg, color: s.color }}>
-              {batch.status}
+            <span className="px-2 py-0.5 rounded-full text-micro font-medium" style={{ backgroundColor: s.bg, color: s.color }}>
+              {prettyBatchStatus(batch.status)}
             </span>
           </div>
           <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)" }}>
-            {batchQuantityLabel(batch)} · {BATCH_STATUS_LABELS[batch.status] ?? batch.status}
+            {batchQuantityLabel(batch)} · {BATCH_STATUS_LABELS[batch.status] ?? prettyBatchStatus(batch.status)}
           </p>
           <p className="mt-1" style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
-            Ordered {<LocalTime iso={batch.created_at} pattern="MMM d, yyyy" />}
-            {batch.shipped_at ? ` · Shipped ${<LocalTime iso={batch.shipped_at} pattern="MMM d, yyyy" />}` : ""}
+            Ordered <LocalTime iso={batch.created_at} pattern="MMM d, yyyy" />
+            {batch.shipped_at && (
+              <> · Shipped <LocalTime iso={batch.shipped_at} pattern="MMM d, yyyy" /></>
+            )}
           </p>
           {batch.notes && (
             <p className="mt-2" style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)", fontStyle: "italic" }}>

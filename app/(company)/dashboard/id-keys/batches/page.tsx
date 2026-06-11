@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Layers, Plus, ChevronRight } from "lucide-react";
 import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
 import FeatureWall from "@/components/company/FeatureWall";
-import { batchQuantityLabel, BATCH_TYPE_BADGE, BATCH_STATUS_STYLES, type BatchRow } from "@/components/company/batch-display";
+import { batchQuantityLabel, BATCH_TYPE_BADGE, BATCH_STATUS_STYLES, prettyBatchStatus, type BatchRow } from "@/components/company/batch-display";
 import Pagination from "@/components/ui/Pagination";
 import type { BatchType } from "@/types/database";
 import LocalTime from "@/components/ui/LocalTime";
@@ -144,13 +144,15 @@ export default async function BatchesPage({
                     <span className="px-2 py-0.5 rounded-full text-micro font-medium" style={{ backgroundColor: typeBadge.bg, color: typeBadge.color }}>
                       {typeBadge.label}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-micro font-medium capitalize" style={{ backgroundColor: s.bg, color: s.color }}>
-                      {batch.status}
+                    <span className="px-2 py-0.5 rounded-full text-micro font-medium" style={{ backgroundColor: s.bg, color: s.color }}>
+                      {prettyBatchStatus(batch.status)}
                     </span>
                   </div>
                   <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>
-                    {batchQuantityLabel(batch)} · Ordered {<LocalTime iso={batch.created_at} pattern="MMM d, yyyy" />}
-                    {batch.shipped_at ? ` · Shipped ${<LocalTime iso={batch.shipped_at} pattern="MMM d" />}` : ""}
+                    {batchQuantityLabel(batch)} · Ordered <LocalTime iso={batch.created_at} pattern="MMM d, yyyy" />
+                    {batch.shipped_at && (
+                      <> · Shipped <LocalTime iso={batch.shipped_at} pattern="MMM d" /></>
+                    )}
                   </p>
                 </div>
                 <ChevronRight size={16} style={{ color: "var(--color-mist)" }} className="shrink-0" />

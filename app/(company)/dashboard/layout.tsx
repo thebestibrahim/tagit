@@ -31,20 +31,25 @@ export default async function CompanyLayout({ children }: { children: React.Reac
 
   const flags: FlagMap = await getFlagsForBrand(user.id);
 
+  // Subscription drives the sidebar plan chip + the suspension redirect.
   // Suspended for non-payment? Every dashboard page bounces to billing. Chip
   // scanning (/v/[token]) is a separate route group and is never affected.
   const { data: sub } = await createAdminClient()
     .from("subscriptions")
-    .select("status")
+    .select("status, trial_ends_at, plans(name)")
     .eq("company_id", user.id)
     .maybeSingle();
   const suspended = sub?.status === "suspended";
+  const subRow = sub as { status: string; trial_ends_at: string | null; plans: { name: string } | null } | null;
+  const billing = subRow
+    ? { status: subRow.status, planName: subRow.plans?.name ?? "Plan", trialEndsAt: subRow.trial_ends_at }
+    : null;
 
   return (
     <FlagProvider flags={flags}>
       <SuspensionGuard suspended={suspended} />
       <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#1C1A14" }}>
-        <CompanySidebar companyName={company.name} logoUrl={company.logo_url} />
+        <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden rounded-tl-xl rounded-bl-xl" style={{ backgroundColor: "var(--color-smoke)" }}>
           <main className="flex-1 overflow-y-auto bg-dot-grid">
             {children}

@@ -28,15 +28,38 @@ export const BATCH_TYPE_BADGE: Record<BatchType, { label: string; bg: string; co
 };
 
 export const BATCH_STATUS_STYLES: Record<string, { bg: string; color: string }> = {
-  pending:   { bg: "var(--color-cream)",     color: "var(--color-slate)" },
-  generated: { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" },
-  written:   { bg: "#EFF6FF",                color: "#1D4ED8" },
-  shipped:   { bg: "#ECFDF5",                color: "#065F46" },
+  pending:          { bg: "var(--color-cream)",     color: "var(--color-slate)" },
+  awaiting_payment: { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" },
+  processing:       { bg: "#EFF6FF",                color: "#1D4ED8" },
+  generated:        { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" },
+  written:          { bg: "#EFF6FF",                color: "#1D4ED8" },
+  shipped:          { bg: "#ECFDF5",                color: "#065F46" },
 };
 
 export const BATCH_STATUS_LABELS: Record<string, string> = {
-  pending:   "Request received — awaiting Tagit",
-  generated: "Generated",
-  written:   "Programmed",
-  shipped:   "Shipped",
+  pending:          "Request received — awaiting Tagit",
+  awaiting_payment: "Awaiting payment",
+  processing:       "In production",
+  generated:        "Generated",
+  written:          "Programmed",
+  shipped:          "Shipped",
 };
+
+// Short, presentable badge label. Falls back to a humanised version of any
+// status not in the map (e.g. "awaiting_payment" → "Awaiting payment").
+const BATCH_STATUS_BADGE: Record<string, string> = {
+  pending:          "Pending",
+  awaiting_payment: "Awaiting payment",
+  processing:       "In production",
+  generated:        "Generated",
+  written:          "Programmed",
+  shipped:          "Shipped",
+  cancelled:        "Cancelled",
+};
+
+export function prettyBatchStatus(status: string): string {
+  return (
+    BATCH_STATUS_BADGE[status] ??
+    status.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())
+  );
+}

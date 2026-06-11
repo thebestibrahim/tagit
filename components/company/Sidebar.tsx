@@ -50,12 +50,19 @@ const bottomNav = [
   { label: "Settings",      href: "/dashboard/settings",      icon: Settings },
 ];
 
+interface BillingSummary {
+  status: string;
+  planName: string;
+  trialEndsAt: string | null;
+}
+
 interface CompanySidebarProps {
   companyName: string;
   logoUrl?: string | null;
+  billing?: BillingSummary | null;
 }
 
-export function CompanySidebar({ companyName, logoUrl }: CompanySidebarProps) {
+export function CompanySidebar({ companyName, logoUrl, billing }: CompanySidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -169,7 +176,8 @@ export function CompanySidebar({ companyName, logoUrl }: CompanySidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 shrink-0" style={{ borderTop: "1px solid #2E2A1E" }}>
+      <div className="p-3 shrink-0 space-y-2" style={{ borderTop: "1px solid #2E2A1E" }}>
+        {billing && <PlanChip billing={billing} />}
         <button
           onClick={handleSignOut}
           className="nav-item nav-item-dark w-full text-left"
@@ -180,5 +188,46 @@ export function CompanySidebar({ companyName, logoUrl }: CompanySidebarProps) {
         </button>
       </div>
     </aside>
+  );
+}
+
+// Compact plan/billing chip in the sidebar footer — links to the Billing page.
+function PlanChip({ billing }: { billing: BillingSummary }) {
+  const { status, planName, trialEndsAt } = billing;
+
+  let dot = "#16A34A";
+  let line = "Active";
+  let lineColor = "#8A8478";
+  if (status === "trialing") {
+    dot = "#B8945D";
+    const days = trialEndsAt ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)) : 0;
+    line = `Trial · ${days} day${days === 1 ? "" : "s"} left`;
+    lineColor = "#B8945D";
+  } else if (status === "past_due") {
+    dot = "#DC2626";
+    line = "Payment due";
+    lineColor = "#B85C5C";
+  } else if (status === "suspended") {
+    dot = "#DC2626";
+    line = "Suspended — pay to restore";
+    lineColor = "#B85C5C";
+  } else if (status === "cancelled") {
+    dot = "#6B7280";
+    line = "Cancelled";
+  }
+
+  return (
+    <Link
+      href="/dashboard/features"
+      className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors"
+      style={{ backgroundColor: "#171510", border: "1px solid #2E2A1E", textDecoration: "none" }}
+    >
+      <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: dot }} />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-body-sm font-medium" style={{ color: "#E4E4E7" }}>{planName}</span>
+        <span className="block truncate text-micro" style={{ color: lineColor }}>{line}</span>
+      </span>
+      <ChevronRight size={12} style={{ color: "#52525B" }} className="shrink-0" />
+    </Link>
   );
 }
