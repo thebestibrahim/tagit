@@ -4,18 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Layers, Package, Shirt, Palette, Watch, Cpu, ArrowRight } from "lucide-react";
+import { Loader2, ArrowLeft, Layers, ArrowRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { MINIMUM_ORDER, type ChipUsage } from "@/lib/billing/limits";
 
-const INDUSTRIES = [
-  { value: "fashion",      label: "Fashion",      desc: "Bags, shoes, garments, accessories",   icon: Shirt },
-  { value: "jewellery",    label: "Jewellery",     desc: "Rings, necklaces, watches, bracelets", icon: Watch },
-  { value: "arts",         label: "Art & Prints",  desc: "Paintings, prints, sculpture, photos", icon: Palette },
-  { value: "collectibles", label: "Collectibles",  desc: "Cards, memorabilia, graded items",     icon: Package },
-  { value: "electronics",  label: "Electronics",   desc: "Devices, components, tech items",      icon: Cpu },
-  { value: "other",        label: "Other",         desc: "Any product not listed above",         icon: Layers },
-];
+// Industry selection was removed from the batch request flow (it was a required
+// field causing avoidable friction/bugs). Orders now default to "other"; the
+// column is still populated so nothing downstream changes. To bring the picker
+// back, restore the INDUSTRIES list + the commented "Industry" block below.
+const DEFAULT_INDUSTRY = "other";
 
 const SUGGESTED_QTY = [25, 50, 100, 250, 500, 1000];
 
@@ -23,7 +20,7 @@ export default function BatchRequestPage() {
   const router = useRouter();
   const [batchName, setBatchName] = useState("");
   const [batchType, setBatchType] = useState<"tags" | "cards" | "mixed">("tags");
-  const [industry, setIndustry] = useState("");
+  const industry = DEFAULT_INDUSTRY; // industry picker removed — see note above
   const [quantity, setQuantity] = useState("");
   const [cardsQuantity, setCardsQuantity] = useState("");
   const [notes, setNotes] = useState("");
@@ -42,7 +39,7 @@ export default function BatchRequestPage() {
 
   const needsTags = batchType === "tags" || batchType === "mixed";
   const needsCards = batchType === "cards" || batchType === "mixed";
-  const canSubmit = !!industry && (!needsTags || !!quantity) && (!needsCards || !!cardsQuantity);
+  const canSubmit = (!needsTags || !!quantity) && (!needsCards || !!cardsQuantity);
 
   const tagUse = chips?.tags ?? null;
   const cardUse = chips?.cards ?? null;
@@ -52,7 +49,6 @@ export default function BatchRequestPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!industry) { toast.error("Please select an industry."); return; }
 
     const tagsQty = needsTags ? parseInt(quantity, 10) : 0;
     const cardsQty = needsCards ? parseInt(cardsQuantity, 10) : 0;
@@ -187,38 +183,7 @@ export default function BatchRequestPage() {
           </div>
         </div>
 
-        {/* Industry */}
-        <div className="space-y-3">
-          <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-            What type of products are these tags for?
-          </Label>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {INDUSTRIES.map(({ value, label, desc, icon: Icon }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setIndustry(value)}
-                style={{
-                  padding: "14px 14px",
-                  borderRadius: "var(--radius-md)",
-                  border: `2px solid ${industry === value ? "var(--color-gold)" : "var(--color-cream)"}`,
-                  backgroundColor: industry === value ? "var(--color-soft-gold)" : "var(--color-pearl)",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  transition: "all 0.15s",
-                }}
-              >
-                <Icon size={18} style={{ color: industry === value ? "var(--color-gold)" : "var(--color-slate)", marginBottom: 8 }} />
-                <p className="font-semibold" style={{ fontSize: "var(--text-body-sm)", color: industry === value ? "var(--color-deep-gold)" : "var(--color-charcoal)", marginBottom: 2 }}>
-                  {label}
-                </p>
-                <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)", lineHeight: 1.4 }}>
-                  {desc}
-                </p>
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Industry picker removed — orders default to "other". See note at top. */}
 
         {/* Quantity — one field per medium in the batch */}
         <div className={needsTags && needsCards ? "grid grid-cols-1 gap-6 sm:grid-cols-2" : ""}>

@@ -69,7 +69,7 @@ export default async function InquiriesPage({
             <p style={{ fontSize: "var(--text-body-sm)" }}>No inquiries yet</p>
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto"><table className="w-full">
             <thead>
               <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
                 {["Name", "Company", "Contact", "Status", "Submitted", ""].map((h) => (
@@ -137,7 +137,7 @@ export default async function InquiriesPage({
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         )}
         <Pagination page={page} totalPages={totalPages} makeHref={pageHref} totalLabel={`${inquiries.length} total`} />
       </div>

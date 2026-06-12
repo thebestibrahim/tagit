@@ -131,7 +131,7 @@ export default async function ProductsPage({
           </div>
         ) : (
           <>
-            <table className="w-full">
+            <div className="overflow-x-auto"><table className="w-full">
               <thead>
                 <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
                   {["Product", "Tag ID", "Tag status", "Price", "Registered", ""].map((h) => (
@@ -200,7 +200,7 @@ export default async function ProductsPage({
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
 
             {/* Pagination */}
             {totalPages > 1 && (

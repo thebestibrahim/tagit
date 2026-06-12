@@ -134,7 +134,7 @@ export default async function AdminCompaniesPage({
             <p style={{ fontSize: "var(--text-body-sm)" }}>No companies found</p>
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto"><table className="w-full">
             <thead>
               <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
                 {["Company", "Industry", "Status", "Applied", ""].map((h) => (
@@ -198,7 +198,7 @@ export default async function AdminCompaniesPage({
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         )}
         <Pagination page={page} totalPages={totalPages} makeHref={pageHref} totalLabel={`${filtered.length} total`} />
       </div>

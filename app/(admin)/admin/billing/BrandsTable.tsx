@@ -80,7 +80,7 @@ export function BrandsTable({ brands }: { brands: BrandRow[] }) {
             <p style={{ fontSize: "var(--text-body-sm)" }}>No brands in this view.</p>
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto"><table className="w-full">
             <thead>
               <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
                 {["Brand", "Plan", "Status", "Next invoice", "Value", "Discount", ""].map((h, i) => (
@@ -130,7 +130,7 @@ export function BrandsTable({ brands }: { brands: BrandRow[] }) {
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </div>

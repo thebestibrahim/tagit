@@ -198,7 +198,7 @@ export default async function AdminBatchesPage({
               )}
             </div>
           ) : (
-            <table className="w-full">
+            <div className="overflow-x-auto"><table className="w-full">
               <thead>
                 <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
                   {["Company", "Batch", "Industry", "Size", "Status", "Created", "Shipped", ""].map((h) => (
@@ -278,7 +278,7 @@ export default async function AdminBatchesPage({
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
           )}
           <Pagination page={page} totalPages={totalPages} makeHref={pageHref} totalLabel={`${allProcessed.length} total`} />
         </div>

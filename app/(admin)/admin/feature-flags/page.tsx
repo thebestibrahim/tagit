@@ -74,7 +74,7 @@ export default async function FeatureFlagsPage({
             <p style={{ fontSize: "var(--text-body-sm)" }}>No feature flags yet</p>
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto"><table className="w-full">
             <thead>
               <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
                 {["Feature", "Master", "Effective access", "Overrides", ""].map((h) => (
@@ -152,7 +152,7 @@ export default async function FeatureFlagsPage({
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         )}
         <Pagination page={page} totalPages={totalPages} makeHref={pageHref} totalLabel={`${allFlags.length} total`} />
       </div>
