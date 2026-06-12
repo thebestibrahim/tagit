@@ -6,6 +6,7 @@ const defaultFlags: FlagMap = {
   certificate_generation: false,
   brand_customisation: false,
   ai_persona: false,
+  analytics_overview: false,
   resale_analytics: false,
   ownership_transfer_fee: false,
   bulk_tag_creation: false,

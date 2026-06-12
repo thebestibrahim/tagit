@@ -7,6 +7,7 @@ const FLAG_KEYS: FlagKey[] = [
   'certificate_generation',
   'brand_customisation',
   'ai_persona',
+  'analytics_overview',
   'resale_analytics',
   'ownership_transfer_fee',
   'bulk_tag_creation',

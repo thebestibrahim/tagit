@@ -36,9 +36,17 @@ const initialFlags = [
     environments: ['production', 'staging']
   },
   {
+    key: 'analytics_overview',
+    name: 'Analytics Overview',
+    description: 'The Analytics page Overview tab: scan activity, top products, and scan/claim location',
+    enabled: true,
+    rollout_percentage: 100,
+    environments: ['production', 'staging']
+  },
+  {
     key: 'resale_analytics',
-    name: 'Resale Analytics Dashboard',
-    description: 'Shows brands detailed analytics on how their items perform in the secondary market',
+    name: 'Resale Analytics',
+    description: 'The Resale Analytics tab: where items travel after resale (previous vs new owner country)',
     enabled: false,
     rollout_percentage: 0,
     environments: ['production', 'staging']

@@ -34,7 +34,7 @@ const FLAG_FOR_HREF: Record<string, FlagKey> = {
   "/dashboard/certificates": "certificate_generation",
   "/dashboard/customization": "brand_customisation",
   "/dashboard/ai-persona": "ai_persona",
-  "/dashboard/analytics": "resale_analytics",
+  "/dashboard/analytics": "analytics_overview",
 };
 
 const topNav = [

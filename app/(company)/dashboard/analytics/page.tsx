@@ -6,8 +6,9 @@ import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { format, subDays } from "date-fns";
-import { BarChart2, Eye, Package, Award, TrendingUp, MapPin } from "lucide-react";
+import { BarChart2, Eye, Package, Award, TrendingUp, MapPin, Lock } from "lucide-react";
 import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
+import FeatureWall from "@/components/company/FeatureWall";
 import ScanChart from "./ScanChart";
 
 type Ranked = { name: string; count: number; pct: number };
@@ -22,11 +23,12 @@ export default async function AnalyticsPage({
   if (!user) redirect("/auth/login");
 
   const flags = await getCurrentBrandFlags();
-  // Overview is available to every brand. The Resale Analytics tab is the only
-  // part gated by the resale_analytics flag.
+  // Two independent flags: the Overview tab and the Resale Analytics tab each
+  // have their own. Both tabs are always shown; a locked tab shows a wall.
+  const analyticsUnlocked = flags.analytics_overview;
   const resaleUnlocked = flags.resale_analytics;
   const { tab } = await searchParams;
-  const activeTab: "overview" | "resale" = tab === "resale" && resaleUnlocked ? "resale" : "overview";
+  const activeTab: "overview" | "resale" = tab === "resale" ? "resale" : "overview";
 
   // Fetch this company's tags
   const { data: tagsData } = await supabase
@@ -233,11 +235,15 @@ export default async function AnalyticsPage({
 
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-8 border-b" style={{ borderColor: "var(--color-cream)" }}>
-        <TabLink label="Overview" tab="overview" active={activeTab === "overview"} />
-        {resaleUnlocked && <TabLink label="Resale Analytics" tab="resale" active={activeTab === "resale"} />}
+        <TabLink label="Overview" tab="overview" active={activeTab === "overview"} locked={!analyticsUnlocked} />
+        <TabLink label="Resale Analytics" tab="resale" active={activeTab === "resale"} locked={!resaleUnlocked} />
       </div>
 
-      {activeTab === "overview" && (
+      {activeTab === "overview" && !analyticsUnlocked && (
+        <FeatureWall name="Analytics" description="See how your tags are scanned and where your items are being used." />
+      )}
+
+      {activeTab === "overview" && analyticsUnlocked && (
       <>
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-4">
@@ -403,7 +409,11 @@ export default async function AnalyticsPage({
       </>
       )}
 
-      {activeTab === "resale" && (
+      {activeTab === "resale" && !resaleUnlocked && (
+        <FeatureWall name="Resale Analytics" description="See where your items travel after resale — the country of the previous owner versus the new owner." />
+      )}
+
+      {activeTab === "resale" && resaleUnlocked && (
         <div>
           <div className="card-raised rounded-xl p-6 mb-6">
             <div className="flex items-center gap-2 mb-1">
@@ -422,11 +432,11 @@ export default async function AnalyticsPage({
   );
 }
 
-function TabLink({ label, tab, active }: { label: string; tab: string; active: boolean }) {
+function TabLink({ label, tab, active, locked }: { label: string; tab: string; active: boolean; locked?: boolean }) {
   return (
     <Link
       href={`/dashboard/analytics?tab=${tab}`}
-      className="px-4 py-2.5 -mb-px font-medium"
+      className="inline-flex items-center gap-1.5 px-4 py-2.5 -mb-px font-medium"
       style={{
         fontSize: "var(--text-body-sm)",
         color: active ? "var(--color-charcoal)" : "var(--color-slate)",
@@ -435,6 +445,7 @@ function TabLink({ label, tab, active }: { label: string; tab: string; active: b
       }}
     >
       {label}
+      {locked && <Lock size={12} style={{ color: "var(--color-mist)", opacity: 0.7 }} />}
     </Link>
   );
 }
@@ -458,7 +469,10 @@ function LocationCard({ title, rows, empty }: { title: string; rows: Ranked[]; e
               <div style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: "var(--color-linen)", overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${r.pct}%`, backgroundColor: "var(--color-gold)", borderRadius: 3 }} />
               </div>
-              <span className="tabular-nums" style={{ width: 38, textAlign: "right", fontSize: "var(--text-body-sm)", fontWeight: 600, color: "var(--color-graphite)" }}>{r.pct}%</span>
+              <span className="tabular-nums" style={{ width: 90, textAlign: "right", fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
+                <span style={{ fontWeight: 600 }}>{r.count.toLocaleString()}</span>
+                <span style={{ color: "var(--color-mist)" }}> · {r.pct}%</span>
+              </span>
             </div>
           ))}
         </div>
