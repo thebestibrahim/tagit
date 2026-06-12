@@ -1,5 +1,11 @@
 import { Document, Page, Text, View, renderToBuffer } from "@react-pdf/renderer";
-import { formatNaira } from "@/lib/billing/pricing";
+
+// The built-in PDF fonts (Helvetica) have no ₦ glyph — it renders as a tofu
+// box — so the PDF uses the "NGN" currency code instead of the symbol.
+function money(kobo: number): string {
+  const sign = kobo < 0 ? "-" : "";
+  return `${sign}NGN ${Math.abs(kobo / 100).toLocaleString("en-NG", { maximumFractionDigits: 0 })}`;
+}
 
 // Branded invoice PDF, attached to every invoice email. Kept deliberately
 // simple: wordmark, parties, line items, totals, status.
@@ -79,7 +85,7 @@ function InvoiceDocument({ data }: { data: InvoicePdfData }) {
           {positive.map((item, idx) => (
             <View key={idx} style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 7, borderTopWidth: 1, borderTopColor: LINE }}>
               <Text style={{ fontSize: 10, color: INK }}>{item.description}</Text>
-              <Text style={{ fontSize: 10, color: INK }}>{formatNaira(item.total)}</Text>
+              <Text style={{ fontSize: 10, color: INK }}>{money(item.total)}</Text>
             </View>
           ))}
           {data.discountAmount > 0 && (
@@ -87,12 +93,12 @@ function InvoiceDocument({ data }: { data: InvoicePdfData }) {
               <Text style={{ fontSize: 10, color: GOLD }}>
                 Discount{data.discountPercentage ? ` (${data.discountPercentage}% off)` : ""}
               </Text>
-              <Text style={{ fontSize: 10, color: GOLD }}>-{formatNaira(data.discountAmount)}</Text>
+              <Text style={{ fontSize: 10, color: GOLD }}>{money(-data.discountAmount)}</Text>
             </View>
           )}
           <View style={{ flexDirection: "row", justifyContent: "space-between", paddingTop: 12, marginTop: 4, borderTopWidth: 2, borderTopColor: INK }}>
             <Text style={{ fontSize: 9, color: INK, textTransform: "uppercase", letterSpacing: 1 }}>Total</Text>
-            <Text style={{ fontSize: 15, color: INK }}>{formatNaira(data.amount)}</Text>
+            <Text style={{ fontSize: 15, color: INK }}>{money(data.amount)}</Text>
           </View>
         </View>
 

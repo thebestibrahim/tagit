@@ -179,9 +179,19 @@ export default async function BillingPage() {
                   <p className="font-medium" style={{ color: active ? "var(--color-charcoal)" : "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>{feature.name}</p>
                   <p className="mt-0.5" style={{ color: "var(--color-mist)", fontSize: "var(--text-caption)" }}>{feature.description}</p>
                 </div>
-                <span className="shrink-0 text-micro font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: active ? "#DCFCE7" : "var(--color-cream)", color: active ? "#166534" : "var(--color-mist)" }}>
-                  {active ? "Active" : "Coming soon"}
-                </span>
+                {active ? (
+                  <span className="shrink-0 text-micro font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: "#DCFCE7", color: "#166534" }}>
+                    Active
+                  </span>
+                ) : (
+                  <a
+                    href={`mailto:business@tagitlux.com?subject=${encodeURIComponent(`Upgrade request — ${feature.name}`)}`}
+                    className="shrink-0 text-micro font-semibold px-3 py-1 rounded-full"
+                    style={{ backgroundColor: "var(--color-soft-gold)", color: "var(--color-deep-gold)", textDecoration: "none" }}
+                  >
+                    Request upgrade
+                  </a>
+                )}
               </div>
             );
           })}

@@ -46,33 +46,49 @@ export default function FeatureWall({
             lineHeight: 1.2,
           }}
         >
-          This feature isn&apos;t available yet
+          Not on your current plan
         </h1>
         <p
           className="mt-3"
           style={{
             color: "var(--color-slate)",
             fontSize: "var(--text-body-sm)",
-            maxWidth: 420,
+            maxWidth: 440,
             lineHeight: 1.6,
           }}
         >
           {description ? `${description} ` : ""}
-          {`${name} isn't currently enabled for your account. Feature access is managed by the Tagit team.`}
+          {`${name} isn't included in your current plan. Upgrade to unlock it.`}
         </p>
 
-        <Link
-          href="/dashboard/features"
-          className="inline-flex items-center gap-1.5 mt-7 px-5 py-2.5 rounded-lg font-medium"
-          style={{
-            backgroundColor: "var(--color-onyx)",
-            color: "var(--color-pearl)",
-            fontSize: "var(--text-body-sm)",
-          }}
-        >
-          View your plan
-          <ArrowRight size={15} />
-        </Link>
+        <div className="flex items-center gap-3 mt-7">
+          <a
+            href={`mailto:business@tagitlux.com?subject=${encodeURIComponent(`Upgrade request — ${name}`)}`}
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg font-medium"
+            style={{
+              backgroundColor: "var(--color-onyx)",
+              color: "var(--color-pearl)",
+              fontSize: "var(--text-body-sm)",
+              textDecoration: "none",
+            }}
+          >
+            Request upgrade
+            <ArrowRight size={15} />
+          </a>
+          <Link
+            href="/dashboard/features"
+            className="inline-flex items-center px-5 py-2.5 rounded-lg font-medium"
+            style={{
+              backgroundColor: "var(--color-pearl)",
+              color: "var(--color-graphite)",
+              border: "1px solid var(--color-cream)",
+              fontSize: "var(--text-body-sm)",
+              textDecoration: "none",
+            }}
+          >
+            View your plan
+          </Link>
+        </div>
       </div>
     </div>
   );
