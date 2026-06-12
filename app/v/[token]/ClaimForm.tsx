@@ -151,6 +151,12 @@ export default function ClaimForm({
             {loading ? <Loader2 size={16} className="animate-spin" style={{ display: "inline" }} /> : null}
             {loading ? "Sending code…" : "Continue"}
           </button>
+          <p style={{ fontSize: "12px", color: "#9E9EA3", lineHeight: 1.6, textAlign: "center", margin: "2px 0 0" }}>
+            By continuing, you agree to our{" "}
+            <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: "#6E6E73", textDecoration: "underline" }}>Terms</a>{" "}
+            and{" "}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#6E6E73", textDecoration: "underline" }}>Privacy Policy</a>, including the collection of approximate location data based on your IP address.
+          </p>
         </form>
       )}
 

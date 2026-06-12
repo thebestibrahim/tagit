@@ -25,7 +25,7 @@ export default function PrivacyPage() {
           Privacy Policy
         </h1>
         <p style={{ fontSize: 14, color: "#9E9EA3", margin: "0 0 48px", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
-          Last updated: May 2025
+          Last updated: June 2026
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
@@ -55,6 +55,18 @@ export default function PrivacyPage() {
               body: "Depending on your location, you may have rights to access, correct, or delete your personal data. To exercise these rights, contact us at business@tagitlux.com. We will respond within 30 days.",
             },
             {
+              title: "Location data",
+              body: "When a consumer scans a Tagit-enabled item, Tagit collects the approximate geographic location of that scan based on the IP address of the device used. This location data is collected at country and region level only. Tagit does not collect precise GPS coordinates or device location.\n\nLocation data collected includes the country and approximate region from which a scan, ownership claim, or ownership transfer was initiated. This data is used to provide brand partners with analytics showing where their items are being used and where ownership is changing hands.\n\nBrand partners receive aggregate and anonymised location analytics through their Tagit dashboard. Individual consumer location data is never shared with brand partners in an identifiable form.\n\nLocation data is retained for the lifetime of the product record to which it belongs. Consumers may request deletion of their location data by contacting info@tagitlux.com.",
+            },
+            {
+              title: "Data we collect on scans",
+              body: "Each time a Tagit-enabled item is scanned, Tagit automatically records the date and time of the scan, the approximate geographic location based on IP address, the device type, and the item scanned. This data is used to detect fraudulent scanning activity and to provide analytics to brand partners.",
+            },
+            {
+              title: "Your rights under GDPR and the NDPA",
+              body: "If you are located in the European Union or United Kingdom you have rights under the General Data Protection Regulation including the right to access your personal data, the right to request correction or deletion, and the right to object to processing. To exercise these rights contact info@tagitlux.com.\n\nIf you are located in Nigeria your data rights are governed by the Nigeria Data Protection Act 2023. Tagit processes personal data in compliance with the NDPA. To exercise your rights contact info@tagitlux.com.",
+            },
+            {
               title: "Cookies",
               body: "We use cookies and similar technologies to keep you signed in and to understand how the platform is used. You can manage cookie preferences through your browser settings.",
             },
@@ -71,9 +83,11 @@ export default function PrivacyPage() {
               <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 400, fontStyle: "italic", color: "#1F1F22", letterSpacing: "-0.015em", margin: "0 0 12px" }}>
                 {section.title}
               </h2>
-              <p style={{ fontSize: 14, color: "#6E6E73", lineHeight: 1.75, margin: 0, letterSpacing: "-0.003em" }}>
-                {section.body}
-              </p>
+              {section.body.split("\n\n").map((para, i) => (
+                <p key={i} style={{ fontSize: 14, color: "#6E6E73", lineHeight: 1.75, margin: i === 0 ? 0 : "12px 0 0", letterSpacing: "-0.003em" }}>
+                  {para}
+                </p>
+              ))}
             </div>
           ))}
         </div>

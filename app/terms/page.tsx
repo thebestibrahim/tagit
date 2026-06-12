@@ -25,7 +25,7 @@ export default function TermsPage() {
           Terms of Service
         </h1>
         <p style={{ fontSize: 14, color: "#9E9EA3", margin: "0 0 48px", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
-          Last updated: May 2025
+          Last updated: June 2026
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
@@ -45,6 +45,18 @@ export default function TermsPage() {
             {
               title: "Ownership records",
               body: "Ownership records created on the Tagit platform are permanent and cannot be altered or deleted. This permanence is a core feature of the service. You are responsible for ensuring that any ownership claim or transfer you initiate is accurate and authorised.",
+            },
+            {
+              title: "Analytics and location data",
+              body: "By scanning a Tagit-enabled item or claiming ownership of an item through the Tagit platform, you consent to Tagit collecting approximate location data based on your IP address for the purposes described in our Privacy Policy. This data enables brand partners to understand where their items are being used and is an integral part of the Tagit authentication service.\n\nBrand partners who use the Tagit platform agree that location analytics provided to them represent aggregate data about scan and ownership activity and may not be used to identify, target, or contact individual consumers.",
+            },
+            {
+              title: "Data retention",
+              body: "Tagit retains scan and location data for the lifetime of the product record to which it belongs. Ownership records are retained permanently as part of an item's provenance history. Consumers may request deletion of personal data not forming part of a permanent provenance record by contacting info@tagitlux.com.",
+            },
+            {
+              title: "European Union compliance",
+              body: "Tagit operates in compliance with the EU Digital Product Passport framework and applicable data protection law. Brand partners selling into the European Union acknowledge that Tagit's authentication and ownership tracking services are designed to support compliance with EU Digital Product Passport requirements coming into effect between 2027 and 2029.",
             },
             {
               title: "Intellectual property",
@@ -75,9 +87,11 @@ export default function TermsPage() {
               <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 400, fontStyle: "italic", color: "#1F1F22", letterSpacing: "-0.015em", margin: "0 0 12px" }}>
                 {section.title}
               </h2>
-              <p style={{ fontSize: 14, color: "#6E6E73", lineHeight: 1.75, margin: 0, letterSpacing: "-0.003em" }}>
-                {section.body}
-              </p>
+              {section.body.split("\n\n").map((para, i) => (
+                <p key={i} style={{ fontSize: 14, color: "#6E6E73", lineHeight: 1.75, margin: i === 0 ? 0 : "12px 0 0", letterSpacing: "-0.003em" }}>
+                  {para}
+                </p>
+              ))}
             </div>
           ))}
         </div>

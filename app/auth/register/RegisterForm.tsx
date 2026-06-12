@@ -405,6 +405,12 @@ export default function RegisterForm() {
                   {loading && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />}
                   {loading ? "Submitting application…" : "Submit application"}
                 </button>
+                <p style={{ marginTop: 14, fontSize: 12, color: "#9E9EA3", lineHeight: 1.6, textAlign: "center", letterSpacing: "-0.003em" }}>
+                  By submitting, you agree to Tagit&apos;s{" "}
+                  <Link href="/terms" target="_blank" style={{ color: "#4A4A4F", borderBottom: "1px solid #E8E2D5", textDecoration: "none" }}>Terms of Service</Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" target="_blank" style={{ color: "#4A4A4F", borderBottom: "1px solid #E8E2D5", textDecoration: "none" }}>Privacy Policy</Link>.
+                </p>
               </form>
 
               <p style={{ marginTop: 24, fontSize: 13, color: "#9E9EA3", letterSpacing: "-0.003em" }}>
