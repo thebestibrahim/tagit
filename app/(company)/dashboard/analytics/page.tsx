@@ -161,8 +161,8 @@ export default async function AnalyticsPage({
 
   // ── Location analytics ──
   // Scans: scan_logs.geo_location (JSONB) → country. Claims: ownership_claims
-  // .claim_location (free text). Resale has no stored country yet, so it shows
-  // an empty state until location capture is added to transfers.
+  // .claim_location (country name captured from edge geo at claim time). Resale:
+  // transfer_requests.from_country/to_country on completed transfers.
   let scanCountries: Ranked[] = [];
   let claimCountries: Ranked[] = [];
   let resalePrev: Ranked[] = [];
@@ -174,7 +174,7 @@ export default async function AnalyticsPage({
       supabase.from("transfer_requests").select("from_country, to_country").in("tag_id", tagIds).eq("status", "completed"),
     ]);
     scanCountries = rankLocations((geoRows ?? []).map((r) => extractCountry(r.geo_location)));
-    claimCountries = rankLocations((claimRows ?? []).map((r) => r.claim_location));
+    claimCountries = rankLocations((claimRows ?? []).map((r) => countryName(r.claim_location)));
     resalePrev = rankLocations((transferRows ?? []).map((r) => countryName(r.from_country)));
     resaleNew = rankLocations((transferRows ?? []).map((r) => countryName(r.to_country)));
   }

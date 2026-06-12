@@ -127,6 +127,20 @@ export async function POST(request: Request) {
   const headerStore = await headers();
   const ip = headerStore.get("x-forwarded-for") ?? headerStore.get("x-real-ip") ?? null;
 
+  // Country of the claimant from Vercel edge geo (country level only) — mapped
+  // to a full name. Powers the "Where ownership is being claimed" location card.
+  // An explicit client-provided location still wins; geo is the fallback so the
+  // data is captured even though the claim form collects no location field.
+  const countryCode = headerStore.get("x-vercel-ip-country");
+  let geoCountry: string | null = null;
+  if (countryCode && /^[A-Za-z]{2}$/.test(countryCode)) {
+    try {
+      geoCountry = new Intl.DisplayNames(["en"], { type: "region" }).of(countryCode.toUpperCase()) ?? countryCode;
+    } catch {
+      geoCountry = countryCode;
+    }
+  }
+
   // Create claim
   const { data: claimData, error: claimError } = await admin
     .from("ownership_claims")
@@ -135,7 +149,7 @@ export async function POST(request: Request) {
       claimant_name,
       claimant_email,
       claim_ip: ip,
-      claim_location: claim_location ?? null,
+      claim_location: (claim_location?.trim() || geoCountry) ?? null,
       status: "pending",
       // Tag stays `live`; the brand must manually approve before this expiry
       // (now + 24h), after which the claim lapses and the item is claimable again.

@@ -386,23 +386,10 @@ function PlanStatus({
     );
   }
 
-  // Active — neutral.
-  return (
-    <BannerShell tone="default">
-      <span className="inline-block w-2 h-2 rounded-full mt-2 shrink-0" style={{ backgroundColor: "#16A34A" }} />
-      <div className="flex-1">
-        <p className="font-semibold" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>
-          {planName} · Active — next invoice {formatNaira(nextAmount)}{sub.current_period_end ? ` on ${fmtDate(sub.current_period_end)}` : ""}
-        </p>
-        {subDiscount && (
-          <p className="mt-0.5" style={{ color: "var(--color-deep-gold)", fontSize: "var(--text-caption)" }}>
-            {subDiscount.percentage}% off — {subDiscount.duration - subDiscount.used} cycles remaining
-          </p>
-        )}
-      </div>
-      <ManageLink />
-    </BannerShell>
-  );
+  // Active — neutral. The sidebar plan chip already shows this, so the Overview
+  // doesn't repeat it; only the actionable states above (trial / overdue /
+  // suspended) surface a banner here.
+  return null;
 }
 
 function BannerShell({ tone, children }: { tone: "gold" | "default"; children: React.ReactNode }) {
