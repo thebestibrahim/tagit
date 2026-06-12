@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { formatCurrency } from "@/lib/billing/pricing";
 import Link from "next/link";
 import { Plus, Package } from "lucide-react";
 import { Suspense } from "react";
@@ -181,8 +182,8 @@ export default async function ProductsPage({
                       </td>
                       <td className="px-5 py-4">
                         <span style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-                          {product.retail_price
-                            ? `${product.currency} ${product.retail_price.toLocaleString()}`
+                          {product.retail_price != null
+                            ? formatCurrency(product.retail_price, product.currency)
                             : "—"}
                         </span>
                       </td>

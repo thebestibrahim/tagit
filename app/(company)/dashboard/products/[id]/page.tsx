@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/billing/pricing";
 import Image from "next/image";
 import { format } from "date-fns";
 import { ChevronLeft, Pencil, Copy, Tag, User, ArrowRightLeft, Award, Package, CheckCircle2 } from "lucide-react";
@@ -285,7 +286,7 @@ export default async function ProductDetailPage({
       title: rec.acquisition_type === "origin" ? "Ownership established" : "Ownership transferred",
       meta: [
         `${rec.owner_name} · ${rec.owner_email}`,
-        ...(rec.sale_price ? [`${rec.currency} ${rec.sale_price.toLocaleString()}`] : []),
+        ...(rec.sale_price ? [formatCurrency(rec.sale_price, rec.currency)] : []),
         ...(rec.ended_at ? [`Ownership ended ${fmtDate(rec.ended_at)}`] : rec.is_current ? ["Current owner"] : []),
       ],
       badge: rec.is_current
@@ -305,7 +306,7 @@ export default async function ProductDetailPage({
       title: "Transfer of ownership initiated",
       meta: [
         `To: ${tr.to_name} · ${tr.to_email}`,
-        ...(tr.sale_price ? [`${tr.currency} ${tr.sale_price.toLocaleString()}`] : []),
+        ...(tr.sale_price ? [formatCurrency(tr.sale_price, tr.currency)] : []),
         ...(tr.completed_at ? [`Completed ${fmtDate(tr.completed_at)}`] : tr.status !== "completed" && tr.status !== "cancelled" ? [`Expires ${fmtDate(tr.expires_at)}`] : []),
       ],
       badge: { label: tr.status.replace(/_/g, " "), bg: badge.bg, color: badge.color },
@@ -435,7 +436,7 @@ export default async function ProductDetailPage({
           <div>
             <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>Retail price</p>
             <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
-              {product.retail_price ? `${product.currency} ${product.retail_price.toLocaleString()}` : "—"}
+              {product.retail_price != null ? formatCurrency(product.retail_price, product.currency) : "—"}
             </p>
           </div>
           <div>

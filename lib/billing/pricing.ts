@@ -56,6 +56,23 @@ export function formatNaira(kobo: number): string {
   return formatMoney(kobo, "NGN");
 }
 
+// Format a MAJOR-unit amount (e.g. a product retail/sale price stored in whole
+// units, not kobo) in any currency code, showing the proper symbol. Falls back
+// to "CODE amount" if the currency code is unknown/invalid.
+export function formatCurrency(amount: number, currency?: string | null): string {
+  const code = (currency || "NGN").toUpperCase();
+  try {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: code,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${code} ${amount.toLocaleString()}`;
+  }
+}
+
 // Calculate the next billing date from a given date.
 export function getNextBillingDate(from: Date, interval: BillingInterval): Date {
   const next = new Date(from);

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
+import { formatCurrency } from "@/lib/billing/pricing";
 import Link from "next/link";
 import { ArrowLeft, Award, ExternalLink, ShieldCheck } from "lucide-react";
 import type { CompanyStatus } from "@/types/database";
@@ -198,9 +199,9 @@ export default async function ClaimDetailPage({
           <p className="font-semibold mb-0.5" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body)" }}>
             {product?.name ?? "—"}
           </p>
-          {product?.retail_price && (
+          {product?.retail_price != null && (
             <p className="mb-2" style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-              {product.currency} {product.retail_price.toLocaleString()}
+              {formatCurrency(product.retail_price, product.currency)}
             </p>
           )}
           <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--color-cream)" }}>

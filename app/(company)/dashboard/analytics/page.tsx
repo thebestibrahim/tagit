@@ -483,5 +483,15 @@ function rankLocations(values: (string | null | undefined)[]): Ranked[] {
 function extractCountry(geo: unknown): string | null {
   if (!geo || typeof geo !== "object") return null;
   const g = geo as Record<string, unknown>;
-  return (g.country as string) ?? (g.country_name as string) ?? (g.region as string) ?? null;
+  const raw = (g.country as string) ?? (g.country_name as string) ?? (g.region as string) ?? null;
+  if (!raw) return null;
+  // Vercel stores a 2-letter ISO country code (e.g. "NG"); show the full name.
+  if (/^[A-Za-z]{2}$/.test(raw)) {
+    try {
+      return new Intl.DisplayNames(["en"], { type: "region" }).of(raw.toUpperCase()) ?? raw;
+    } catch {
+      return raw;
+    }
+  }
+  return raw;
 }

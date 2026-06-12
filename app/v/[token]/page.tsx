@@ -33,11 +33,29 @@ function validateHmac(token: string, signature: string) {
 async function logScan(tagId: string, result: string, headerStore: Awaited<ReturnType<typeof headers>>) {
   const ip = headerStore.get("x-forwarded-for") ?? headerStore.get("x-real-ip") ?? null;
   const userAgent = headerStore.get("user-agent") ?? null;
+
+  // Country/region/city are provided by Vercel's edge network (derived from the
+  // request IP) — country/region level only, no GPS, no third-party GeoIP. The
+  // 2-letter country code is mapped to a full name at display time. Absent in
+  // local dev, so geo_location is null there.
+  const country = headerStore.get("x-vercel-ip-country");
+  const region = headerStore.get("x-vercel-ip-country-region");
+  const city = headerStore.get("x-vercel-ip-city");
+  const geo =
+    country || region || city
+      ? {
+          country: country ?? null,
+          region: region ?? null,
+          city: city ? decodeURIComponent(city) : null,
+        }
+      : null;
+
   await admin.from("scan_logs").insert({
     tag_id: tagId,
     ip_address: ip,
     user_agent: userAgent,
     scan_result: result,
+    geo_location: geo,
   }).then(() => {});
 }
 

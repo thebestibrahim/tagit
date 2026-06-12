@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import AcceptTransferButton from "./AcceptTransferButton";
 import { ShieldX } from "lucide-react";
+import { formatCurrency } from "@/lib/billing/pricing";
 import Image from "next/image";
 
 const admin = createClient(
@@ -124,7 +125,7 @@ export default async function TransferAcceptPage({
               {[
                 ["From", owner?.owner_name || "—"],
                 ["To", transfer.to_name],
-                ...(transfer.sale_price ? [["Sale price", `${transfer.currency || "NGN"} ${transfer.sale_price.toLocaleString()}`]] : []),
+                ...(transfer.sale_price ? [["Sale price", formatCurrency(transfer.sale_price, transfer.currency)]] : []),
                 ["Brand", product?.companies?.name || "—"],
               ].map(([label, value]) => (
                 <tr key={label} style={{ borderBottom: "1px solid #F5F2EC" }}>
