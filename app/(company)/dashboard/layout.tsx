@@ -3,6 +3,7 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { CompanySidebar } from "@/components/company/Sidebar";
 import { SuspensionGuard } from "@/components/company/SuspensionGuard";
+import { MobileNav } from "@/components/layout/MobileNav";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { CompanyStatus } from "@/types/database";
 import { getFlagsForBrand } from "@/lib/feature-flags/server";
@@ -49,8 +50,13 @@ export default async function CompanyLayout({ children }: { children: React.Reac
     <FlagProvider flags={flags}>
       <SuspensionGuard suspended={suspended} />
       <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#1C1A14" }}>
-        <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} />
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden rounded-tl-xl rounded-bl-xl" style={{ backgroundColor: "var(--color-smoke)" }}>
+        <div className="hidden lg:flex shrink-0">
+          <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} />
+        </div>
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden lg:rounded-tl-xl lg:rounded-bl-xl" style={{ backgroundColor: "var(--color-smoke)" }}>
+          <MobileNav label={company.name}>
+            <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} />
+          </MobileNav>
           <main className="flex-1 overflow-y-auto bg-dot-grid">
             {children}
           </main>

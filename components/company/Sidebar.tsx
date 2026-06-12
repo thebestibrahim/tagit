@@ -20,9 +20,22 @@ import {
   Award,
   KeyRound,
   CreditCard,
+  Lock,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useFlags } from "@/lib/feature-flags/client";
+import type { FlagKey } from "@/lib/feature-flags/types";
 import { toast } from "sonner";
+
+// Nav items whose page is gated by a feature flag. When the flag is off the
+// item still shows (and stays clickable — the page renders its own feature
+// wall), but a lock icon signals it's not on the brand's plan.
+const FLAG_FOR_HREF: Record<string, FlagKey> = {
+  "/dashboard/certificates": "certificate_generation",
+  "/dashboard/customization": "brand_customisation",
+  "/dashboard/ai-persona": "ai_persona",
+  "/dashboard/analytics": "resale_analytics",
+};
 
 const topNav = [
   { label: "Overview", href: "/dashboard",          icon: LayoutDashboard },
@@ -65,8 +78,10 @@ interface CompanySidebarProps {
 export function CompanySidebar({ companyName, logoUrl, billing }: CompanySidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const flags = useFlags();
 
   const idKeysActive = pathname.startsWith(idKeysNav.basePath);
+  const idKeysLocked = !flags.bulk_tag_creation;
   const [idKeysOpen, setIdKeysOpen] = useState(idKeysActive);
 
   async function handleSignOut() {
@@ -78,11 +93,17 @@ export function CompanySidebar({ companyName, logoUrl, billing }: CompanySidebar
 
   function NavLink({ label, href, icon: Icon }: { label: string; href: string; icon: React.FC<{ size: number; strokeWidth?: number; style?: React.CSSProperties }> }) {
     const active = href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
+    const flagKey = FLAG_FOR_HREF[href];
+    const locked = flagKey ? !flags[flagKey] : false;
     return (
       <Link href={href} className={`nav-item nav-item-dark ${active ? "active" : ""}`}>
         <Icon size={16} strokeWidth={1.5} style={{ color: active ? "#B8945D" : "#52525B" }} />
         <span className="flex-1">{label}</span>
-        {active && <ChevronRight size={12} style={{ color: "#52525B" }} />}
+        {locked ? (
+          <Lock size={12} style={{ color: "#52525B", opacity: 0.7 }} />
+        ) : active ? (
+          <ChevronRight size={12} style={{ color: "#52525B" }} />
+        ) : null}
       </Link>
     );
   }
@@ -150,6 +171,7 @@ export function CompanySidebar({ companyName, logoUrl, billing }: CompanySidebar
         >
           <idKeysNav.icon size={16} strokeWidth={1.5} style={{ color: idKeysActive ? "#B8945D" : "#52525B" }} />
           <span className="flex-1">{idKeysNav.label}</span>
+          {idKeysLocked && <Lock size={12} style={{ color: "#52525B", opacity: 0.7 }} />}
           {idKeysOpen ? (
             <ChevronDown size={12} style={{ color: "#52525B" }} />
           ) : (
