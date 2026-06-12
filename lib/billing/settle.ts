@@ -63,12 +63,15 @@ export async function settleInvoice(
     }
   }
 
-  // Payment confirmation email (best-effort).
-  const { data: company } = await admin
-    .from("companies")
-    .select("name, email")
-    .eq("id", invoice.company_id)
-    .single();
+  // Receipt email (best-effort) — line items, reference, paid date, PAID badge.
+  const [{ data: company }, { data: items }] = await Promise.all([
+    admin.from("companies").select("name, email").eq("id", invoice.company_id).single(),
+    admin
+      .from("invoice_line_items")
+      .select("description, total, sort_order")
+      .eq("invoice_id", invoice.id)
+      .order("sort_order", { ascending: true }),
+  ]);
   if (company?.email) {
     await sendPaymentConfirmedEmail(company.email, {
       companyName: company.name,
@@ -76,7 +79,13 @@ export async function settleInvoice(
       invoiceNumber: invoiceNumber(invoice),
       type: invoice.type,
       periodLabel,
-    }).catch((err) => log.error("billing/settle", "Payment confirmed email failed", err));
+      paidAt: now.toISOString(),
+      reference: opts.reference,
+      lineItems: (items ?? []).map((i) => ({ description: i.description, total: i.total })),
+      subtotal: invoice.subtotal,
+      discountAmount: invoice.discount_amount,
+      discountPercentage: invoice.discount_percentage,
+    }).catch((err) => log.error("billing/settle", "Receipt email failed", err));
   }
 
   return { alreadyPaid: false };

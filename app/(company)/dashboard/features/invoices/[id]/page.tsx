@@ -6,6 +6,7 @@ import { ChevronLeft, ArrowRight } from "lucide-react";
 import type { Invoice, InvoiceLineItem } from "@/types/database";
 import { formatNaira } from "@/lib/billing/pricing";
 import { invoiceNumber } from "@/lib/billing/invoices";
+import { PrintReceiptButton } from "./PrintReceiptButton";
 
 function fmtDate(d: string | null | undefined): string {
   if (!d) return "—";
@@ -43,7 +44,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
-      <Link href="/dashboard/features" className="inline-flex items-center gap-1.5 mb-8" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)", textDecoration: "none" }}>
+      <Link href="/dashboard/features" className="inline-flex items-center gap-1.5 mb-8 print:hidden" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)", textDecoration: "none" }}>
         <ChevronLeft size={16} /> Back to billing
       </Link>
 
@@ -93,8 +94,23 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
             Pay {formatNaira(invoice.amount)} now <ArrowRight size={15} />
           </a>
         )}
-        {invoice.status === "paid" && invoice.paid_at && (
-          <p className="mt-8 text-center text-body-sm" style={{ color: "#166534" }}>Payment received {fmtDate(invoice.paid_at)}.</p>
+        {invoice.status === "paid" && (
+          <div className="mt-8">
+            <div className="flex flex-col items-center gap-2 py-6 rounded-xl" style={{ backgroundColor: "#DCFCE7", border: "1px solid #BBF7D0" }}>
+              <span className="text-micro font-bold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full" style={{ backgroundColor: "#166534", color: "#fff" }}>
+                ● Paid
+              </span>
+              {invoice.paid_at && (
+                <p className="text-body-sm font-medium" style={{ color: "#166534" }}>Paid on {fmtDate(invoice.paid_at)}</p>
+              )}
+              {invoice.paystack_reference && (
+                <p className="text-caption" style={{ color: "#15803D", fontFamily: "var(--font-jetbrains-mono)" }}>
+                  Ref: {invoice.paystack_reference}
+                </p>
+              )}
+            </div>
+            <PrintReceiptButton />
+          </div>
         )}
       </div>
     </div>

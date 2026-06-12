@@ -652,9 +652,24 @@ export async function sendBatchInvoiceEmail(to: string, opts: InvoiceEmailOpts) 
   await resend.emails.send({ from: FROM, to, subject: `Invoice for your chip order — ${opts.invoiceNumber}`, html, attachments: invoiceAttachments(opts) });
 }
 
+// Payment receipt — sent when an invoice is settled. Doubles as the brand's
+// receipt for their records: receipt number, paid date, reference, line items,
+// totals and a PAID badge.
 export async function sendPaymentConfirmedEmail(
   to: string,
-  opts: { companyName: string; amount: number; invoiceNumber: string; type: "subscription" | "batch"; periodLabel?: string }
+  opts: {
+    companyName: string;
+    amount: number;
+    invoiceNumber: string;
+    type: "subscription" | "batch";
+    periodLabel?: string;
+    paidAt: string;
+    reference: string | null;
+    lineItems: { description: string; total: number }[];
+    subtotal: number;
+    discountAmount: number;
+    discountPercentage: number | null;
+  }
 ) {
   const what =
     opts.type === "batch"
@@ -662,16 +677,47 @@ export async function sendPaymentConfirmedEmail(
       : opts.periodLabel
       ? `Your subscription is active for ${opts.periodLabel}.`
       : "Your subscription is active.";
+
   const html = base(
     `
-    ${eyebrow("Payment Received")}
+    ${eyebrow("Receipt")}
     ${heading("Payment received")}
-    ${para(`Thank you, ${opts.companyName}. We have received your payment of <strong style="color:${INK};font-weight:600">${formatNaira(opts.amount)}</strong> for invoice ${opts.invoiceNumber}.`)}
-    ${para(what)}
+
+    <table role="presentation" width="100%" style="margin:0 0 20px"><tr>
+      <td align="center" style="padding:12px;background:#DCFCE7;border-radius:8px;font-family:${MONO};font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#166534;font-weight:700">● Paid</td>
+    </tr></table>
+
+    ${para(`Thank you, ${opts.companyName}. We have received your payment of <strong style="color:${INK};font-weight:600">${formatNaira(opts.amount)}</strong>.`)}
+
+    <table role="presentation" style="width:100%;border-collapse:collapse;margin:18px 0 6px">
+      ${keyVal("Receipt no.", opts.invoiceNumber)}
+      ${keyVal("Paid on", fmtDate(opts.paidAt))}
+      ${opts.reference ? keyVal("Reference", opts.reference) : ""}
+    </table>
+
+    ${invoiceTable({
+      companyName: opts.companyName,
+      invoiceNumber: opts.invoiceNumber,
+      subtotal: opts.subtotal,
+      discountAmount: opts.discountAmount,
+      discountPercentage: opts.discountPercentage,
+      amount: opts.amount,
+      dueDate: opts.paidAt,
+      payUrl: null,
+      paid: false, // prominent PAID badge is shown above; avoid a duplicate here
+      lineItems: opts.lineItems,
+    })}
+
+    ${para(`<span style="font-size:13px;color:${MUTE}">${what}</span>`)}
   `,
     { preheader: `Payment received — ${formatNaira(opts.amount)}` }
   );
-  await resend.emails.send({ from: FROM, to, subject: `Payment received — ${formatNaira(opts.amount)}`, html });
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Payment Received — ${formatNaira(opts.amount)} — Receipt #${opts.invoiceNumber}`,
+    html,
+  });
 }
 
 export async function sendDiscountAppliedEmail(

@@ -26,7 +26,7 @@ export function MobileNav({
 
   return (
     <div
-      className="lg:hidden flex items-center gap-3 h-14 px-4 shrink-0"
+      className="lg:hidden print:hidden flex items-center gap-3 h-14 px-4 shrink-0"
       style={{ backgroundColor: "#1C1A14", borderBottom: "1px solid #2E2A1E" }}
     >
       <Sheet open={open} onOpenChange={setOpen}>
