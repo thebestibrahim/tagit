@@ -70,6 +70,18 @@ function SubscriptionForm({ companyId, data, onSaved }: { companyId: string; dat
   const planCardLimit = selectedPlan?.card_limit;
   const limitHint = (v: number | null | undefined) => (v == null ? "unlimited (Bespoke)" : `${v} lifetime`);
 
+  const isSetUp = !!sub;
+  const currentPlan = data.plans.find((p) => p.id === sub?.plan_id);
+  const fmtD = (d: string | null | undefined) =>
+    d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—";
+  // A mid-cycle edit: an active brand whose plan/interval/price changed, with no
+  // trial being set. New pricing applies on the next invoice (period preserved).
+  const newCustom = customNaira ? Math.round(parseFloat(customNaira) * 100) : null;
+  const planChanged =
+    isSetUp &&
+    (planId !== sub?.plan_id || interval !== sub?.billing_interval || newCustom !== (sub?.custom_monthly_price ?? null));
+  const midCycle = isSetUp && (sub?.status === "active" || sub?.status === "past_due") && planChanged && (parseInt(trialDays, 10) || 0) === 0;
+
   async function save() {
     setSaving(true);
     const res = await fetch(`/api/admin/billing/${companyId}/configure`, {
@@ -91,6 +103,25 @@ function SubscriptionForm({ companyId, data, onSaved }: { companyId: string; dat
 
   return (
     <Block title="Subscription configuration">
+      {/* Current state */}
+      <div className="mb-4 rounded-lg px-4 py-3" style={{ backgroundColor: isSetUp ? "var(--color-smoke)" : "var(--color-soft-gold)", border: `1px solid ${isSetUp ? "var(--color-cream)" : "var(--color-champagne)"}` }}>
+        {!isSetUp ? (
+          <p className="text-body-sm" style={{ color: "var(--color-deep-gold)" }}>
+            Billing isn&apos;t set up yet. Choose a plan and save to set it up.
+          </p>
+        ) : (
+          <p className="text-body-sm" style={{ color: "var(--color-charcoal)" }}>
+            <span className="font-semibold capitalize">{sub.status.replace(/_/g, " ")}</span>
+            {currentPlan ? ` · ${currentPlan.name}` : ""}
+            {sub.status === "trialing"
+              ? ` · trial ends ${fmtD(sub.trial_ends_at)}`
+              : sub.current_period_end
+              ? ` · renews ${fmtD(sub.current_period_end)}`
+              : ""}
+          </p>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <Labeled label="Plan">
           <select value={planId} onChange={(e) => setPlanId(e.target.value)} className="w-full px-3 py-2 rounded-lg text-body-sm" style={fieldStyle()}>
@@ -128,8 +159,12 @@ function SubscriptionForm({ companyId, data, onSaved }: { companyId: string; dat
         )}
       </div>
 
-      {sub && <p className="text-caption mt-3" style={{ color: "var(--color-mist)" }}>Current status: {sub.status}</p>}
-      <SaveButton onClick={save} saving={saving}>Save configuration</SaveButton>
+      {midCycle && (
+        <p className="text-caption mt-3 rounded-lg px-3 py-2" style={{ color: "var(--color-deep-gold)", backgroundColor: "var(--color-soft-gold)", border: "1px solid var(--color-champagne)" }}>
+          Mid-cycle change: the new plan and pricing take effect on the next invoice ({fmtD(sub?.current_period_end)}). The current period is unchanged.
+        </p>
+      )}
+      <SaveButton onClick={save} saving={saving}>{isSetUp ? "Save changes" : "Set up billing"}</SaveButton>
     </Block>
   );
 }

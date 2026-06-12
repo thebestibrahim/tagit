@@ -4,6 +4,7 @@ import { log } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import { sendTrialWelcomeEmail } from "@/lib/email";
 import { getEffectivePrice } from "@/lib/billing/pricing";
+import { buildSubscriptionConfig } from "@/lib/billing/configure";
 import { APP_URL } from "@/lib/email";
 import type { BillingInterval, VolumeTier } from "@/types/database";
 
@@ -62,50 +63,23 @@ export async function POST(
 
   const now = new Date();
 
-  const customPrice =
-    custom_monthly_price === undefined || custom_monthly_price === null || custom_monthly_price === 0
-      ? null
-      : custom_monthly_price;
-
-  // Trial scheduling is only (re)applied when trial_days is explicitly sent.
-  // A pricing-only save omits it, so an in-progress trial is never disturbed.
-  const trialProvided = trial_days !== undefined && trial_days !== null;
-  const trialDays = trialProvided ? Math.max(0, Math.floor(trial_days as number)) : 0;
-  const isNewTrial = trialProvided && trialDays > 0 && (!existing || existing.status !== "trialing");
-  const trialEndsAt = trialDays > 0 ? new Date(now.getTime() + trialDays * 86400000).toISOString() : null;
-
-  // Blank override → null (fall back to the plan's lifetime limit).
-  const normLimit = (v: number | null | undefined) =>
-    v === undefined || v === null || (v as unknown) === "" ? null : Math.max(0, Math.floor(Number(v)));
-
-  // Base fields always written.
-  const subPayload: Record<string, unknown> = {
-    company_id: companyId,
-    plan_id,
-    billing_interval,
-    custom_monthly_price: customPrice,
-    tag_limit_override: normLimit(tag_limit_override),
-    card_limit_override: normLimit(card_limit_override),
-    updated_at: now.toISOString(),
-  };
-
-  if (trialProvided) {
-    // Admin explicitly set (or cleared) the trial: reset scheduling accordingly.
-    Object.assign(subPayload, {
-      status: trialDays > 0 ? "trialing" : "active",
-      trial_starts_at: trialDays > 0 ? now.toISOString() : null,
-      trial_ends_at: trialEndsAt,
-      current_period_start: trialDays > 0 ? null : now.toISOString(),
-      current_period_end: trialDays > 0 ? trialEndsAt : null,
-    });
-  } else if (!existing) {
-    // New subscription, no trial specified: start an active period now.
-    Object.assign(subPayload, {
-      status: "active",
-      current_period_start: now.toISOString(),
-    });
-  }
-  // else: existing subscription, no trial field → leave status/trial/period as-is.
+  // All "what to write" logic lives in buildSubscriptionConfig (unit-tested):
+  // new setup, trial set/clear, and mid-cycle plan/price/limit edits.
+  const { payload: subPayload, isNewTrial } = buildSubscriptionConfig(
+    existing,
+    {
+      companyId,
+      planId: plan_id,
+      billingInterval: billing_interval,
+      customMonthlyPrice: custom_monthly_price,
+      tagLimitOverride: tag_limit_override,
+      cardLimitOverride: card_limit_override,
+      trialDays: trial_days,
+    },
+    now
+  );
+  const trialDays = trial_days ?? 0;
+  const trialEndsAt = subPayload.trial_ends_at as string | null;
 
   const { data: subscription, error: subErr } = await admin
     .from("subscriptions")
@@ -129,7 +103,7 @@ export async function POST(
   }
 
   if (isNewTrial && company.email) {
-    const firstInvoiceAmount = getEffectivePrice(plan.monthly_price, customPrice, billing_interval);
+    const firstInvoiceAmount = getEffectivePrice(plan.monthly_price, (subPayload.custom_monthly_price as number | null) ?? null, billing_interval);
     await sendTrialWelcomeEmail(company.email, {
       companyName: company.name,
       planName: plan.name,
