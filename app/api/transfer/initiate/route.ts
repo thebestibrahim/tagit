@@ -73,6 +73,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Email does not match current owner" }, { status: 403 });
   }
 
+  // Country of the previous owner initiating the transfer (Vercel edge geo,
+  // country level only). Powers the Resale Analytics location lists.
+  const fromCountry = request.headers.get("x-vercel-ip-country");
+
   // Create transfer request in draft state
   const acceptance_token = crypto.randomUUID();
   const { data: transferData, error: transferError } = await admin
@@ -86,6 +90,7 @@ export async function POST(request: Request) {
       currency: currency ?? "NGN",
       status: "otp_pending",
       acceptance_token,
+      from_country: fromCountry ?? null,
     })
     .select("id")
     .single();

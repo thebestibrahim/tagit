@@ -163,16 +163,19 @@ export default async function AnalyticsPage({
   // an empty state until location capture is added to transfers.
   let scanCountries: Ranked[] = [];
   let claimCountries: Ranked[] = [];
+  let resalePrev: Ranked[] = [];
+  let resaleNew: Ranked[] = [];
   if (tagIds.length) {
-    const [{ data: geoRows }, { data: claimRows }] = await Promise.all([
+    const [{ data: geoRows }, { data: claimRows }, { data: transferRows }] = await Promise.all([
       supabase.from("scan_logs").select("geo_location").in("tag_id", tagIds).not("geo_location", "is", null).range(0, 9999),
       supabase.from("ownership_claims").select("claim_location").in("tag_id", tagIds).not("claim_location", "is", null),
+      supabase.from("transfer_requests").select("from_country, to_country").in("tag_id", tagIds).eq("status", "completed"),
     ]);
     scanCountries = rankLocations((geoRows ?? []).map((r) => extractCountry(r.geo_location)));
     claimCountries = rankLocations((claimRows ?? []).map((r) => r.claim_location));
+    resalePrev = rankLocations((transferRows ?? []).map((r) => countryName(r.from_country)));
+    resaleNew = rankLocations((transferRows ?? []).map((r) => countryName(r.to_country)));
   }
-  const resalePrev: Ranked[] = [];
-  const resaleNew: Ranked[] = [];
 
   const statCards = [
     {
@@ -480,18 +483,24 @@ function rankLocations(values: (string | null | undefined)[]): Ranked[] {
     .slice(0, 8);
 }
 
+// Map a 2-letter ISO country code (e.g. "NG", from Vercel edge geo) to a full
+// country name. Non-code values (free-text locations) pass through unchanged.
+function countryName(raw: string | null | undefined): string | null {
+  const v = (raw ?? "").trim();
+  if (!v) return null;
+  if (/^[A-Za-z]{2}$/.test(v)) {
+    try {
+      return new Intl.DisplayNames(["en"], { type: "region" }).of(v.toUpperCase()) ?? v;
+    } catch {
+      return v;
+    }
+  }
+  return v;
+}
+
 function extractCountry(geo: unknown): string | null {
   if (!geo || typeof geo !== "object") return null;
   const g = geo as Record<string, unknown>;
   const raw = (g.country as string) ?? (g.country_name as string) ?? (g.region as string) ?? null;
-  if (!raw) return null;
-  // Vercel stores a 2-letter ISO country code (e.g. "NG"); show the full name.
-  if (/^[A-Za-z]{2}$/.test(raw)) {
-    try {
-      return new Intl.DisplayNames(["en"], { type: "region" }).of(raw.toUpperCase()) ?? raw;
-    } catch {
-      return raw;
-    }
-  }
-  return raw;
+  return countryName(raw);
 }

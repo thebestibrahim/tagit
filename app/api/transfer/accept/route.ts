@@ -101,6 +101,17 @@ export async function POST(request: Request) {
 
   const newOwner = { id: rpcResult.new_owner_id };
 
+  // Record the new owner's country (Vercel edge geo, country level) for Resale
+  // Analytics. Best-effort — never blocks transfer completion.
+  const toCountry = request.headers.get("x-vercel-ip-country");
+  if (toCountry) {
+    await admin
+      .from("transfer_requests")
+      .update({ to_country: toCountry })
+      .eq("id", transfer.id)
+      .then(() => {}, () => {});
+  }
+
   // Fetch tag (with joined product name) and company branding in parallel
   const { data: tagData } = await admin
     .from("tags")

@@ -1082,11 +1082,13 @@ export type Database = {
           created_at: string | null
           currency: string | null
           expires_at: string | null
+          from_country: string | null
           from_owner_id: string
           id: string
           sale_price: number | null
           status: string
           tag_id: string
+          to_country: string | null
           to_email: string
           to_name: string
         }
@@ -1096,11 +1098,13 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           expires_at?: string | null
+          from_country?: string | null
           from_owner_id: string
           id?: string
           sale_price?: number | null
           status?: string
           tag_id: string
+          to_country?: string | null
           to_email: string
           to_name: string
         }
@@ -1110,11 +1114,13 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           expires_at?: string | null
+          from_country?: string | null
           from_owner_id?: string
           id?: string
           sale_price?: number | null
           status?: string
           tag_id?: string
+          to_country?: string | null
           to_email?: string
           to_name?: string
         }
