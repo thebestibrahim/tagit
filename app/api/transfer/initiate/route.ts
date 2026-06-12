@@ -9,25 +9,25 @@ import { normalizeEmail } from "@/lib/utils";
 
 const admin = createAdminClient();
 
+// Step 1 of the transfer flow: verify the requester IS the current owner and
+// email them a one-time code. No recipient details are collected yet and no
+// transfer_request row is created — that happens at /finalize once the owner's
+// identity is confirmed. This keeps the owner check up front so a sender never
+// fills in recipient + price only to be told their email is wrong.
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
-  const { tag_id, owner_email: rawOwnerEmail, recipient_name, recipient_email: rawRecipientEmail, sale_price, currency } = body as {
+  const { tag_id, owner_email: rawOwnerEmail } = body as {
     tag_id?: string;
     owner_email?: string;
-    recipient_name?: string;
-    recipient_email?: string;
-    sale_price?: number | null;
-    currency?: string;
   };
 
-  if (!tag_id || !rawOwnerEmail || !recipient_name || !rawRecipientEmail) {
+  if (!tag_id || !rawOwnerEmail) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
   const owner_email = normalizeEmail(rawOwnerEmail);
-  const recipient_email = normalizeEmail(rawRecipientEmail);
 
-  // Rate limit: max 3 transfer initiations per email in 15 minutes
+  // Rate limit: max 3 code requests per email in 15 minutes
   const windowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
   const { count: recentCount } = await admin
     .from("otp_codes")
@@ -40,15 +40,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Too many requests. Try again soon." }, { status: 429 });
   }
 
-  // Verify tag is owned and owner email matches
+  // Tag must be owned (or already transferred onward) to be transferable.
   const { data: tagData } = await admin
     .from("tags")
     .select("id, status, product_id")
     .eq("id", tag_id)
     .single();
 
-  // Transferable once owned — including items already acquired via a prior
-  // transfer (status `transferred`), which can be transferred onward.
   const tag = tagData as { id: string; status: string; product_id: string | null } | null;
   if (!tag || !["owned", "transferred"].includes(tag.status)) {
     return NextResponse.json({ error: "Tag is not available for transfer" }, { status: 409 });
@@ -73,36 +71,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Email does not match current owner" }, { status: 403 });
   }
 
-  // Country of the previous owner initiating the transfer (Vercel edge geo,
-  // country level only). Powers the Resale Analytics location lists.
-  const fromCountry = request.headers.get("x-vercel-ip-country");
+  // Invalidate any prior unused codes, then issue a fresh one.
+  await admin
+    .from("otp_codes")
+    .update({ is_used: true })
+    .eq("email", owner_email)
+    .eq("purpose", "transfer")
+    .eq("is_used", false);
 
-  // Create transfer request in draft state
-  const acceptance_token = crypto.randomUUID();
-  const { data: transferData, error: transferError } = await admin
-    .from("transfer_requests")
-    .insert({
-      tag_id,
-      from_owner_id: ownerRecord.id,
-      to_name: recipient_name,
-      to_email: recipient_email,
-      sale_price: sale_price ?? null,
-      currency: currency ?? "NGN",
-      status: "otp_pending",
-      acceptance_token,
-      from_country: fromCountry ?? null,
-    })
-    .select("id")
-    .single();
-
-  if (transferError || !transferData) {
-    return NextResponse.json({ error: "Failed to create transfer request" }, { status: 500 });
-  }
-
-  // Send OTP to current owner
   const code = randomInt(100000, 1000000).toString();
   const code_hash = await hash(code, 10);
-
   const expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   await admin.from("otp_codes").insert({
     email: owner_email,
@@ -123,6 +101,5 @@ export async function POST(request: Request) {
     log.error("transfer", "OTP email failed", { owner_email, error: emailError });
   }
 
-  const transfer = transferData as { id: string };
-  return NextResponse.json({ success: true, transfer_id: transfer.id, emailSent, emailError });
+  return NextResponse.json({ success: true, emailSent, emailError });
 }

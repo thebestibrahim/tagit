@@ -3,9 +3,17 @@ import { makeRequest } from "../setup";
 
 const mockTagQuery = vi.fn();
 const mockOwnerQuery = vi.fn();
-const mockTransferInsert = vi.fn();
 const mockOtpCount = vi.fn();
 const mockOtpInsert = vi.fn();
+
+// Chainable stub for `.update().eq().eq().eq()` (and any depth), awaitable.
+function eqChain(result: unknown) {
+  const obj: Record<string, unknown> = {
+    eq: () => eqChain(result),
+    then: (resolve: (v: unknown) => unknown) => Promise.resolve(result).then(resolve),
+  };
+  return obj;
+}
 
 vi.mock("@supabase/supabase-js", () => ({
   createClient: vi.fn(() => ({
@@ -20,22 +28,13 @@ vi.mock("@supabase/supabase-js", () => ({
         };
       }
       if (table === "ownership_records") {
-        // Owner is now resolved across the product's tag group: .in().eq().single()
+        // Owner is resolved across the product's tag group: .in().eq().single()
         return {
           select: vi.fn(() => ({
             in: vi.fn(() => ({
               eq: vi.fn(() => ({
                 single: vi.fn(() => Promise.resolve(mockOwnerQuery())),
               })),
-            })),
-          })),
-        };
-      }
-      if (table === "transfer_requests") {
-        return {
-          insert: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: vi.fn(() => Promise.resolve(mockTransferInsert())),
             })),
           })),
         };
@@ -49,6 +48,8 @@ vi.mock("@supabase/supabase-js", () => ({
               })),
             })),
           })),
+          // Invalidate prior unused codes before issuing a fresh one.
+          update: vi.fn(() => eqChain({ error: null })),
           insert: vi.fn(() => Promise.resolve(mockOtpInsert())),
         };
       }
@@ -63,12 +64,11 @@ vi.mock("@/lib/email", () => ({
 
 const { POST } = await import("@/app/api/transfer/initiate/route");
 
+// New flow: /initiate only verifies the owner and emails a code. Recipient
+// details are collected later at /finalize, so they are not part of this body.
 const validBody = {
   tag_id: "tag-uuid",
   owner_email: "owner@example.com",
-  recipient_name: "Jane Doe",
-  recipient_email: "jane@example.com",
-  sale_price: null,
 };
 
 describe("POST /api/transfer/initiate", () => {
@@ -81,7 +81,6 @@ describe("POST /api/transfer/initiate", () => {
       data: { id: "owner-record-uuid", owner_email: "owner@example.com" },
       error: null,
     });
-    mockTransferInsert.mockReturnValue({ data: { id: "transfer-uuid" }, error: null });
   });
 
   it("returns 400 when required fields are missing", async () => {
@@ -122,7 +121,7 @@ describe("POST /api/transfer/initiate", () => {
     expect(res.status).toBe(403);
   });
 
-  it("returns 403 on case-insensitive email mismatch", async () => {
+  it("matches owner email case-insensitively", async () => {
     mockOwnerQuery.mockReturnValue({
       data: { id: "owner-record-uuid", owner_email: "OWNER@EXAMPLE.COM" },
       error: null,
@@ -131,17 +130,13 @@ describe("POST /api/transfer/initiate", () => {
     expect(res.status).toBe(200);
   });
 
-  it("returns 500 when transfer DB insert fails", async () => {
-    mockTransferInsert.mockReturnValue({ data: null, error: { message: "fail" } });
-    const res = await POST(makeRequest(validBody));
-    expect(res.status).toBe(500);
-  });
-
-  it("returns 200 with transfer_id on success", async () => {
+  it("returns 200 and reports the code was sent, without creating a transfer yet", async () => {
     const res = await POST(makeRequest(validBody));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.success).toBe(true);
-    expect(body.transfer_id).toBe("transfer-uuid");
+    expect(body.emailSent).toBe(true);
+    // No transfer_request exists until /finalize.
+    expect(body.transfer_id).toBeUndefined();
   });
 });

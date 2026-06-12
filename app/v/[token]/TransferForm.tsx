@@ -5,7 +5,17 @@ import { Loader2, CheckCircle2, ArrowRightLeft, MailWarning } from "lucide-react
 
 const CURRENCIES = ["NGN", "USD", "EUR", "GBP", "GHS", "KES", "ZAR", "AED", "CHF"];
 
-type Step = "closed" | "form" | "otp" | "success";
+// Hint of the expected owner email without exposing it in full, e.g.
+// "fa****z@gmail.com" — enough for the real owner to recognise their address.
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  const head = local.slice(0, 2);
+  const tail = local.length > 3 ? local.slice(-1) : "";
+  return `${head}${"*".repeat(Math.max(2, local.length - head.length - tail.length))}${tail}@${domain}`;
+}
+
+type Step = "closed" | "verify" | "otp" | "details" | "success";
 
 export default function TransferForm({
   tagId,
@@ -29,6 +39,7 @@ export default function TransferForm({
   const [salePrice, setSalePrice] = useState("");
   const [currency, setCurrency] = useState(defaultCurrency);
   const [otp, setOtp] = useState("");
+  const [verification, setVerification] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [transferId, setTransferId] = useState("");
@@ -40,12 +51,13 @@ export default function TransferForm({
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState("");
 
-  async function handleInitiate(e: React.FormEvent) {
+  // Step 1 → 2: verify the owner email and send the identity code.
+  async function handleVerifyOwner(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
     if (ownerEmail.toLowerCase().trim() !== currentOwnerEmail.toLowerCase().trim()) {
-      setError("Email does not match the current owner.");
+      setError(`That email doesn't match ${currentOwnerName}, the current owner. Only the current owner can transfer this item.`);
       return;
     }
 
@@ -54,24 +66,16 @@ export default function TransferForm({
     const res = await fetch("/api/transfer/initiate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tag_id: tagId,
-        owner_email: ownerEmail,
-        recipient_name: recipientName,
-        recipient_email: recipientEmail,
-        sale_price: salePrice ? parseFloat(salePrice) : null,
-        currency,
-      }),
+      body: JSON.stringify({ tag_id: tagId, owner_email: ownerEmail }),
     });
 
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || "Failed to initiate transfer");
+      setError(data.error || "Failed to send verification code");
       setLoading(false);
       return;
     }
 
-    setTransferId(data.transfer_id);
     setOtpEmailSent(data.emailSent ?? false);
     setEmailError(data.emailError ?? null);
     setStep("otp");
@@ -85,7 +89,7 @@ export default function TransferForm({
     const res = await fetch("/api/transfer/resend-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ transfer_id: transferId, owner_email: ownerEmail }),
+      body: JSON.stringify({ tag_id: tagId, owner_email: ownerEmail }),
     });
 
     const data = await res.json();
@@ -100,6 +104,7 @@ export default function TransferForm({
     setLoading(false);
   }
 
+  // Step 2 → 3: confirm the code, then collect recipient details.
   async function handleVerifyOtp(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -108,18 +113,51 @@ export default function TransferForm({
     const confirmRes = await fetch("/api/transfer/confirm", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ transfer_id: transferId, email: ownerEmail, code: otp.trim() }),
+      body: JSON.stringify({ email: ownerEmail, code: otp.trim() }),
     });
 
     const confirmData = await confirmRes.json();
     if (!confirmRes.ok) {
-      setError(confirmData.error || "Failed to confirm transfer");
+      setError(confirmData.error || "Failed to verify code");
       setLoading(false);
       return;
     }
 
-    setAcceptanceUrl(confirmData.acceptanceUrl ?? "");
-    setAcceptanceEmailSent(confirmData.emailSent ?? false);
+    setVerification(confirmData.verification ?? "");
+    setStep("details");
+    setLoading(false);
+  }
+
+  // Step 3 → success: create the transfer and email the acceptance link.
+  async function handleFinalize(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const res = await fetch("/api/transfer/finalize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tag_id: tagId,
+        owner_email: ownerEmail,
+        verification,
+        recipient_name: recipientName,
+        recipient_email: recipientEmail,
+        sale_price: salePrice ? parseFloat(salePrice) : null,
+        currency,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Failed to complete transfer");
+      setLoading(false);
+      return;
+    }
+
+    setTransferId(data.transfer_id ?? "");
+    setAcceptanceUrl(data.acceptanceUrl ?? "");
+    setAcceptanceEmailSent(data.emailSent ?? false);
     setStep("success");
     setLoading(false);
   }
@@ -171,7 +209,7 @@ export default function TransferForm({
           <p style={{ margin: 0, fontSize: "12px", color: "#9E9EA3" }}>Current verified owner</p>
         </div>
         <button
-          onClick={() => setStep("form")}
+          onClick={() => setStep("verify")}
           style={{
             padding: "9px 16px",
             fontSize: "13px",
@@ -300,9 +338,11 @@ export default function TransferForm({
             Transfer ownership
           </p>
           <p style={{ margin: 0, fontSize: "13px", color: "#6E6E73" }}>
-            {step === "form"
-              ? "Verify your identity and enter the recipient's details."
-              : `Enter the code sent to ${ownerEmail}`}
+            {step === "verify"
+              ? "First, let's confirm you're the current owner."
+              : step === "otp"
+                ? `Enter the code sent to ${ownerEmail}`
+                : "You're verified. Now enter the recipient's details."}
           </p>
         </div>
       </div>
@@ -313,8 +353,8 @@ export default function TransferForm({
         </div>
       )}
 
-      {step === "form" && (
-        <form onSubmit={handleInitiate} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      {step === "verify" && (
+        <form onSubmit={handleVerifyOwner} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           <div
             style={{
               padding: "10px 14px",
@@ -323,13 +363,15 @@ export default function TransferForm({
               marginBottom: "4px",
             }}
           >
-            <p style={{ margin: 0, fontSize: "12px", color: "#6E6E73" }}>
-              You must be the current owner to initiate a transfer. Your email will be verified with a code.
+            <p style={{ margin: 0, fontSize: "12px", color: "#6E6E73", lineHeight: 1.55 }}>
+              This item is owned by <strong style={{ color: "#1F1F22" }}>{currentOwnerName}</strong>{" "}
+              (<span style={{ fontFamily: "monospace" }}>{maskEmail(currentOwnerEmail)}</span>). Only the
+              current owner can transfer it. Enter that email and we&apos;ll send a one-time code to confirm.
             </p>
           </div>
 
           <div>
-            <label style={labelStyle}>Your email (owner)</label>
+            <label style={labelStyle}>Current owner&apos;s email</label>
             <input
               type="email"
               value={ownerEmail}
@@ -340,63 +382,96 @@ export default function TransferForm({
             />
           </div>
 
-          <div style={{ borderTop: "1px solid #E8E2D5", paddingTop: "12px", marginTop: "4px" }}>
-            <p style={{ margin: "0 0 10px", fontSize: "12px", fontWeight: "700", color: "#9E9EA3", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Recipient
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ ...btnStyle(primary), marginTop: "4px" }}
+          >
+            {loading ? <Loader2 size={16} className="animate-spin" style={{ display: "inline" }} /> : null}
+            {loading ? "Sending code…" : "Send verification code"}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setStep("closed"); setError(""); }}
+            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", color: "#6E6E73", textDecoration: "underline" }}
+          >
+            Cancel
+          </button>
+        </form>
+      )}
+
+      {step === "details" && (
+        <form onSubmit={handleFinalize} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "10px 14px",
+              backgroundColor: "#DCEEE3",
+              borderRadius: "8px",
+              marginBottom: "4px",
+            }}
+          >
+            <CheckCircle2 size={15} color="#2D6A4F" style={{ flexShrink: 0 }} />
+            <p style={{ margin: 0, fontSize: "12px", color: "#2D6A4F", lineHeight: 1.5 }}>
+              Identity verified as <strong>{currentOwnerName}</strong>. Enter who you&apos;re transferring to.
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div>
-                <label style={labelStyle}>Recipient name</label>
-                <input
-                  type="text"
-                  value={recipientName}
-                  onChange={(e) => setRecipientName(e.target.value)}
-                  required
-                  placeholder="Full name"
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>Recipient email</label>
-                <input
-                  type="email"
-                  value={recipientEmail}
-                  onChange={(e) => setRecipientEmail(e.target.value)}
-                  required
-                  placeholder="recipient@example.com"
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>Sale price (optional)</label>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <select
-                    value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
-                    style={{
-                      ...inputStyle,
-                      width: "auto",
-                      paddingLeft: 10,
-                      paddingRight: 10,
-                      flexShrink: 0,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {CURRENCIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="number"
-                    value={salePrice}
-                    onChange={(e) => setSalePrice(e.target.value)}
-                    min="0"
-                    step="0.01"
-                    placeholder="e.g. 150000"
-                    style={{ ...inputStyle, flex: 1 }}
-                  />
-                </div>
-              </div>
+          </div>
+
+          <p style={{ margin: "0 0 2px", fontSize: "12px", fontWeight: "700", color: "#9E9EA3", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            Recipient
+          </p>
+          <div>
+            <label style={labelStyle}>Recipient name</label>
+            <input
+              type="text"
+              value={recipientName}
+              onChange={(e) => setRecipientName(e.target.value)}
+              required
+              placeholder="Full name"
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Recipient email</label>
+            <input
+              type="email"
+              value={recipientEmail}
+              onChange={(e) => setRecipientEmail(e.target.value)}
+              required
+              placeholder="recipient@example.com"
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Sale price (optional)</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                style={{
+                  ...inputStyle,
+                  width: "auto",
+                  paddingLeft: 10,
+                  paddingRight: 10,
+                  flexShrink: 0,
+                  cursor: "pointer",
+                }}
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                value={salePrice}
+                onChange={(e) => setSalePrice(e.target.value)}
+                min="0"
+                step="0.01"
+                placeholder="e.g. 150000"
+                style={{ ...inputStyle, flex: 1 }}
+              />
             </div>
           </div>
 
@@ -406,14 +481,7 @@ export default function TransferForm({
             style={{ ...btnStyle(primary), marginTop: "4px" }}
           >
             {loading ? <Loader2 size={16} className="animate-spin" style={{ display: "inline" }} /> : null}
-            {loading ? "Sending code…" : "Continue"}
-          </button>
-          <button
-            type="button"
-            onClick={() => { setStep("closed"); setError(""); }}
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", color: "#6E6E73", textDecoration: "underline" }}
-          >
-            Cancel
+            {loading ? "Completing…" : "Complete transfer"}
           </button>
         </form>
       )}
@@ -488,11 +556,11 @@ export default function TransferForm({
             style={{ ...btnStyle(primary), marginTop: "4px" }}
           >
             {loading ? <Loader2 size={16} className="animate-spin" style={{ display: "inline" }} /> : null}
-            {loading ? "Processing…" : "Confirm transfer"}
+            {loading ? "Verifying…" : "Verify identity"}
           </button>
           <button
             type="button"
-            onClick={() => { setStep("form"); setError(""); setOtp(""); }}
+            onClick={() => { setStep("verify"); setError(""); setOtp(""); }}
             style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", color: "#6E6E73", textDecoration: "underline" }}
           >
             Go back

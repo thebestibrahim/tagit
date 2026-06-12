@@ -52,7 +52,7 @@ export default async function CompanyLayout({ children }: { children: React.Reac
   return (
     <FlagProvider flags={flags}>
       <SuspensionGuard suspended={suspended} />
-      <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#1C1A14" }}>
+      <div className="flex h-dvh overflow-hidden" style={{ backgroundColor: "#1C1A14" }}>
         <div className="hidden lg:flex shrink-0 print:hidden">
           <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} alerts={alerts} />
         </div>
@@ -60,7 +60,7 @@ export default async function CompanyLayout({ children }: { children: React.Reac
           <MobileNav label={company.name}>
             <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} alerts={alerts} />
           </MobileNav>
-          <main className="flex-1 overflow-y-auto bg-dot-grid">
+          <main className="flex-1 overflow-y-auto overscroll-contain bg-dot-grid">
             {children}
           </main>
         </div>

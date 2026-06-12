@@ -504,9 +504,13 @@ function ProvenanceCollapsible({ ownershipRecords, accent }: { ownershipRecords:
             <div style={{ paddingBottom: i < ownershipRecords.length - 1 ? 16 : 0 }}>
               <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: r.is_current ? 600 : 500, color: r.is_current ? "#1F1F22" : "#6E6E73", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                 {r.owner_name}
-                {r.is_current && (
+                {r.is_current ? (
                   <span style={{ fontSize: 9, padding: "2px 7px", backgroundColor: "#DCEEE3", color: "#2D6A4F", borderRadius: 99, fontFamily: "'JetBrains Mono',monospace", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                    Current
+                    Current owner
+                  </span>
+                ) : (
+                  <span style={{ fontSize: 9, padding: "2px 7px", backgroundColor: "#F0EDE8", color: "#9E9EA3", borderRadius: 99, fontFamily: "'JetBrains Mono',monospace", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                    Previous
                   </span>
                 )}
               </p>

@@ -86,10 +86,16 @@ function button(text: string, url: string) {
   </tr></table>`;
 }
 
-function keyVal(label: string, value: string) {
+function keyVal(label: string, value: string, mono = false) {
+  // `mono` renders long machine strings (e.g. payment references) in a smaller
+  // monospace with forced wrapping so they hug the cell instead of overflowing
+  // the email body on narrow mobile widths.
+  const valueStyle = mono
+    ? `font-family:${MONO};font-size:11px;word-break:break-all;line-height:1.5`
+    : `font-family:${SANS};font-size:14px`;
   return `<tr>
-    <td style="padding:11px 0;border-top:1px solid ${LINE};font-family:${MONO};font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:${MUTE};vertical-align:top">${label}</td>
-    <td style="padding:11px 0;border-top:1px solid ${LINE};font-family:${SANS};font-size:14px;color:${INK};font-weight:500;text-align:right;vertical-align:top">${value}</td>
+    <td style="padding:11px 16px 11px 0;border-top:1px solid ${LINE};font-family:${MONO};font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:${MUTE};vertical-align:top;white-space:nowrap">${label}</td>
+    <td style="padding:11px 0;border-top:1px solid ${LINE};${valueStyle};color:${INK};font-weight:500;text-align:right;vertical-align:top">${value}</td>
   </tr>`;
 }
 
@@ -692,7 +698,7 @@ export async function sendPaymentConfirmedEmail(
     <table role="presentation" style="width:100%;border-collapse:collapse;margin:18px 0 6px">
       ${keyVal("Receipt no.", opts.invoiceNumber)}
       ${keyVal("Paid on", fmtDate(opts.paidAt))}
-      ${opts.reference ? keyVal("Reference", opts.reference) : ""}
+      ${opts.reference ? keyVal("Reference", opts.reference, true) : ""}
     </table>
 
     ${invoiceTable({

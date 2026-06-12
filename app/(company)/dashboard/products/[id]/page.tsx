@@ -332,9 +332,9 @@ export default async function ProductDetailPage({
   const tagBadge = statusBadge(primaryTag?.status ?? "created");
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-4xl mx-auto">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-6 sm:mb-8">
         <Link
           href="/dashboard/products"
           className="inline-flex items-center gap-1.5"
@@ -364,7 +364,7 @@ export default async function ProductDetailPage({
       </div>
 
       {/* ── Product overview card ── */}
-      <div className="card-raised rounded-xl p-6 mb-6">
+      <div className="card-raised rounded-xl p-5 sm:p-6 mb-6">
         <div className="flex items-start justify-between gap-4 mb-5">
           <div>
             <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-gold)" }}>
@@ -485,7 +485,7 @@ export default async function ProductDetailPage({
 
       {/* ── Industry fields ── */}
       {Object.keys(iFields).length > 0 && (
-        <div className="card-raised rounded-xl p-6 mb-6">
+        <div className="card-raised rounded-xl p-5 sm:p-6 mb-6">
           <h2 className="text-body font-semibold mb-4" style={{ color: "var(--color-charcoal)" }}>Product details</h2>
           {Object.entries(grouped).map(([groupName, fields]) => {
             const hasValues = fields.some((f) => iFields[f.key]);
@@ -515,7 +515,7 @@ export default async function ProductDetailPage({
 
       {/* ── Certificates ── */}
       {certificates.length > 0 && (
-        <div className="card-raised rounded-xl p-6 mb-6">
+        <div className="card-raised rounded-xl p-5 sm:p-6 mb-6">
           <h2 className="text-body font-semibold mb-4" style={{ color: "var(--color-charcoal)" }}>
             Certificates
           </h2>
@@ -556,7 +556,7 @@ export default async function ProductDetailPage({
       )}
 
       {/* ── Provenance timeline ── */}
-      <div className="card-raised rounded-xl p-6">
+      <div className="card-raised rounded-xl p-5 sm:p-6">
         <h2 className="text-body font-semibold mb-6" style={{ color: "var(--color-charcoal)" }}>
           Provenance history
         </h2>

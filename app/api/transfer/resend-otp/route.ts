@@ -4,39 +4,45 @@ import { NextResponse } from "next/server";
 import { sendOtpEmail } from "@/lib/email";
 import { hash } from "bcryptjs";
 import { log } from "@/lib/logger";
+import { getSiblingTagIds } from "@/lib/tags";
+import { normalizeEmail } from "@/lib/utils";
 
 const admin = createAdminClient();
 
+// Re-send the identity code from step 1. No transfer_request exists yet, so the
+// owner is re-verified from the tag group rather than from a transfer row.
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
-  const { transfer_id, owner_email } = body as { transfer_id?: string; owner_email?: string };
+  const { tag_id, owner_email: rawOwnerEmail } = body as { tag_id?: string; owner_email?: string };
 
-  if (!transfer_id || !owner_email) {
+  if (!tag_id || !rawOwnerEmail) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // Verify transfer exists and is still in OTP-pending state
-  const { data: transferData } = await admin
-    .from("transfer_requests")
-    .select("id, from_owner_id, status")
-    .eq("id", transfer_id)
+  const owner_email = normalizeEmail(rawOwnerEmail);
+
+  const { data: tagData } = await admin
+    .from("tags")
+    .select("id, status, product_id")
+    .eq("id", tag_id)
     .single();
 
-  const transfer = transferData as { id: string; from_owner_id: string; status: string } | null;
-  if (!transfer || transfer.status !== "otp_pending") {
-    return NextResponse.json({ error: "Transfer not found or already processed" }, { status: 404 });
+  const tag = tagData as { id: string; status: string; product_id: string | null } | null;
+  if (!tag || !["owned", "transferred"].includes(tag.status)) {
+    return NextResponse.json({ error: "Tag is not available for transfer" }, { status: 409 });
   }
 
-  // Verify owner email matches
+  const siblingIds = await getSiblingTagIds(admin, tag);
   const { data: ownerData } = await admin
     .from("ownership_records")
     .select("owner_email")
-    .eq("id", transfer.from_owner_id)
+    .in("tag_id", siblingIds)
+    .eq("is_current", true)
     .single();
 
   const ownerRecord = ownerData as { owner_email: string } | null;
   if (!ownerRecord || ownerRecord.owner_email.toLowerCase() !== owner_email.toLowerCase()) {
-    return NextResponse.json({ error: "Email does not match owner" }, { status: 403 });
+    return NextResponse.json({ error: "Email does not match current owner" }, { status: 403 });
   }
 
   // Rate limit: max 5 OTP sends per email per 15 minutes
@@ -60,7 +66,6 @@ export async function POST(request: Request) {
     .eq("purpose", "transfer")
     .eq("is_used", false);
 
-  // Create new OTP
   const code = randomInt(100000, 1000000).toString();
   const code_hash = await hash(code, 10);
   const expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();

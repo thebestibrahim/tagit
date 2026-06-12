@@ -21,7 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const alerts = await getAdminNavAlerts();
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#1C1A14" }}>
+    <div className="flex h-dvh overflow-hidden" style={{ backgroundColor: "#1C1A14" }}>
       <div className="hidden lg:flex shrink-0">
         <AdminSidebar alerts={alerts} />
       </div>
@@ -29,7 +29,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <MobileNav label="Tagit · Admin">
           <AdminSidebar alerts={alerts} />
         </MobileNav>
-        <main className="flex-1 overflow-y-auto bg-dot-grid">
+        <main className="flex-1 overflow-y-auto overscroll-contain bg-dot-grid">
           {children}
         </main>
       </div>
