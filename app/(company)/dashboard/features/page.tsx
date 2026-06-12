@@ -14,7 +14,8 @@ const FEATURE_DISPLAY: { key: FlagKey; name: string; description: string }[] = [
   { key: "certificate_generation", name: "Certificate of Authenticity", description: "Verified certificates for every ownership confirmation" },
   { key: "brand_customisation", name: "Brand Page Customisation", description: "Personalise your consumer-facing scan experience" },
   { key: "ai_persona", name: "AI Product Persona", description: "Let your items speak for themselves with AI" },
-  { key: "resale_analytics", name: "Analytics", description: "See how your tags are scanned and how your products perform" },
+  { key: "analytics_overview", name: "Analytics", description: "See how your tags are scanned and where your items are being used" },
+  { key: "resale_analytics", name: "Resale Analytics", description: "Where your items travel after resale, by country" },
   { key: "bulk_tag_creation", name: "Bulk Tag Creation", description: "Create multiple tags in a single operation" },
   { key: "intelligence_reports", name: "Intelligence Reports", description: "Premium market intelligence for your brand" },
 ];
