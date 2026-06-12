@@ -2,27 +2,31 @@ export const dynamic = "force-dynamic";
 
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
+import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { format, subDays } from "date-fns";
-import { BarChart2, Eye, Package, Award, TrendingUp } from "lucide-react";
+import { BarChart2, Eye, Package, Award, TrendingUp, MapPin } from "lucide-react";
 import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
-import FeatureWall from "@/components/company/FeatureWall";
 import ScanChart from "./ScanChart";
-export default async function AnalyticsPage() {
+
+type Ranked = { name: string; count: number; pct: number };
+
+export default async function AnalyticsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const supabase = await createClient();
   const user = await getUser();
   if (!user) redirect("/auth/login");
 
   const flags = await getCurrentBrandFlags();
-  if (!flags.resale_analytics) {
-    return (
-      <FeatureWall
-        name="Analytics"
-        description="See how your tags are scanned and how your products are performing."
-      />
-    );
-  }
+  // Overview is available to every brand. The Resale Analytics tab is the only
+  // part gated by the resale_analytics flag.
+  const resaleUnlocked = flags.resale_analytics;
+  const { tab } = await searchParams;
+  const activeTab: "overview" | "resale" = tab === "resale" && resaleUnlocked ? "resale" : "overview";
 
   // Fetch this company's tags
   const { data: tagsData } = await supabase
@@ -153,6 +157,23 @@ export default async function AnalyticsPage() {
     }
   }
 
+  // ── Location analytics ──
+  // Scans: scan_logs.geo_location (JSONB) → country. Claims: ownership_claims
+  // .claim_location (free text). Resale has no stored country yet, so it shows
+  // an empty state until location capture is added to transfers.
+  let scanCountries: Ranked[] = [];
+  let claimCountries: Ranked[] = [];
+  if (tagIds.length) {
+    const [{ data: geoRows }, { data: claimRows }] = await Promise.all([
+      supabase.from("scan_logs").select("geo_location").in("tag_id", tagIds).not("geo_location", "is", null).range(0, 9999),
+      supabase.from("ownership_claims").select("claim_location").in("tag_id", tagIds).not("claim_location", "is", null),
+    ]);
+    scanCountries = rankLocations((geoRows ?? []).map((r) => extractCountry(r.geo_location)));
+    claimCountries = rankLocations((claimRows ?? []).map((r) => r.claim_location));
+  }
+  const resalePrev: Ranked[] = [];
+  const resaleNew: Ranked[] = [];
+
   const statCards = [
     {
       label: "Scans (30 days)",
@@ -207,6 +228,14 @@ export default async function AnalyticsPage() {
         </p>
       </div>
 
+      {/* Tabs */}
+      <div className="flex items-center gap-1 mb-8 border-b" style={{ borderColor: "var(--color-cream)" }}>
+        <TabLink label="Overview" tab="overview" active={activeTab === "overview"} />
+        {resaleUnlocked && <TabLink label="Resale Analytics" tab="resale" active={activeTab === "resale"} />}
+      </div>
+
+      {activeTab === "overview" && (
+      <>
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-4">
         {statCards.map(({ label, value, icon: Icon, delta, sub }) => (
@@ -362,6 +391,97 @@ export default async function AnalyticsPage() {
           )}
         </div>
       </div>
+
+      {/* Location — where items are scanned & claimed */}
+      <div className="grid gap-6 sm:grid-cols-2 mt-6">
+        <LocationCard title="Where your items are being scanned" rows={scanCountries} empty="Location data will appear as your items are scanned." />
+        <LocationCard title="Where ownership is being claimed" rows={claimCountries} empty="Location data will appear as owners claim their items." />
+      </div>
+      </>
+      )}
+
+      {activeTab === "resale" && (
+        <div>
+          <div className="card-raised rounded-xl p-6 mb-6">
+            <div className="flex items-center gap-2 mb-1">
+              <MapPin size={16} style={{ color: "var(--color-gold)" }} />
+              <h2 className="font-semibold" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)" }}>Where your items travel after resale</h2>
+            </div>
+            <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>Country of the previous owner vs the new owner on completed transfers.</p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <LocationCard title="Previous owner — by country" rows={resalePrev} empty="Resale location data will appear as items change hands." />
+            <LocationCard title="New owner — by country" rows={resaleNew} empty="Resale location data will appear as items change hands." />
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function TabLink({ label, tab, active }: { label: string; tab: string; active: boolean }) {
+  return (
+    <Link
+      href={`/dashboard/analytics?tab=${tab}`}
+      className="px-4 py-2.5 -mb-px font-medium"
+      style={{
+        fontSize: "var(--text-body-sm)",
+        color: active ? "var(--color-charcoal)" : "var(--color-slate)",
+        borderBottom: `2px solid ${active ? "var(--color-gold)" : "transparent"}`,
+        textDecoration: "none",
+      }}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function LocationCard({ title, rows, empty }: { title: string; rows: Ranked[]; empty: string }) {
+  return (
+    <div className="card-raised rounded-xl p-6">
+      <div className="flex items-center gap-2 mb-5">
+        <MapPin size={16} style={{ color: "var(--color-gold)" }} />
+        <h2 className="font-semibold" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)" }}>{title}</h2>
+      </div>
+      {rows.length === 0 ? (
+        <div className="py-8 text-center" style={{ color: "var(--color-mist)" }}>
+          <p style={{ fontSize: "var(--text-body-sm)" }}>{empty}</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {rows.map((r) => (
+            <div key={r.name} className="flex items-center gap-3">
+              <span className="truncate font-medium" style={{ width: 120, fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)" }}>{r.name}</span>
+              <div style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: "var(--color-linen)", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${r.pct}%`, backgroundColor: "var(--color-gold)", borderRadius: 3 }} />
+              </div>
+              <span className="tabular-nums" style={{ width: 38, textAlign: "right", fontSize: "var(--text-body-sm)", fontWeight: 600, color: "var(--color-graphite)" }}>{r.pct}%</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function rankLocations(values: (string | null | undefined)[]): Ranked[] {
+  const counts = new Map<string, number>();
+  let total = 0;
+  for (const v of values) {
+    const name = (v ?? "").trim();
+    if (!name) continue;
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+    total++;
+  }
+  if (total === 0) return [];
+  return [...counts.entries()]
+    .map(([name, count]) => ({ name, count, pct: Math.round((count / total) * 100) }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+}
+
+function extractCountry(geo: unknown): string | null {
+  if (!geo || typeof geo !== "object") return null;
+  const g = geo as Record<string, unknown>;
+  return (g.country as string) ?? (g.country_name as string) ?? (g.region as string) ?? null;
 }
