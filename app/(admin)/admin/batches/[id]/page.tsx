@@ -12,6 +12,7 @@ import LocalTime from "@/components/ui/LocalTime";
 import CopyLinkButton from "@/components/ui/CopyLinkButton";
 import BatchChipsExport from "../BatchChipsExport";
 import BatchFulfilActions from "../BatchFulfilActions";
+import { toDisplayChips, type RawChip } from "@/lib/batch-chips";
 
 type Batch = {
   id: string;
@@ -26,14 +27,6 @@ type Batch = {
   created_at: string;
   shipped_at: string | null;
   companies: { name: string } | null;
-};
-
-type Chip = {
-  id: string;
-  short_id: string;
-  medium: string;
-  url: string | null;
-  status: string;
 };
 
 export default async function AdminBatchDetailPage({
@@ -55,21 +48,13 @@ export default async function AdminBatchDetailPage({
 
   const { data: tagData } = await supabase
     .from("tags")
-    .select("id, short_id, medium, url, status")
+    .select("id, short_id, medium, token, status")
     .eq("batch_id", id);
 
-  // Tags first, then cards; stable within each by short_id — matches how the
-  // physical chips are sorted when the team writes the links.
-  const chips = ((tagData ?? []) as Chip[]).sort((a, b) => {
-    const am = a.medium === "card" ? 1 : 0;
-    const bm = b.medium === "card" ? 1 : 0;
-    if (am !== bm) return am - bm;
-    return a.short_id.localeCompare(b.short_id);
-  });
-
-  const exportChips = chips
-    .filter((c) => c.url)
-    .map((c) => ({ short_id: c.short_id, medium: c.medium, url: c.url as string }));
+  // Resolve each chip's working scan link from its token (tags first, then
+  // cards). Mirrors the brand product page exactly; never the stored `url`.
+  const chips = toDisplayChips((tagData ?? []) as RawChip[]);
+  const exportChips = chips.map((c) => ({ short_id: c.short_id, medium: c.medium, url: c.url }));
 
   const s = BATCH_STATUS_STYLES[batch.status] ?? BATCH_STATUS_STYLES.pending;
   const batchLabel = batch.batch_name || `${batch.companies?.name ?? "batch"}-${batch.id.slice(0, 8)}`;
