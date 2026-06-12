@@ -721,7 +721,7 @@ export async function sendPaymentConfirmedEmail(
   await resend.emails.send({
     from: FROM,
     to,
-    subject: `Payment Received — ${formatNaira(opts.amount)} — Receipt #${opts.invoiceNumber}`,
+    subject: `Payment Received — Receipt #${opts.invoiceNumber}`,
     html,
   });
 }

@@ -224,9 +224,13 @@ export default async function AdminBatchesPage({
                       }}
                     >
                       <td className="px-4 py-3">
-                        <p className="font-medium" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>
+                        <Link
+                          href={`/admin/batches/${batch.id}`}
+                          className="font-medium hover:underline"
+                          style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)", textDecoration: "none" }}
+                        >
                           {batch.companies?.name ?? "—"}
-                        </p>
+                        </Link>
                       </td>
                       <td className="px-4 py-3">
                         {batch.batch_name ? (
