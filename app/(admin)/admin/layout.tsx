@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AdminSidebar } from "@/components/admin/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { getAdminNavAlerts } from "@/lib/nav-alerts";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -17,14 +18,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/dashboard");
   }
 
+  const alerts = await getAdminNavAlerts();
+
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#1C1A14" }}>
       <div className="hidden lg:flex shrink-0">
-        <AdminSidebar />
+        <AdminSidebar alerts={alerts} />
       </div>
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden lg:rounded-tl-xl lg:rounded-bl-xl" style={{ backgroundColor: "var(--color-smoke)" }}>
         <MobileNav label="Tagit · Admin">
-          <AdminSidebar />
+          <AdminSidebar alerts={alerts} />
         </MobileNav>
         <main className="flex-1 overflow-y-auto bg-dot-grid">
           {children}

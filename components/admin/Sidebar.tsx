@@ -32,9 +32,16 @@ const navItems = [
   { label: "Settings",      href: "/admin/settings",         icon: Settings },
 ];
 
-export function AdminSidebar() {
+export function AdminSidebar({ alerts }: { alerts?: { companies?: boolean; billing?: boolean; batches?: boolean } | null }) {
   const pathname = usePathname();
   const router = useRouter();
+
+  // Nav items that should show an amber action-needed dot.
+  const navAlert: Record<string, boolean> = {
+    "/admin/companies": !!alerts?.companies,
+    "/admin/billing": !!alerts?.billing,
+    "/admin/batches": !!alerts?.batches,
+  };
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -91,6 +98,9 @@ export function AdminSidebar() {
                 style={{ color: active ? "#B8945D" : "#52525B" }}
               />
               <span className="flex-1">{label}</span>
+              {navAlert[href] && (
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: "#FBBF24" }} />
+              )}
               {active && (
                 <ChevronRight size={12} style={{ color: "#52525B" }} />
               )}

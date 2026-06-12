@@ -5,6 +5,7 @@ import { CompanySidebar } from "@/components/company/Sidebar";
 import { SuspensionGuard } from "@/components/company/SuspensionGuard";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getBrandNavAlerts } from "@/lib/nav-alerts";
 import type { CompanyStatus } from "@/types/database";
 import { getFlagsForBrand } from "@/lib/feature-flags/server";
 import { FlagProvider } from "@/lib/feature-flags/client";
@@ -46,16 +47,18 @@ export default async function CompanyLayout({ children }: { children: React.Reac
     ? { status: subRow.status, planName: subRow.plans?.name ?? "Plan", trialEndsAt: subRow.trial_ends_at }
     : null;
 
+  const alerts = await getBrandNavAlerts(user.id);
+
   return (
     <FlagProvider flags={flags}>
       <SuspensionGuard suspended={suspended} />
       <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#1C1A14" }}>
         <div className="hidden lg:flex shrink-0">
-          <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} />
+          <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} alerts={alerts} />
         </div>
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden lg:rounded-tl-xl lg:rounded-bl-xl" style={{ backgroundColor: "var(--color-smoke)" }}>
           <MobileNav label={company.name}>
-            <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} />
+            <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} alerts={alerts} />
           </MobileNav>
           <main className="flex-1 overflow-y-auto bg-dot-grid">
             {children}

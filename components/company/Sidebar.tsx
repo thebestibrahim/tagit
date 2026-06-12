@@ -73,12 +73,19 @@ interface CompanySidebarProps {
   companyName: string;
   logoUrl?: string | null;
   billing?: BillingSummary | null;
+  alerts?: { billing?: boolean; ownership?: boolean } | null;
 }
 
-export function CompanySidebar({ companyName, logoUrl, billing }: CompanySidebarProps) {
+export function CompanySidebar({ companyName, logoUrl, billing, alerts }: CompanySidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const flags = useFlags();
+
+  // Nav items that should show an amber action-needed dot.
+  const navAlert: Record<string, boolean> = {
+    "/dashboard/features": !!alerts?.billing,
+    "/dashboard/ownership": !!alerts?.ownership,
+  };
 
   const idKeysActive = pathname.startsWith(idKeysNav.basePath);
   const idKeysLocked = !flags.bulk_tag_creation;
@@ -95,10 +102,12 @@ export function CompanySidebar({ companyName, logoUrl, billing }: CompanySidebar
     const active = href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
     const flagKey = FLAG_FOR_HREF[href];
     const locked = flagKey ? !flags[flagKey] : false;
+    const alert = navAlert[href];
     return (
       <Link href={href} className={`nav-item nav-item-dark ${active ? "active" : ""}`}>
         <Icon size={16} strokeWidth={1.5} style={{ color: active ? "#B8945D" : "#52525B" }} />
         <span className="flex-1">{label}</span>
+        {alert && <AlertDot />}
         {locked ? (
           <Lock size={12} style={{ color: "#52525B", opacity: 0.7 }} />
         ) : active ? (
@@ -211,6 +220,11 @@ export function CompanySidebar({ companyName, logoUrl, billing }: CompanySidebar
       </div>
     </aside>
   );
+}
+
+// Amber dot signalling a nav item needs the brand's attention.
+function AlertDot() {
+  return <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: "#FBBF24" }} />;
 }
 
 // Compact plan/billing chip in the sidebar footer — links to the Billing page.
