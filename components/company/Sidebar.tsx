@@ -236,6 +236,8 @@ function PlanChip({ billing }: { billing: BillingSummary }) {
   let lineColor = "#8A8478";
   if (status === "trialing") {
     dot = "#B8945D";
+    // A trial countdown is intentionally relative to the current time.
+    // eslint-disable-next-line react-hooks/purity
     const days = trialEndsAt ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)) : 0;
     line = `Trial · ${days} day${days === 1 ? "" : "s"} left`;
     lineColor = "#B8945D";

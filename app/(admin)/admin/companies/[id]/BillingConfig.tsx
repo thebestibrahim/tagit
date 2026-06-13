@@ -35,6 +35,9 @@ export function BillingConfig({ companyId }: { companyId: string }) {
     setLoading(false);
   }, [companyId]);
 
+  // Fetch the billing config once on mount. Standard client data-fetch — state
+  // is set inside the async callback, not synchronously in the effect body.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
   if (loading) return <p className="text-body-sm" style={{ color: "var(--color-mist)" }}>Loading billing…</p>;

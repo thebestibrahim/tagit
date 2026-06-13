@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { rateLimitAsync, getIp } from "@/lib/rate-limit";
+import { log } from "@/lib/logger";
 import type { Industry } from "@/types/database";
 
 const ALLOWED_INDUSTRIES: Industry[] = ["fashion", "arts", "collectibles"];
@@ -58,14 +59,14 @@ export async function POST(request: Request) {
     });
 
     if (dbError) {
-      console.error("[register] companies insert failed:", dbError);
+      log.error("register", "companies insert failed", dbError);
       await admin.auth.admin.deleteUser(userId);
       return NextResponse.json({ error: "Failed to create company profile." }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[register] unexpected error:", err);
+    log.error("register", "unexpected error", err);
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }

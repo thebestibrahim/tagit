@@ -41,24 +41,16 @@ export default async function AdminBillingPage() {
     if (inv.due_date < today) overdueByCompany.set(inv.company_id, (overdueByCompany.get(inv.company_id) ?? 0) + inv.amount);
   }
 
-  let mrr = 0, active = 0, trialing = 0, pastDue = 0, suspended = 0, unconfigured = 0;
-
+  // Pure mapping — no external mutation during the map callback.
   const brands: BrandRow[] = ((companies ?? []) as { id: string; name: string }[]).map((c) => {
     const s = subByCompany.get(c.id);
     if (!s) {
-      unconfigured += 1;
       return {
         company_id: c.id, company_name: c.name, plan_name: "—",
         status: "unconfigured", billing_interval: "—", next_billing_date: null,
         monthly_value: 0, has_discount: discounted.has(c.id), overdue_amount: overdueByCompany.get(c.id) ?? 0,
       };
     }
-    const monthlyValue = s.custom_monthly_price ?? s.plans?.monthly_price ?? 0;
-    if (s.status === "active") { mrr += monthlyValue; active += 1; }
-    else if (s.status === "trialing") trialing += 1;
-    else if (s.status === "past_due") pastDue += 1;
-    else if (s.status === "suspended") suspended += 1;
-
     return {
       company_id: c.id,
       company_name: c.name,
@@ -66,11 +58,21 @@ export default async function AdminBillingPage() {
       status: s.status,
       billing_interval: s.billing_interval,
       next_billing_date: s.current_period_end ?? s.trial_ends_at ?? getNextBillingDate(new Date(), s.billing_interval).toISOString(),
-      monthly_value: monthlyValue,
+      monthly_value: s.custom_monthly_price ?? s.plans?.monthly_price ?? 0,
       has_discount: discounted.has(c.id),
       overdue_amount: overdueByCompany.get(c.id) ?? 0,
     };
   });
+
+  // Summary stats derived from the mapped rows.
+  let mrr = 0, active = 0, trialing = 0, pastDue = 0, suspended = 0, unconfigured = 0;
+  for (const b of brands) {
+    if (b.status === "unconfigured") unconfigured += 1;
+    else if (b.status === "active") { mrr += b.monthly_value; active += 1; }
+    else if (b.status === "trialing") trialing += 1;
+    else if (b.status === "past_due") pastDue += 1;
+    else if (b.status === "suspended") suspended += 1;
+  }
 
   const attention = pastDue + suspended;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -20,9 +20,13 @@ export function MobileNav({
   const pathname = usePathname();
 
   // Close the drawer whenever the route changes (i.e. a nav item was tapped).
-  useEffect(() => {
+  // Done at render time (not in an effect) per the React Compiler guidance —
+  // avoids a cascading re-render and the react-hooks/set-state-in-effect lint.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   return (
     <div
