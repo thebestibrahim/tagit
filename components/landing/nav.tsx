@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
+import { Wordmark } from "@/components/ui/Wordmark";
 import MagneticButton from "./interactive/magnetic-button";
 import { RequestAccessButton } from "./request-access-modal";
 
@@ -30,9 +31,7 @@ export default function LandingNav() {
         {/* Logo */}
         <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#B8945D", display: "inline-block", flexShrink: 0 }} />
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontStyle: "italic", color: "#0A0A0B", letterSpacing: "-0.02em" }}>
-            Tagit
-          </span>
+          <Wordmark tone="ink" height={18} />
         </Link>
 
         {/* Links */}

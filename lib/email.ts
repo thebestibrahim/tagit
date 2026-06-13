@@ -39,10 +39,9 @@ ${opts.preheader ? preheader(opts.preheader) : ""}
 <tr><td align="center" style="padding:48px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px">
 
-  <!-- wordmark -->
-  <tr><td style="padding:0 6px 22px">
-    <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${GOLD};vertical-align:middle;margin-right:8px"></span>
-    <span style="font-family:${SERIF};font-style:italic;font-size:25px;color:${INK};letter-spacing:-0.02em;vertical-align:middle">Tagit</span>
+  <!-- header banner -->
+  <tr><td style="padding:0 0 18px">
+    <img src="${APP_URL}/email-header.png" width="480" alt="Tagit — The Identification Infrastructure of Luxury" style="display:block;width:100%;max-width:480px;height:auto;border:0" />
   </td></tr>
 
   <!-- card -->
@@ -53,15 +52,34 @@ ${opts.preheader ? preheader(opts.preheader) : ""}
     </table>
   </td></tr>
 
-  <!-- footer -->
+  <!-- footer (tagline lives in the header banner now) -->
   <tr><td style="padding:26px 8px 0;text-align:center">
-    <p style="margin:0 0 7px;font-family:${MONO};font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:#BFBAAE">Identity Infrastructure for Physical Luxury</p>
     <p style="margin:0;font-family:${SANS};font-size:11px;color:#BFBAAE">© ${new Date().getFullYear()} Tagit · <a href="mailto:info@tagitlux.com" style="color:#BFBAAE;text-decoration:none">info@tagitlux.com</a></p>
   </td></tr>
 
 </table>
 </td></tr></table>
 </body></html>`;
+}
+
+// Representative email rendered to HTML for visual preview (no send). Shows the
+// shared header banner + card. Used by the staging-only /dev/email-preview route.
+export function previewEmailHtml(): string {
+  return base(
+    `
+    ${eyebrow("Ownership Transfer")}
+    ${heading("An item is being transferred to you")}
+    ${para(`Hi Amara, <strong style="color:${INK};font-weight:600">Studio Noir</strong> is transferring ownership of <strong style="color:${INK};font-weight:600">The Midnight Tote</strong> to you on Tagit.`)}
+    <table role="presentation" style="width:100%;border-collapse:collapse;margin:22px 0 24px">
+      ${keyVal("Item", "The Midnight Tote")}
+      ${keyVal("From", "Studio Noir")}
+      ${keyVal("Sale price", "NGN 250,000")}
+    </table>
+    ${para("Accept to become the verified owner and receive your certificate. This link expires in 24 hours.")}
+    ${button("Accept ownership", "#")}
+  `,
+    { preheader: "Sample email — header & layout preview" }
+  );
 }
 
 // Mono uppercase gold label: the editorial "eyebrow" above a headline.

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Wordmark } from "@/components/ui/Wordmark";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
@@ -159,10 +160,8 @@ export function CompanySidebar({ companyName, logoUrl, billing, alerts }: Compan
       </div>
 
       {/* Tagit wordmark */}
-      <div className="px-5 py-3" style={{ borderBottom: "1px solid #251F15" }}>
-        <span className="font-display text-lg" style={{ color: "#B8945D", letterSpacing: "-0.01em" }}>
-          Tagit
-        </span>
+      <div className="px-5 py-3 flex items-center" style={{ borderBottom: "1px solid #251F15" }}>
+        <Wordmark tone="gold" height={20} />
       </div>
 
       {/* Nav */}

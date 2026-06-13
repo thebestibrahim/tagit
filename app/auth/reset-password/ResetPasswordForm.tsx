@@ -1,5 +1,6 @@
 "use client";
 
+import { Wordmark } from "@/components/ui/Wordmark";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -121,7 +122,7 @@ export default function ResetPasswordForm() {
 
         <div style={{ display: "flex", alignItems: "center", gap: 6, position: "relative" }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#B8945D", display: "inline-block" }} />
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontStyle: "italic", color: "#FAFAF8", letterSpacing: "-0.02em" }}>Tagit</span>
+          <Wordmark tone="light" height={20} />
         </div>
 
         <div style={{ position: "relative" }}>
@@ -175,7 +176,7 @@ export default function ResetPasswordForm() {
           {/* Mobile logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 32 }} className="lg:hidden">
             <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#B8945D", display: "inline-block" }} />
-            <span style={{ fontFamily: "var(--font-display)", fontSize: 18, fontStyle: "italic", color: "#0A0A0B", letterSpacing: "-0.02em" }}>Tagit</span>
+            <Wordmark tone="ink" height={18} />
           </div>
 
           {done ? (
