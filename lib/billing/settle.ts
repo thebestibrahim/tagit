@@ -16,6 +16,17 @@ export async function settleInvoice(
 ): Promise<{ alreadyPaid: boolean }> {
   if (invoice.status === "paid") return { alreadyPaid: true };
 
+  // Defense in depth: never settle for less than the invoice owes. Paystack
+  // fixes the charge amount at initialization, so this should never trip; if it
+  // does it signals a misconfigured link or a partial payment — flag, don't pay.
+  if (opts.amount < invoice.amount) {
+    log.warn(
+      "billing/settle",
+      `Underpayment ignored for invoice ${invoice.id}: paid ${opts.amount} < owed ${invoice.amount} (ref ${opts.reference})`
+    );
+    return { alreadyPaid: false };
+  }
+
   const now = new Date();
 
   await admin

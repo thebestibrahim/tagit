@@ -14,3 +14,16 @@ export function cn(...inputs: ClassValue[]) {
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
+
+/**
+ * Sanitize a free-text search term before interpolating it into a PostgREST
+ * `.or("col.ilike.%term%")` filter. PostgREST treats commas as condition
+ * separators and parentheses/asterisks as syntax, so an unsanitized term like
+ * `x,status.eq.approved` could inject additional filter branches. We strip the
+ * filter-significant characters and cap the length. (RLS still scopes results,
+ * so this is defense-in-depth — but it keeps the query well-formed and closes
+ * the injection class entirely.)
+ */
+export function sanitizeSearch(input: string): string {
+  return input.replace(/[,()*:\\]/g, "").trim().slice(0, 100)
+}

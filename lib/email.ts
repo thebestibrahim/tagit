@@ -86,6 +86,18 @@ function button(text: string, url: string) {
   </tr></table>`;
 }
 
+// Escape user-controlled text before interpolating into email HTML. Names and
+// emails reach external inboxes (e.g. a claimant's name in the brand's
+// notification), so a value like `<a href="evil">` must not inject markup.
+function esc(v: string | null | undefined): string {
+  return String(v ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function keyVal(label: string, value: string, mono = false) {
   // `mono` renders long machine strings (e.g. payment references) in a smaller
   // monospace with forced wrapping so they hug the cell instead of overflowing
@@ -95,7 +107,7 @@ function keyVal(label: string, value: string, mono = false) {
     : `font-family:${SANS};font-size:14px`;
   return `<tr>
     <td style="padding:11px 16px 11px 0;border-top:1px solid ${LINE};font-family:${MONO};font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:${MUTE};vertical-align:top;white-space:nowrap">${label}</td>
-    <td style="padding:11px 0;border-top:1px solid ${LINE};${valueStyle};color:${INK};font-weight:500;text-align:right;vertical-align:top">${value}</td>
+    <td style="padding:11px 0;border-top:1px solid ${LINE};${valueStyle};color:${INK};font-weight:500;text-align:right;vertical-align:top">${esc(value)}</td>
   </tr>`;
 }
 
@@ -176,7 +188,7 @@ export async function sendClaimApprovedEmail(
   const html = base(`
     ${eyebrow("Ownership Confirmed")}
     ${heading("The piece is yours")}
-    ${para(`Congratulations, ${opts.claimantName}. Your ownership of <strong style="color:${INK};font-weight:600">${opts.productName}</strong> by ${opts.companyName} has been verified and recorded on Tagit.`)}
+    ${para(`Congratulations, ${esc(opts.claimantName)}. Your ownership of <strong style="color:${INK};font-weight:600">${esc(opts.productName)}</strong> by ${esc(opts.companyName)} has been verified and recorded on Tagit.`)}
     ${para("It now forms part of the permanent provenance record for this item, a history that travels with it forever.")}
     ${button("View your item", opts.tagUrl)}
   `);
@@ -200,8 +212,8 @@ export async function sendClaimRejectedEmail(
   const html = base(`
     ${eyebrow("Claim Update")}
     ${heading("Your claim wasn’t approved")}
-    ${para(`Hi ${opts.claimantName}, your ownership claim for <strong style="color:${INK};font-weight:600">${opts.productName}</strong> was not approved.`)}
-    ${opts.reason ? `<table role="presentation" width="100%" style="margin:18px 0"><tr><td style="padding:14px 18px;background:${PAPER};border-left:2px solid ${GOLD};border-radius:0 8px 8px 0"><p style="margin:0;font-family:${SANS};font-size:14px;line-height:1.6;color:${BODY}">${opts.reason}</p></td></tr></table>` : ""}
+    ${para(`Hi ${esc(opts.claimantName)}, your ownership claim for <strong style="color:${INK};font-weight:600">${esc(opts.productName)}</strong> was not approved.`)}
+    ${opts.reason ? `<table role="presentation" width="100%" style="margin:18px 0"><tr><td style="padding:14px 18px;background:${PAPER};border-left:2px solid ${GOLD};border-radius:0 8px 8px 0"><p style="margin:0;font-family:${SANS};font-size:14px;line-height:1.6;color:${BODY}">${esc(opts.reason)}</p></td></tr></table>` : ""}
     ${para("If you believe this is an error, please contact the brand directly.")}
   `);
 
@@ -235,7 +247,7 @@ export async function sendTransferAcceptanceEmail(
     `
     ${eyebrow("Ownership Transfer")}
     ${heading("An item is being transferred to you")}
-    ${para(`Hi ${opts.recipientName}, <strong style="color:${INK};font-weight:600">${opts.fromName}</strong> is transferring ownership of <strong style="color:${INK};font-weight:600">${opts.productName}</strong> by ${opts.companyName} to you on Tagit.`)}
+    ${para(`Hi ${esc(opts.recipientName)}, <strong style="color:${INK};font-weight:600">${esc(opts.fromName)}</strong> is transferring ownership of <strong style="color:${INK};font-weight:600">${esc(opts.productName)}</strong> by ${esc(opts.companyName)} to you on Tagit.`)}
     <table role="presentation" style="width:100%;border-collapse:collapse;margin:22px 0 24px">
       ${keyVal("Item", opts.productName)}
       ${keyVal("From", opts.fromName)}
@@ -266,8 +278,8 @@ export async function sendTransferCompleteEmail(
     ${eyebrow("Transfer Complete")}
     ${heading(opts.role === "recipient" ? "Welcome, new owner" : "Transfer complete")}
     ${opts.role === "recipient"
-      ? para(`You are now the verified owner of <strong style="color:${INK};font-weight:600">${opts.productName}</strong> on Tagit. Your ownership is recorded on the permanent provenance ledger.`)
-      : para(`Ownership of <strong style="color:${INK};font-weight:600">${opts.productName}</strong> has been successfully transferred. Your stewardship now lives on as part of its provenance.`)}
+      ? para(`You are now the verified owner of <strong style="color:${INK};font-weight:600">${esc(opts.productName)}</strong> on Tagit. Your ownership is recorded on the permanent provenance ledger.`)
+      : para(`Ownership of <strong style="color:${INK};font-weight:600">${esc(opts.productName)}</strong> has been successfully transferred. Your stewardship now lives on as part of its provenance.`)}
     ${button("View item", opts.tagUrl)}
   `);
 
@@ -285,13 +297,13 @@ export async function sendChipReplacedEmail(
 ) {
   const subject = `Your ${opts.productName} chip has been replaced`;
 
-  const greeting = opts.ownerName ? `Hi ${opts.ownerName},` : "Hi,";
+  const greeting = opts.ownerName ? `Hi ${esc(opts.ownerName)},` : "Hi,";
 
   const html = base(`
     ${eyebrow("Authentication Chip")}
     ${heading("Your item’s chip has been replaced")}
     ${para(greeting)}
-    ${para(`<strong style="color:${INK};font-weight:600">${opts.brandName}</strong> has replaced the authentication chip on your item. Your ownership record is fully intact and unaffected.`)}
+    ${para(`<strong style="color:${INK};font-weight:600">${esc(opts.brandName)}</strong> has replaced the authentication chip on your item. Your ownership record is fully intact and unaffected.`)}
     ${para(`If you did not expect this, contact <a href="mailto:info@tagitlux.com" style="color:${INK}">info@tagitlux.com</a>.`)}
   `);
 
@@ -310,7 +322,7 @@ export async function sendInquiryReceivedEmail(
     `
     ${eyebrow("Application Received")}
     ${heading("Your request is being reviewed")}
-    ${para(`Thank you for your interest in Tagit, ${firstName}. We have received your request to bring <strong style="color:${INK};font-weight:600">${opts.company}</strong> onto the platform.`)}
+    ${para(`Thank you for your interest in Tagit, ${esc(firstName)}. We have received your request to bring <strong style="color:${INK};font-weight:600">${esc(opts.company)}</strong> onto the platform.`)}
     ${para("Tagit is the identity layer for the world’s finest physical goods. Every piece a house creates gains a permanent, verifiable identity that travels with it forever, through every owner, for the life of the object.")}
     ${para("Access is considered, and every brand is reviewed personally. We will be in touch within 48 hours with your next step.")}
     <table role="presentation" width="100%" style="margin:22px 0 4px"><tr><td style="padding:16px 18px;background:${PAPER};border:1px solid ${LINE};border-radius:10px">
@@ -343,7 +355,7 @@ export async function sendCompanyApprovedEmail(
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:32px 24px;font-family:system-ui,-apple-system,sans-serif;background:#ffffff;color:#1F1F22;max-width:560px">
   <p style="margin:0 0 20px;font-size:15px;line-height:1.6">Hi,</p>
-  <p style="margin:0 0 16px;font-size:15px;line-height:1.6">I'm Fawaz, founder of Tagit. I personally reviewed your application and I'm glad to let you know that <strong>${opts.companyName}</strong> has been approved.</p>
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.6">I'm Fawaz, founder of Tagit. I personally reviewed your application and I'm glad to let you know that <strong>${esc(opts.companyName)}</strong> has been approved.</p>
   <p style="margin:0 0 16px;font-size:15px;line-height:1.6">We built Tagit because luxury goods deserve an identity layer that lasts forever, travels with every product, and gives your customers ownership records they can verify themselves.</p>
   <p style="margin:0 0 16px;font-size:15px;line-height:1.6">You can now sign in to your dashboard, register products, assign tags, and start building provenance for your brand.</p>
   <p style="margin:0 0 24px;font-size:15px;line-height:1.6">Head here to get started:</p>
@@ -378,9 +390,9 @@ export async function sendCompanyRejectedEmail(
   const html = base(`
     ${eyebrow("Application Update")}
     ${heading("About your application")}
-    ${para(`Thank you for applying to join Tagit, ${opts.companyName}.`)}
+    ${para(`Thank you for applying to join Tagit, ${esc(opts.companyName)}.`)}
     ${para("After reviewing your application, we’re unable to approve your account at this time.")}
-    ${opts.reason ? `<table role="presentation" width="100%" style="margin:18px 0"><tr><td style="padding:14px 18px;background:${PAPER};border-left:2px solid ${GOLD};border-radius:0 8px 8px 0"><p style="margin:0;font-family:${SANS};font-size:14px;line-height:1.6;color:${BODY}">${opts.reason}</p></td></tr></table>` : ""}
+    ${opts.reason ? `<table role="presentation" width="100%" style="margin:18px 0"><tr><td style="padding:14px 18px;background:${PAPER};border-left:2px solid ${GOLD};border-radius:0 8px 8px 0"><p style="margin:0;font-family:${SANS};font-size:14px;line-height:1.6;color:${BODY}">${esc(opts.reason)}</p></td></tr></table>` : ""}
     ${para("If you believe this is a mistake or would like to reapply, please reply to this email.")}
   `);
 
@@ -401,8 +413,8 @@ export async function sendBrandInvitationEmail(
   const html = base(
     `
     ${eyebrow("Welcome to Tagit")}
-    ${heading(`Welcome, ${opts.company}`)}
-    ${para(`${firstName}, I’m Fawaz, founder of Tagit. I reviewed your application personally, and it is my pleasure to welcome you in.`)}
+    ${heading(`Welcome, ${esc(opts.company)}`)}
+    ${para(`${esc(firstName)}, I’m Fawaz, founder of Tagit. I reviewed your application personally, and it is my pleasure to welcome you in.`)}
     ${para("You are joining a small, considered group of houses building something rare: a permanent identity for every piece they create. From today, your products can carry proof of their origin, their craftsmanship, and their ownership, verifiable by anyone, for the life of the object.")}
     ${para("Your dashboard is ready. Register your first products, assign their Tagit identities, and begin building provenance for your brand.")}
     ${button("Enter your dashboard", opts.loginUrl)}

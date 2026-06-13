@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
 import Pagination from "@/components/ui/Pagination";
 import LocalTime from "@/components/ui/LocalTime";
+import { sanitizeSearch } from "@/lib/utils";
 
 const PER_PAGE = 25;
 
@@ -39,7 +40,7 @@ export default async function AdminCompaniesPage({
   searchParams: Promise<{ status?: string; q?: string; page?: string }>;
 }) {
   const { status: filterStatus, q: rawQ, page: pageParam } = await searchParams;
-  const q = rawQ?.trim() ?? "";
+  const q = sanitizeSearch(rawQ ?? "");
   const supabase = createServiceClient();
 
   let query = supabase

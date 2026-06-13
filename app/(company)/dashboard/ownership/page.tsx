@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
 import OwnerLedgerTable, { type OwnerRow } from "@/components/OwnerLedgerTable";
 import LocalTime from "@/components/ui/LocalTime";
+import { sanitizeSearch } from "@/lib/utils";
 
 type Claim = {
   id: string;
@@ -53,7 +54,7 @@ export default async function OwnershipPage({
 
   const params = await searchParams;
   const view = params.view === "owners" ? "owners" : "claims";
-  const q = params.q?.trim() ?? "";
+  const q = sanitizeSearch(params.q ?? "");
   const page = Math.max(1, parseInt(params.page ?? "1", 10));
   const from = (page - 1) * PER_PAGE;
   const to = from + PER_PAGE - 1;
