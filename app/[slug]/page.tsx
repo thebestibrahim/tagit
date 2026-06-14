@@ -107,6 +107,8 @@ export default async function BrandPage({
         :root { --brand-cols: 3; }
         @media (max-width: 900px) { :root { --brand-cols: 2; } }
         @media (max-width: 560px) { :root { --brand-cols: 1; } }
+        .brand-cta { transition: opacity 200ms ease; }
+        .brand-cta:hover { opacity: 0.9; }
       `}</style>
     </main>
   );
@@ -273,18 +275,24 @@ function ProductCard({
           href={enquiryUrl}
           target="_blank"
           rel="noopener noreferrer"
+          className="brand-cta"
           style={{
-            display: "inline-block",
-            alignSelf: "flex-start",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            width: "100%",
+            marginTop: 16,
+            padding: "13px 18px",
             fontFamily: FONT_BODY,
-            fontSize: 11,
-            letterSpacing: "0.08em",
+            fontSize: 11.5,
+            fontWeight: 500,
+            letterSpacing: "0.1em",
             textTransform: "uppercase",
-            color: palette.accent,
+            color: palette.onAccent,
+            backgroundColor: palette.accent,
+            borderRadius: 2,
             textDecoration: "none",
-            marginTop: 14,
-            borderBottom: `1px solid ${palette.accent}`,
-            paddingBottom: 2,
           }}
         >
           Enquire about this piece →
