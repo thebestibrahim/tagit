@@ -525,7 +525,10 @@ export type Database = {
           industry: string
           logo_url: string | null
           name: string
+          page_bio: string | null
+          page_enabled: boolean | null
           signature_url: string | null
+          slug: string | null
           social_links: Json | null
           status: string
         }
@@ -554,7 +557,10 @@ export type Database = {
           industry: string
           logo_url?: string | null
           name: string
+          page_bio?: string | null
+          page_enabled?: boolean | null
           signature_url?: string | null
+          slug?: string | null
           social_links?: Json | null
           status?: string
         }
@@ -583,7 +589,10 @@ export type Database = {
           industry?: string
           logo_url?: string | null
           name?: string
+          page_bio?: string | null
+          page_enabled?: boolean | null
           signature_url?: string | null
+          slug?: string | null
           social_links?: Json | null
           status?: string
         }

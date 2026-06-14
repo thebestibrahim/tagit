@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { formatCurrency } from "@/lib/billing/pricing";
@@ -8,6 +9,7 @@ import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
 import ClickableRow from "./ClickableRow";
 import ProductRowActions from "./ProductRowActions";
+import BrandPageSection from "./BrandPageSection";
 import LocalTime from "@/components/ui/LocalTime";
 
 const STATUS_FILTERS = ["all", "live", "owned", "transferred", "flagged"];
@@ -52,6 +54,13 @@ export default async function ProductsPage({
   const products = (data ?? []) as Product[];
   const totalPages = Math.ceil((count ?? 0) / PER_PAGE);
 
+  // Public brand-page settings (server-side, scoped to this brand).
+  const { data: pageSettings } = await createAdminClient()
+    .from("companies")
+    .select("slug, page_bio, page_enabled")
+    .eq("id", user.id)
+    .single();
+
   // A product can be linked to several tags (each with its own link); match the
   // status filter if ANY of its tags is in that status.
   const filtered = statusFilter && statusFilter !== "all"
@@ -91,6 +100,12 @@ export default async function ProductsPage({
           Register product
         </Link>
       </div>
+
+      <BrandPageSection
+        initialSlug={pageSettings?.slug ?? null}
+        initialBio={pageSettings?.page_bio ?? null}
+        initialEnabled={pageSettings?.page_enabled ?? false}
+      />
 
       {/* Search + filter bar */}
       <div className="flex flex-wrap items-center gap-3 mb-5">
