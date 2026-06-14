@@ -64,7 +64,7 @@ export function AdminSidebar({ alerts }: { alerts?: { companies?: boolean; billi
         className="flex items-center gap-3 px-5 h-[72px] shrink-0"
         style={{ borderBottom: "1px solid #2E2A1E", backgroundColor: "#171510" }}
       >
-        <Wordmark tone="gold" height={22} />
+        <Wordmark height={28} />
         <span
           className="text-micro font-semibold uppercase tracking-widest px-2 py-0.5 rounded"
           style={{

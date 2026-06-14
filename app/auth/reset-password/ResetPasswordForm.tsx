@@ -122,7 +122,7 @@ export default function ResetPasswordForm() {
 
         <div style={{ display: "flex", alignItems: "center", gap: 6, position: "relative" }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#B8945D", display: "inline-block" }} />
-          <Wordmark tone="light" height={20} />
+          <Wordmark height={30} />
         </div>
 
         <div style={{ position: "relative" }}>
@@ -176,7 +176,7 @@ export default function ResetPasswordForm() {
           {/* Mobile logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 32 }} className="lg:hidden">
             <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#B8945D", display: "inline-block" }} />
-            <Wordmark tone="ink" height={18} />
+            <Wordmark height={26} />
           </div>
 
           {done ? (

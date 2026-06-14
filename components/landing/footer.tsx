@@ -39,7 +39,7 @@ export default function LandingFooter() {
           <div className="footer-brand">
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 14 }}>
               <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#B8945D", display: "inline-block" }} />
-              <Wordmark tone="ink" height={16} />
+              <Wordmark height={22} />
             </div>
             <p style={{ fontSize: 13, color: "#6E6E73", lineHeight: 1.65, maxWidth: 240, margin: "0 0 16px" }}>
               Every luxury piece deserves a permanent record. Tagit gives your work a life beyond the point of sale.

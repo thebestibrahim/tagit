@@ -161,7 +161,7 @@ export function CompanySidebar({ companyName, logoUrl, billing, alerts }: Compan
 
       {/* Tagit wordmark */}
       <div className="px-5 py-3 flex items-center" style={{ borderBottom: "1px solid #251F15" }}>
-        <Wordmark tone="gold" height={20} />
+        <Wordmark height={26} />
       </div>
 
       {/* Nav */}

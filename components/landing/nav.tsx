@@ -31,7 +31,7 @@ export default function LandingNav() {
         {/* Logo */}
         <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#B8945D", display: "inline-block", flexShrink: 0 }} />
-          <Wordmark tone="ink" height={18} />
+          <Wordmark height={26} />
         </Link>
 
         {/* Links */}

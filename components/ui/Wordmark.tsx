@@ -1,31 +1,13 @@
-import Image from "next/image";
-
-// The Tagit text logo. One asset (gold on transparent), adapted to its surface:
-//   gold  → dark surfaces (sidebars, dark hero) — the asset as-is
-//   ink   → light surfaces (landing, auth form) — darkened to near-black to match
-//   light → dark surfaces where a white wordmark is wanted
-// Height drives the size; width is derived from the asset's 1279×585 ratio.
-const RATIO = 1279 / 585;
-
-export function Wordmark({
-  tone = "gold",
-  height = 20,
-  className,
-}: {
-  tone?: "gold" | "ink" | "light";
-  height?: number;
-  className?: string;
-}) {
-  const filter =
-    tone === "ink" ? "brightness(0)" : tone === "light" ? "brightness(0) invert(1)" : undefined;
+// The Tagit wordmark — the gold SVG, crisp at any size. Used across the app
+// (sidebars, landing, auth). SVG (not PNG) for sharpness; gold on every surface
+// per brand direction. `height` drives the size; width keeps the aspect ratio.
+export function Wordmark({ height = 24, className }: { height?: number; className?: string }) {
   return (
-    <Image
-      src="/tagit-logo.png"
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/tagit-logo.svg"
       alt="Tagit"
-      width={Math.round(height * RATIO)}
-      height={height}
-      priority
-      style={filter ? { filter } : undefined}
+      style={{ height, width: "auto", display: "block" }}
       className={className}
     />
   );
