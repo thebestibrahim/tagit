@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { formatCurrency } from "@/lib/billing/pricing";
@@ -12,6 +13,7 @@ import {
   type BrandPalette,
 } from "@/lib/brand-page";
 import { getPublicBrandPage } from "@/lib/brand-page-data";
+import { BrandHeader, BrandFooter } from "./brand-chrome";
 
 // Catch-all single-segment route. Static top-level routes (/dashboard, /admin,
 // /auth, /v, /certificate, /privacy, /terms, /api, …) always take priority in
@@ -55,10 +57,10 @@ export default async function BrandPage({
 
   return (
     <main style={{ backgroundColor: palette.background, minHeight: "100vh", fontFamily: baseFont }}>
-      <PageHeader brand={brand} palette={palette} />
+      <BrandHeader brand={brand} palette={palette} />
       <Hero brand={brand} palette={palette} />
 
-      <section style={{ maxWidth: 1180, margin: "0 auto", padding: "0 24px 96px" }}>
+      <section style={{ maxWidth: 1180, margin: "0 auto", padding: "0 24px 104px" }}>
         <p
           style={{
             fontFamily: FONT_MONO,
@@ -66,7 +68,7 @@ export default async function BrandPage({
             letterSpacing: "0.18em",
             textTransform: "uppercase",
             color: palette.textSecondary,
-            marginBottom: 20,
+            marginBottom: 32,
           }}
         >
           {products.length} {products.length === 1 ? "piece" : "pieces"}
@@ -81,7 +83,8 @@ export default async function BrandPage({
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(var(--brand-cols, 3), minmax(0, 1fr))",
-              gap: 2,
+              columnGap: 28,
+              rowGap: 64,
             }}
           >
             {products.map((product) => (
@@ -97,7 +100,7 @@ export default async function BrandPage({
         )}
       </section>
 
-      <Footer palette={palette} />
+      <BrandFooter palette={palette} />
 
       {/* Responsive grid columns: 3 desktop / 2 tablet / 1 mobile. */}
       <style>{`
@@ -106,52 +109,6 @@ export default async function BrandPage({
         @media (max-width: 560px) { :root { --brand-cols: 1; } }
       `}</style>
     </main>
-  );
-}
-
-// ── Header ──────────────────────────────────────────────────────────────────
-function PageHeader({
-  brand,
-  palette,
-}: {
-  brand: { name: string };
-  palette: BrandPalette;
-}) {
-  return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 10,
-        backgroundColor: palette.background,
-        borderBottom: `1px solid ${palette.divider}`,
-        backdropFilter: "saturate(180%) blur(8px)",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1180,
-          margin: "0 auto",
-          padding: "14px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Image src="/tagit-icon.svg" alt="Tagit" width={20} height={20} style={{ opacity: 0.9 }} />
-        <span
-          style={{
-            fontFamily: FONT_DISPLAY,
-            fontSize: 14,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: palette.textPrimary,
-          }}
-        >
-          {brand.name}
-        </span>
-      </div>
-    </header>
   );
 }
 
@@ -168,7 +125,7 @@ function Hero({
       style={{
         maxWidth: 760,
         margin: "0 auto",
-        padding: "72px 24px 56px",
+        padding: "84px 24px 64px",
         textAlign: "center",
       }}
     >
@@ -177,15 +134,15 @@ function Hero({
         <img
           src={brand.logo_url}
           alt={brand.name}
-          style={{ maxHeight: 80, width: "auto", margin: "0 auto 28px", objectFit: "contain" }}
+          style={{ maxHeight: 84, width: "auto", margin: "0 auto 30px", objectFit: "contain" }}
         />
       )}
       <h1
         style={{
           fontFamily: FONT_DISPLAY,
           fontWeight: 300,
-          fontSize: "clamp(52px, 8vw, 72px)",
-          lineHeight: 1.02,
+          fontSize: "clamp(48px, 7.5vw, 72px)",
+          lineHeight: 1.04,
           letterSpacing: "-0.01em",
           color: palette.textPrimary,
           margin: 0,
@@ -198,11 +155,11 @@ function Hero({
         <p
           style={{
             fontFamily: FONT_BODY,
-            fontSize: 14,
+            fontSize: 15,
             lineHeight: 1.7,
             color: palette.textSecondary,
             maxWidth: 480,
-            margin: "20px auto 0",
+            margin: "22px auto 0",
           }}
         >
           {brand.bio}
@@ -212,10 +169,10 @@ function Hero({
       {/* Thin gold rule, rotated. */}
       <div
         style={{
-          width: 40,
+          width: 44,
           height: 1,
           backgroundColor: palette.accent,
-          margin: "36px auto 0",
+          margin: "40px auto 0",
           transform: "rotate(-30deg)",
         }}
       />
@@ -240,124 +197,93 @@ function ProductCard({
 
   return (
     <article style={{ display: "flex", flexDirection: "column" }}>
-      {/* Image, 4:5, subtle zoom on hover (CSS only). */}
-      <div className="group" style={{ position: "relative", width: "100%", aspectRatio: "4 / 5", overflow: "hidden", backgroundColor: palette.divider }}>
-        {product.photo ? (
-          <Image
-            src={product.photo}
-            alt={product.name}
-            fill
-            sizes="(max-width: 560px) 100vw, (max-width: 900px) 50vw, 33vw"
-            className="transition-transform duration-[400ms] ease-out group-hover:scale-[1.02]"
-            style={{ objectFit: "cover" }}
-          />
-        ) : (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontFamily: FONT_MONO, fontSize: 9, letterSpacing: "0.14em", color: palette.textSecondary, textTransform: "uppercase" }}>
-              No image
-            </span>
-          </div>
-        )}
-      </div>
+      {/* Whole card (image + meta) links to the product detail page. */}
+      <Link href={`/${slug}/${product.id}`} className="group" style={{ textDecoration: "none", display: "block" }}>
+        <div style={{ position: "relative", width: "100%", aspectRatio: "4 / 5", overflow: "hidden", backgroundColor: palette.divider }}>
+          {product.photo ? (
+            <Image
+              src={product.photo}
+              alt={product.name}
+              fill
+              sizes="(max-width: 560px) 100vw, (max-width: 900px) 50vw, 33vw"
+              className="transition-transform duration-[450ms] ease-out group-hover:scale-[1.03]"
+              style={{ objectFit: "cover" }}
+            />
+          ) : (
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: 9, letterSpacing: "0.14em", color: palette.textSecondary, textTransform: "uppercase" }}>
+                No image
+              </span>
+            </div>
+          )}
 
-      <div style={{ padding: "14px 4px 28px" }}>
-        {/* Status badge */}
-        <span
-          style={{
-            display: "inline-block",
-            fontFamily: FONT_MONO,
-            fontSize: 9,
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            padding: "3px 8px",
-            borderRadius: 2,
-            marginBottom: 10,
-            backgroundColor: available ? palette.badgeBg : palette.divider,
-            color: available ? palette.badgeText : palette.textSecondary,
-          }}
-        >
-          {available ? "Available" : "Owned"}
-        </span>
+          {/* Status badge, overlaid top-left. */}
+          <span
+            style={{
+              position: "absolute",
+              top: 12,
+              left: 12,
+              fontFamily: FONT_MONO,
+              fontSize: 9,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              padding: "4px 9px",
+              borderRadius: 2,
+              backgroundColor: available ? palette.accent : palette.background,
+              color: available ? palette.onAccent : palette.textSecondary,
+              boxShadow: available ? "none" : `inset 0 0 0 1px ${palette.divider}`,
+            }}
+          >
+            {available ? "Available" : "Owned"}
+          </span>
+        </div>
 
         <h3
           style={{
             fontFamily: FONT_DISPLAY,
             fontWeight: 400,
-            fontSize: 20,
+            fontSize: 22,
             lineHeight: 1.15,
             color: palette.textPrimary,
-            margin: 0,
+            margin: "16px 0 0",
           }}
         >
           {product.name}
         </h3>
 
-        {product.price != null && (
-          <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: palette.textSecondary, margin: "6px 0 0" }}>
-            {formatCurrency(product.price, product.currency)}
-          </p>
-        )}
+        <p style={{ fontFamily: FONT_BODY, fontSize: 15, fontWeight: 500, color: palette.textPrimary, margin: "8px 0 0" }}>
+          {product.price != null ? formatCurrency(product.price, product.currency) : "Price on request"}
+        </p>
 
         {product.edition && (
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, letterSpacing: "0.1em", color: palette.accent, margin: "8px 0 0" }}>
             {product.edition}
           </p>
         )}
+      </Link>
 
-        {enquiryUrl && (
-          <a
-            href={enquiryUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "inline-block",
-              fontFamily: FONT_BODY,
-              fontSize: 11,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: palette.accent,
-              textDecoration: "none",
-              marginTop: 14,
-              borderBottom: `1px solid ${palette.accent}`,
-              paddingBottom: 2,
-            }}
-          >
-            Enquire about this piece →
-          </a>
-        )}
-      </div>
-    </article>
-  );
-}
-
-// ── Footer ──────────────────────────────────────────────────────────────────
-function Footer({ palette }: { palette: BrandPalette }) {
-  return (
-    <footer style={{ borderTop: `1px solid ${palette.divider}`, padding: "40px 24px 56px" }}>
-      <div
-        style={{
-          maxWidth: 1180,
-          margin: "0 auto",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Image src="/tagit-icon.svg" alt="Tagit" width={16} height={16} style={{ opacity: 0.5 }} />
-          <span style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: palette.textSecondary }}>
-            Verified by Tagit
-          </span>
-        </div>
+      {enquiryUrl && (
         <a
-          href="https://tagitlux.com"
-          style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: "0.05em", color: palette.textSecondary, opacity: 0.6, textDecoration: "none" }}
+          href={enquiryUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-block",
+            alignSelf: "flex-start",
+            fontFamily: FONT_BODY,
+            fontSize: 11,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: palette.accent,
+            textDecoration: "none",
+            marginTop: 14,
+            borderBottom: `1px solid ${palette.accent}`,
+            paddingBottom: 2,
+          }}
         >
-          tagitlux.com
+          Enquire about this piece →
         </a>
-      </div>
-    </footer>
+      )}
+    </article>
   );
 }

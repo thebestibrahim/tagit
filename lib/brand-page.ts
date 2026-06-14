@@ -5,6 +5,7 @@
 // public /api/brand/[slug] route, and app/[slug]/page.tsx.
 
 import type { TagStatus } from "@/types/database";
+import { resolveField } from "@/lib/industry-fields";
 
 // ── Slug rules ──────────────────────────────────────────────────────────────
 // Lowercase letters, digits and single hyphens; 3–40 chars; must not collide
@@ -85,6 +86,8 @@ export type BrandPalette = {
   textPrimary: string;
   textSecondary: string;
   accent: string;
+  /** Legible text/icon colour to place ON an accent-filled surface. */
+  onAccent: string;
   divider: string;
   badgeBg: string;
   badgeText: string;
@@ -97,31 +100,99 @@ const DEFAULTS = {
   accent: "#B8945D",
 };
 
-/** Convert a #RRGGBB hex to an rgba() string at the given alpha. */
-function withAlpha(hex: string, alpha: number): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return hex;
-  const int = parseInt(m[1], 16);
-  const r = (int >> 16) & 255;
-  const g = (int >> 8) & 255;
-  const b = int & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+// Parse a #RGB / #RRGGBB string to [r,g,b], or null if not a valid hex.
+function parseHex(value: string | null | undefined): [number, number, number] | null {
+  if (!value) return null;
+  let hex = value.trim().replace(/^#/, "");
+  if (/^[0-9a-f]{3}$/i.test(hex)) hex = hex.split("").map((c) => c + c).join("");
+  if (!/^[0-9a-f]{6}$/i.test(hex)) return null;
+  const int = parseInt(hex, 16);
+  return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
+}
+
+function toHex([r, g, b]: [number, number, number]): string {
+  return "#" + [r, g, b].map((c) => Math.max(0, Math.min(255, Math.round(c))).toString(16).padStart(2, "0")).join("");
+}
+
+/** rgba() string from a hex (falls back to the raw value if unparseable). */
+function withAlpha(value: string, alpha: number): string {
+  const rgb = parseHex(value);
+  if (!rgb) return value;
+  return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
+}
+
+// WCAG relative luminance + contrast ratio, used to guarantee legible text.
+function luminance([r, g, b]: [number, number, number]): number {
+  const ch = [r, g, b].map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+}
+
+function contrast(a: [number, number, number], b: [number, number, number]): number {
+  const la = luminance(a);
+  const lb = luminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+const ONYX: [number, number, number] = [10, 10, 11];
+const PEARL: [number, number, number] = [250, 250, 248];
+
+// Mix two colours by ratio t (0 = a, 1 = b).
+function mix(a: [number, number, number], b: [number, number, number], t: number): [number, number, number] {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
+
+// Pick a candidate colour only if it reads clearly against `bg`; otherwise fall
+// back to pure onyx or pearl (whichever contrasts better). This is what stops
+// white-on-white / dark-on-dark when a brand's customisation colours, which were
+// authored for the dark-header scan page, don't suit a light editorial page.
+function legibleInk(
+  candidate: [number, number, number] | null,
+  bg: [number, number, number],
+  minRatio: number,
+): [number, number, number] {
+  if (candidate && contrast(candidate, bg) >= minRatio) return candidate;
+  return contrast(ONYX, bg) >= contrast(PEARL, bg) ? ONYX : PEARL;
 }
 
 export function resolvePalette(brand: BrandColors): BrandPalette {
-  const background = brand.brand_text_color || DEFAULTS.background;
-  const textPrimary = brand.brand_primary_color || DEFAULTS.textPrimary;
-  const textSecondary = brand.brand_secondary_color || DEFAULTS.textSecondary;
-  const accent = brand.brand_accent_color || DEFAULTS.accent;
+  const bg = parseHex(brand.brand_text_color) ?? PEARL;
+  const isLightBg = luminance(bg) > 0.4;
+
+  // Primary text must be highly legible (AA body ≈ 4.5).
+  const textPrimary = legibleInk(parseHex(brand.brand_primary_color), bg, 4.5);
+
+  // Secondary text is muted but must still be readable (≈ 3.0). If the brand's
+  // colour is too faint, derive a muted tone from the primary ink toward the bg.
+  const secondaryCandidate = parseHex(brand.brand_secondary_color);
+  const textSecondary =
+    secondaryCandidate && contrast(secondaryCandidate, bg) >= 3
+      ? secondaryCandidate
+      : mix(textPrimary, bg, isLightBg ? 0.42 : 0.4);
+
+  // Accent (gold) drives badges + CTAs. Keep the brand's accent if it has at
+  // least light contrast; otherwise the luxury gold, nudged toward the ink if
+  // the gold itself is too low-contrast on this background.
+  const accentCandidate = parseHex(brand.brand_accent_color);
+  const gold = parseHex(DEFAULTS.accent)!;
+  let accent =
+    accentCandidate && contrast(accentCandidate, bg) >= 2.6 ? accentCandidate : gold;
+  if (contrast(accent, bg) < 2.6) accent = mix(accent, textPrimary, 0.45);
+
+  // Readable text to sit on top of the accent (for filled CTA buttons).
+  const onAccent = contrast(ONYX, accent) >= contrast(PEARL, accent) ? ONYX : PEARL;
 
   return {
-    background,
-    textPrimary,
-    textSecondary,
-    accent,
-    divider: withAlpha(textPrimary, 0.08),
-    badgeBg: withAlpha(accent, 0.1),
-    badgeText: accent,
+    background: toHex(bg),
+    textPrimary: toHex(textPrimary),
+    textSecondary: toHex(textSecondary),
+    accent: toHex(accent),
+    onAccent: toHex(onAccent),
+    divider: withAlpha(toHex(textPrimary), 0.1),
+    badgeBg: withAlpha(toHex(accent), isLightBg ? 0.12 : 0.18),
+    badgeText: toHex(accent),
   };
 }
 
@@ -226,6 +297,52 @@ export function toPublicProduct(raw: RawProduct): PublicProduct | null {
     description: pickDescription(fields),
     edition: pickEdition(fields),
     status,
+  };
+}
+
+// ── Product detail shaping ──────────────────────────────────────────────────
+// The detail page additionally exposes every uploaded photo and the product's
+// own attribute fields (materials, made in, dimensions, …). These are product
+// specs the brand entered — never chip, tag, ownership, scan or transfer data.
+
+export type ProductSpec = { label: string; value: string };
+
+export type PublicProductDetail = PublicProduct & {
+  photos: string[];
+  specs: ProductSpec[];
+};
+
+// Keys handled elsewhere (name, edition, long-form description) — not repeated
+// in the spec list.
+const SPEC_EXCLUDE = new Set<string>([
+  "product_name", "title", "item_name",
+  "edition_number", "edition_size",
+  ...DESCRIPTION_KEYS,
+]);
+
+function buildSpecs(fields: Record<string, unknown>): ProductSpec[] {
+  const specs: ProductSpec[] = [];
+  for (const [key, raw] of Object.entries(fields)) {
+    if (SPEC_EXCLUDE.has(key)) continue;
+    const value = typeof raw === "string" ? raw.trim() : typeof raw === "number" ? String(raw) : "";
+    if (!value) continue;
+    specs.push({ label: resolveField(key).label, value });
+  }
+  return specs;
+}
+
+export function toPublicProductDetail(raw: RawProduct): PublicProductDetail | null {
+  const base = toPublicProduct(raw);
+  if (!base) return null;
+
+  const fields = (raw.industry_fields && typeof raw.industry_fields === "object"
+    ? raw.industry_fields
+    : {}) as Record<string, unknown>;
+
+  return {
+    ...base,
+    photos: (raw.photos ?? []).filter((p): p is string => typeof p === "string" && !!p),
+    specs: buildSpecs(fields),
   };
 }
 
