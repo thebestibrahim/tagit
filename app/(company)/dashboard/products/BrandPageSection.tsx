@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Copy, Check, ExternalLink, Pencil, Globe } from "lucide-react";
+import { Loader2, Copy, Check, ExternalLink, Pencil, Globe, Plus } from "lucide-react";
 import { validateSlug } from "@/lib/brand-page";
 
 const BIO_MAX = 280;
@@ -25,6 +25,7 @@ export default function BrandPageSection({
   const [editing, setEditing] = useState(false);
   const [draftSlug, setDraftSlug] = useState("");
   const [savingSlug, setSavingSlug] = useState(false);
+  const [editingBio, setEditingBio] = useState(false);
   const [savingBio, setSavingBio] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -78,7 +79,13 @@ export default function BrandPageSection({
     setSavingBio(false);
     if (!res.ok) { toast.error(json.error ?? "Could not save your bio."); return; }
     setSavedBio(bio);
+    setEditingBio(false);
     toast.success("Bio saved.");
+  }
+
+  function cancelBio() {
+    setBio(savedBio);
+    setEditingBio(false);
   }
 
   async function togglePublished(next: boolean) {
@@ -108,19 +115,19 @@ export default function BrandPageSection({
       style={{ border: "1px solid var(--color-cream)", boxShadow: "var(--shadow-sm)", backgroundColor: "var(--color-pearl)" }}
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 p-6 pb-5">
-        <div className="flex items-start gap-3.5">
+      <div className="flex items-center justify-between gap-4 p-5 pb-4">
+        <div className="flex items-center gap-3 min-w-0">
           <div
             className="flex items-center justify-center shrink-0"
-            style={{ width: 40, height: 40, borderRadius: "var(--radius-lg)", backgroundColor: "var(--color-soft-gold)" }}
+            style={{ width: 34, height: 34, borderRadius: "var(--radius-md)", backgroundColor: "var(--color-soft-gold)" }}
           >
-            <Globe size={19} style={{ color: "var(--color-deep-gold)" }} />
+            <Globe size={17} style={{ color: "var(--color-deep-gold)" }} />
           </div>
-          <div>
-            <h3 style={{ color: "var(--color-charcoal)", fontSize: "var(--text-h4)", fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.2 }}>
+          <div className="min-w-0">
+            <h3 style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-lg)", fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.25 }}>
               Your brand page
             </h3>
-            <p className="mt-0.5" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+            <p className="truncate" style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}>
               A public showcase of your products. Share the link anywhere.
             </p>
           </div>
@@ -128,20 +135,20 @@ export default function BrandPageSection({
 
         {slug && (
           <span
-            className="inline-flex items-center gap-2 shrink-0 px-3 py-1.5 rounded-full font-medium"
+            className="inline-flex items-center gap-2 shrink-0 px-2.5 py-1 rounded-full font-medium"
             style={{
               fontSize: "var(--text-caption)",
               backgroundColor: enabled ? "rgba(21,128,61,0.08)" : "var(--color-linen)",
               color: enabled ? "#15803D" : "var(--color-slate)",
             }}
           >
-            <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: enabled ? "#15803D" : "var(--color-mist)" }} />
+            <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: enabled ? "#15803D" : "var(--color-mist)" }} />
             {enabled ? "Live" : "Hidden"}
           </span>
         )}
       </div>
 
-      <div className="px-6 pb-6">
+      <div className="px-5 pb-5">
         {!slug ? (
           <button
             onClick={handleGenerate}
@@ -222,58 +229,78 @@ export default function BrandPageSection({
               )}
             </div>
 
-            {!editing && (
-              <button
-                onClick={startEditing}
-                className="inline-flex items-center gap-1.5 mt-2.5 font-medium transition-colors"
-                style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}
-              >
-                <Pencil size={12} /> Edit slug
-              </button>
-            )}
-
-            {/* Bio */}
-            <div className="mt-6">
-              <label className="block mb-2 font-semibold uppercase" style={{ color: "var(--color-slate)", fontSize: "var(--text-micro)", letterSpacing: "0.08em" }}>
-                Page bio
-              </label>
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value.slice(0, BIO_MAX))}
-                rows={2}
-                placeholder="A short line about your brand, shown under your name."
-                className="w-full px-3.5 py-3 rounded-lg outline-none resize-none transition-colors focus:border-[var(--color-gold)]"
-                style={{ border: "1px solid var(--color-stone)", backgroundColor: "var(--color-pearl)", color: "var(--color-onyx)", fontSize: "var(--text-body-sm)", lineHeight: 1.5 }}
-              />
-              <div className="flex items-center justify-between mt-2">
-                <span style={{ color: "var(--color-mist)", fontSize: "var(--text-caption)", fontFamily: "var(--font-jetbrains-mono)" }}>
-                  {bio.length}/{BIO_MAX}
-                </span>
+            {/* Bio — inline, only opens an editor when you ask for it */}
+            {editingBio ? (
+              <div className="mt-4">
+                <textarea
+                  autoFocus
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value.slice(0, BIO_MAX))}
+                  onKeyDown={(e) => { if (e.key === "Escape") cancelBio(); }}
+                  rows={2}
+                  placeholder="A short line about your brand, shown under your name."
+                  className="w-full px-3.5 py-2.5 rounded-lg outline-none resize-none transition-colors focus:border-[var(--color-gold)]"
+                  style={{ border: "1px solid var(--color-stone)", backgroundColor: "var(--color-pearl)", color: "var(--color-onyx)", fontSize: "var(--text-body-sm)", lineHeight: 1.5 }}
+                />
+                <div className="flex items-center justify-between mt-2">
+                  <span style={{ color: "var(--color-mist)", fontSize: "var(--text-caption)", fontFamily: "var(--font-jetbrains-mono)" }}>
+                    {bio.length}/{BIO_MAX}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button onClick={cancelBio} className="px-3 py-1.5 rounded-md font-medium" style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}>
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveBio}
+                      disabled={savingBio}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md font-medium transition-opacity hover:opacity-90"
+                      style={{ backgroundColor: "var(--color-onyx)", color: "var(--color-pearl)", fontSize: "var(--text-caption)" }}
+                    >
+                      {savingBio ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3 mt-3">
+                {savedBio ? (
+                  <p className="min-w-0 truncate" style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+                    <span style={{ color: "var(--color-mist)" }}>Bio · </span>{savedBio}
+                  </p>
+                ) : (
+                  <span style={{ color: "var(--color-mist)", fontSize: "var(--text-body-sm)" }}>No bio yet</span>
+                )}
                 <button
-                  onClick={handleSaveBio}
-                  disabled={savingBio || bio === savedBio}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md font-medium transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: bio === savedBio ? "var(--color-linen)" : "var(--color-onyx)", color: bio === savedBio ? "var(--color-mist)" : "var(--color-pearl)", fontSize: "var(--text-caption)", cursor: bio === savedBio ? "default" : "pointer" }}
+                  onClick={() => setEditingBio(true)}
+                  className="inline-flex items-center gap-1.5 font-medium transition-colors shrink-0 hover:text-[var(--color-charcoal)]"
+                  style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}
                 >
-                  {savingBio ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
-                  Save bio
+                  {savedBio ? <Pencil size={12} /> : <Plus size={13} />}
+                  {savedBio ? "Edit bio" : "Add a bio"}
                 </button>
               </div>
-            </div>
+            )}
 
-            {/* Publish toggle */}
-            <div className="flex items-center justify-between gap-3 mt-6 pt-5" style={{ borderTop: "1px solid var(--color-cream)" }}>
-              <span style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-                {enabled ? "Your page is live and public." : "Your page is hidden. Visitors see a 404."}
-              </span>
-              <button
-                onClick={() => togglePublished(!enabled)}
-                className="px-4 py-2 rounded-md font-medium transition-opacity hover:opacity-90 shrink-0"
-                style={secondaryStyle}
-              >
-                {enabled ? "Hide page" : "Publish page"}
-              </button>
-            </div>
+            {/* Secondary actions — slim row */}
+            {!editing && (
+              <div className="flex items-center justify-between gap-3 mt-4 pt-3" style={{ borderTop: "1px solid var(--color-cream)" }}>
+                <button
+                  onClick={startEditing}
+                  className="inline-flex items-center gap-1.5 font-medium transition-colors hover:text-[var(--color-charcoal)]"
+                  style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}
+                >
+                  <Pencil size={12} /> Edit slug
+                </button>
+                <button
+                  onClick={() => togglePublished(!enabled)}
+                  className="font-medium transition-colors hover:text-[var(--color-charcoal)]"
+                  style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}
+                >
+                  {enabled ? "Hide page" : "Publish page"}
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
