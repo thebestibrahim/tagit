@@ -141,11 +141,13 @@ function Hero({
         style={{
           fontFamily: FONT_DISPLAY,
           fontWeight: 300,
-          fontSize: "clamp(48px, 7.5vw, 72px)",
-          lineHeight: 1.04,
+          fontSize: "clamp(40px, 7.5vw, 72px)",
+          lineHeight: 1.05,
           letterSpacing: "-0.01em",
           color: palette.textPrimary,
           margin: 0,
+          overflowWrap: "anywhere",
+          hyphens: "auto",
         }}
       >
         {brand.name}
@@ -160,6 +162,8 @@ function Hero({
             color: palette.textSecondary,
             maxWidth: 480,
             margin: "22px auto 0",
+            overflowWrap: "anywhere",
+            whiteSpace: "pre-line",
           }}
         >
           {brand.bio}
@@ -246,6 +250,8 @@ function ProductCard({
             lineHeight: 1.15,
             color: palette.textPrimary,
             margin: "16px 0 0",
+            overflowWrap: "anywhere",
+            hyphens: "auto",
           }}
         >
           {product.name}

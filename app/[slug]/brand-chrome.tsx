@@ -41,7 +41,7 @@ export function BrandHeader({
           <img
             src={brand.logo_url}
             alt={brand.name}
-            style={{ height: 26, width: "auto", objectFit: "contain" }}
+            style={{ height: 26, width: "auto", maxWidth: 160, objectFit: "contain", flexShrink: 0 }}
           />
         )}
         <span
@@ -51,6 +51,10 @@ export function BrandHeader({
             letterSpacing: "0.12em",
             textTransform: "uppercase",
             color: palette.textPrimary,
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
           }}
         >
           {brand.name}
