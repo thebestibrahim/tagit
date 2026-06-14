@@ -29,9 +29,8 @@ export default function LandingNav() {
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         {/* Logo */}
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#B8945D", display: "inline-block", flexShrink: 0 }} />
-          <Wordmark height={26} />
+        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
+          <Wordmark height={26} withIcon />
         </Link>
 
         {/* Links */}
