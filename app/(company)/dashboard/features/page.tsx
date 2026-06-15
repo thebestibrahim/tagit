@@ -285,17 +285,22 @@ function StatusBanner({ sub, nextAmount, discountedNext, subDiscount, batchDisco
   if (sub.status === "past_due" || sub.status === "suspended") {
     const amount = openInvoice?.amount ?? discountedNext;
     const suspended = sub.status === "suspended";
+    // past_due here means the first invoice is awaiting payment — the plan is
+    // not provisioned until it is paid. (Recurring lateness escalates straight
+    // to suspended, never past_due.)
+    const title = suspended
+      ? "Your account is suspended."
+      : `Your plan is awaiting payment — ${formatNaira(amount)}.`;
+    const detail = suspended
+      ? "Pay your outstanding balance to restore dashboard access. Chip scanning is never affected."
+      : `Pay this invoice${openInvoice?.due_date ? ` by ${fmtDate(openInvoice.due_date)}` : ""} to activate your plan and start ordering chips.`;
     return (
       <Banner tone="danger">
         <div className="flex items-start gap-3">
           <AlertTriangle size={20} style={{ color: "#B91C1C" }} className="mt-0.5 shrink-0" />
           <div className="flex-1">
-            <p className="font-medium" style={{ color: "#7F1D1D" }}>
-              {suspended ? "Your account is suspended." : `You have an overdue invoice of ${formatNaira(amount)}.`}
-            </p>
-            <p className="mt-1" style={{ color: "#991B1B", fontSize: "var(--text-body-sm)" }}>
-              {suspended ? "Pay your outstanding balance to restore dashboard access. Chip scanning is never affected." : "Pay now to avoid account suspension."}
-            </p>
+            <p className="font-medium" style={{ color: "#7F1D1D" }}>{title}</p>
+            <p className="mt-1" style={{ color: "#991B1B", fontSize: "var(--text-body-sm)" }}>{detail}</p>
             {openInvoice?.paystack_payment_link && (
               <a href={openInvoice.paystack_payment_link} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-micro font-semibold px-4 py-2 rounded-full" style={{ backgroundColor: "#B91C1C", color: "#fff" }}>
                 Pay {formatNaira(amount)} now <ArrowRight size={12} />

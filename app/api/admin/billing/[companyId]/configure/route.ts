@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { sendTrialWelcomeEmail } from "@/lib/email";
 import { getEffectivePrice } from "@/lib/billing/pricing";
 import { buildSubscriptionConfig } from "@/lib/billing/configure";
+import { createSubscriptionInvoice, sendInvoiceEmail } from "@/lib/billing/invoices";
 import { APP_URL } from "@/lib/email";
 import type { BillingInterval, VolumeTier } from "@/types/database";
 
@@ -54,7 +55,7 @@ export async function POST(
   const [{ data: company }, { data: plan }, { data: existing }] = await Promise.all([
     admin.from("companies").select("name, email").eq("id", companyId).single(),
     admin.from("plans").select("name, monthly_price").eq("id", plan_id).single(),
-    admin.from("subscriptions").select("id, status, trial_ends_at").eq("company_id", companyId).maybeSingle(),
+    admin.from("subscriptions").select("id, status, trial_ends_at, current_period_end").eq("company_id", companyId).maybeSingle(),
   ]);
 
   if (!company || !plan) {
@@ -65,7 +66,7 @@ export async function POST(
 
   // All "what to write" logic lives in buildSubscriptionConfig (unit-tested):
   // new setup, trial set/clear, and mid-cycle plan/price/limit edits.
-  const { payload: subPayload, isNewTrial } = buildSubscriptionConfig(
+  const { payload: subPayload, isNewTrial, needsFirstInvoice } = buildSubscriptionConfig(
     existing,
     {
       companyId,
@@ -100,6 +101,19 @@ export async function POST(
       .from("brand_pricing")
       .upsert(pricingPayload as never, { onConflict: "company_id" });
     if (priceErr) log.error("admin/billing/configure", "Upsert pricing failed", priceErr);
+  }
+
+  // Brand-new, no-trial setup: raise the first invoice immediately and email it
+  // with the payment link. The subscription stays `past_due` until that invoice
+  // is settled (which flips it to `active` and advances the period). This is
+  // what turns "active with no commitment" into "awaiting first payment".
+  if (needsFirstInvoice) {
+    try {
+      const invoice = await createSubscriptionInvoice(admin, subscription.id);
+      await sendInvoiceEmail(admin, invoice.id, "subscription");
+    } catch (err) {
+      log.error("admin/billing/configure", "First invoice generation failed", err);
+    }
   }
 
   if (isNewTrial && company.email) {
