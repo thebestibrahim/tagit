@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { formatNaira } from "@/lib/billing/pricing";
+import { formatNaira, getEffectivePrice } from "@/lib/billing/pricing";
+import { effectiveLimit } from "@/lib/billing/limits";
 import type { Plan, Subscription, Discount, Invoice, InvoiceLineItem, VolumeTier, BillingInterval } from "@/types/database";
 
 type InvoiceWithItems = Invoice & { invoice_line_items: InvoiceLineItem[] };
@@ -67,6 +68,9 @@ function SubscriptionForm({ companyId, data, onSaved }: { companyId: string; dat
   const [cardOverride, setCardOverride] = useState(sub?.card_limit_override != null ? String(sub.card_limit_override) : "");
   const [trialDays, setTrialDays] = useState("0");
   const [saving, setSaving] = useState(false);
+  // Once billing is set up, show a read-only summary; the form is revealed only
+  // when the admin chooses to change the plan (upgrade/downgrade) or details.
+  const [editing, setEditing] = useState(false);
 
   const selectedPlan = data.plans.find((p) => p.id === planId);
   const planTagLimit = selectedPlan?.tag_limit;
@@ -100,12 +104,65 @@ function SubscriptionForm({ companyId, data, onSaved }: { companyId: string; dat
       }),
     });
     setSaving(false);
-    if (res.ok) { toast.success("Configuration saved"); onSaved(); }
+    if (res.ok) { toast.success("Configuration saved"); setEditing(false); onSaved(); }
     else toast.error("Save failed");
   }
 
+  // Discard edits and return to the summary, restoring the saved values.
+  function cancelEdit() {
+    setPlanId(sub?.plan_id ?? data.plans[0]?.id ?? "");
+    setInterval(sub?.billing_interval ?? "monthly");
+    setCustomNaira(sub?.custom_monthly_price ? String(sub.custom_monthly_price / 100) : "");
+    setTagOverride(sub?.tag_limit_override != null ? String(sub.tag_limit_override) : "");
+    setCardOverride(sub?.card_limit_override != null ? String(sub.card_limit_override) : "");
+    setTrialDays("0");
+    setEditing(false);
+  }
+
+  // ── Read-only summary (shown once billing is set up and not being edited) ──
+  if (isSetUp && sub && !editing) {
+    const planPrice = currentPlan?.monthly_price ?? sub.plans?.monthly_price ?? 0;
+    const intervalAmount = getEffectivePrice(planPrice, sub.custom_monthly_price, sub.billing_interval);
+    const tagLimit = effectiveLimit(sub.tag_limit_override, currentPlan?.tag_limit);
+    const cardLimit = effectiveLimit(sub.card_limit_override, currentPlan?.card_limit);
+    const nextBilling =
+      sub.status === "trialing"
+        ? `Trial ends ${fmtD(sub.trial_ends_at)}`
+        : sub.status === "past_due"
+        ? "Awaiting first payment"
+        : sub.status === "suspended"
+        ? "Suspended — payment required"
+        : sub.current_period_end
+        ? fmtD(sub.current_period_end)
+        : "—";
+
+    return (
+      <Block title="Subscription">
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--color-cream)" }}>
+          <div className="flex items-center justify-between px-5 py-4" style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
+            <div className="flex items-center gap-3">
+              <span className="text-body font-semibold" style={{ color: "var(--color-charcoal)" }}>{currentPlan?.name ?? sub.plans?.name ?? "Plan"}</span>
+              <StatusPill status={sub.status} />
+            </div>
+            <button onClick={() => setEditing(true)} className="text-micro font-semibold px-3.5 py-1.5 rounded-full" style={{ backgroundColor: "var(--color-charcoal)", color: "var(--color-pearl)" }}>
+              Change plan
+            </button>
+          </div>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 px-5 py-4">
+            <SummaryRow label="Billing" value={`${cap(sub.billing_interval)} · ${formatNaira(intervalAmount)}`} />
+            <SummaryRow label="Next billing" value={nextBilling} />
+            <SummaryRow label="Tag allowance" value={tagLimit === null ? "Unlimited" : `${tagLimit.toLocaleString()} lifetime`} />
+            <SummaryRow label="Card allowance" value={cardLimit === null ? "Unlimited" : `${cardLimit.toLocaleString()} lifetime`} />
+            {sub.custom_monthly_price != null && <SummaryRow label="Custom price" value={`${formatNaira(sub.custom_monthly_price)}/mo`} />}
+            <SummaryRow label="Ordered to date" value={`${sub.tags_ordered_total.toLocaleString()} tags · ${sub.cards_ordered_total.toLocaleString()} cards`} />
+          </dl>
+        </div>
+      </Block>
+    );
+  }
+
   return (
-    <Block title="Subscription configuration">
+    <Block title={isSetUp ? "Change plan" : "Subscription configuration"}>
       {/* Current state */}
       <div className="mb-4 rounded-lg px-4 py-3" style={{ backgroundColor: isSetUp ? "var(--color-smoke)" : "var(--color-soft-gold)", border: `1px solid ${isSetUp ? "var(--color-cream)" : "var(--color-champagne)"}` }}>
         {!isSetUp ? (
@@ -114,13 +171,7 @@ function SubscriptionForm({ companyId, data, onSaved }: { companyId: string; dat
           </p>
         ) : (
           <p className="text-body-sm" style={{ color: "var(--color-charcoal)" }}>
-            <span className="font-semibold capitalize">{sub.status.replace(/_/g, " ")}</span>
-            {currentPlan ? ` · ${currentPlan.name}` : ""}
-            {sub.status === "trialing"
-              ? ` · trial ends ${fmtD(sub.trial_ends_at)}`
-              : sub.current_period_end
-              ? ` · renews ${fmtD(sub.current_period_end)}`
-              : ""}
+            Changing the plan or price is an upgrade/downgrade — it takes effect on the next invoice; the current period is unchanged. Leave the trial at 0 unless you are starting a new trial.
           </p>
         )}
       </div>
@@ -167,9 +218,46 @@ function SubscriptionForm({ companyId, data, onSaved }: { companyId: string; dat
           Mid-cycle change: the new plan and pricing take effect on the next invoice ({fmtD(sub?.current_period_end)}). The current period is unchanged.
         </p>
       )}
-      <SaveButton onClick={save} saving={saving}>{isSetUp ? "Save changes" : "Set up billing"}</SaveButton>
+      <div className="flex items-center gap-2">
+        <SaveButton onClick={save} saving={saving}>{isSetUp ? "Save changes" : "Set up billing"}</SaveButton>
+        {isSetUp && (
+          <button onClick={cancelEdit} disabled={saving} className="mt-4 px-5 py-2 rounded-lg text-body-sm font-medium" style={{ backgroundColor: "var(--color-linen)", color: "var(--color-graphite)" }}>
+            Cancel
+          </button>
+        )}
+      </div>
     </Block>
   );
+}
+
+function StatusPill({ status }: { status: string }) {
+  const tones: Record<string, { bg: string; color: string }> = {
+    active: { bg: "#DCFCE7", color: "#166534" },
+    trialing: { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" },
+    past_due: { bg: "#FEF2F2", color: "#991B1B" },
+    suspended: { bg: "#FEF2F2", color: "#991B1B" },
+    cancelled: { bg: "var(--color-cream)", color: "var(--color-mist)" },
+  };
+  const t = tones[status] ?? tones.cancelled;
+  const label = status === "past_due" ? "Awaiting payment" : status.charAt(0).toUpperCase() + status.slice(1);
+  return (
+    <span className="text-micro font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: t.bg, color: t.color }}>
+      {label}
+    </span>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-caption" style={{ color: "var(--color-mist)" }}>{label}</dt>
+      <dd className="mt-0.5 text-body-sm font-medium" style={{ color: "var(--color-charcoal)" }}>{value}</dd>
+    </div>
+  );
+}
+
+function cap(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function DiscountSection({ companyId, type, discount, onChange }: { companyId: string; type: "subscription" | "batch"; discount: Discount | null; onChange: () => void }) {
