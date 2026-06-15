@@ -108,13 +108,27 @@ export async function POST(
   // is settled (which flips it to `active` and advances the period). This is
   // what turns "active with no commitment" into "awaiting first payment".
   if (needsFirstInvoice) {
-    try {
-      const invoice = await createSubscriptionInvoice(admin, subscription.id);
-      // First-time welcome (you've been placed on this plan) + first invoice,
-      // not a routine recurring-invoice email.
-      await sendPlanActivationInvoice(admin, invoice.id, { planName: plan.name, interval: billing_interval });
-    } catch (err) {
-      log.error("admin/billing/configure", "First invoice generation failed", err);
+    // Idempotency guard: never raise/email a second first-invoice if this brand
+    // already has an unpaid subscription invoice. Defence in depth so we can
+    // never spam a "pay for your plan" email.
+    const { data: openInvoice } = await admin
+      .from("invoices")
+      .select("id")
+      .eq("company_id", companyId)
+      .eq("type", "subscription")
+      .in("status", ["sent", "overdue"])
+      .limit(1)
+      .maybeSingle();
+
+    if (!openInvoice) {
+      try {
+        const invoice = await createSubscriptionInvoice(admin, subscription.id);
+        // First-time welcome (you've been placed on this plan) + first invoice,
+        // not a routine recurring-invoice email.
+        await sendPlanActivationInvoice(admin, invoice.id, { planName: plan.name, interval: billing_interval });
+      } catch (err) {
+        log.error("admin/billing/configure", "First invoice generation failed", err);
+      }
     }
   }
 
