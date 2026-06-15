@@ -47,12 +47,13 @@ export async function POST(request: Request) {
   // enforce (their order proceeds and is invoiced as before).
   const { data: subRow } = await admin
     .from("subscriptions")
-    .select("tags_ordered_total, cards_ordered_total, tag_limit_override, card_limit_override, plans(name, tag_limit, card_limit)")
+    .select("status, tags_ordered_total, cards_ordered_total, tag_limit_override, card_limit_override, plans(name, tag_limit, card_limit)")
     .eq("company_id", user.id)
     .maybeSingle();
 
   const sub = subRow as
     | {
+        status: string;
         tags_ordered_total: number;
         cards_ordered_total: number;
         tag_limit_override: number | null;
@@ -60,6 +61,19 @@ export async function POST(request: Request) {
         plans: { name: string; tag_limit: number | null; card_limit: number | null } | null;
       }
     | null;
+
+  // ── Provisioning gate ────────────────────────────────────────────────────
+  // A plan is only provisioned once its first invoice is paid. Until then (and
+  // whenever there is an unpaid/overdue balance) the brand cannot place new chip
+  // orders. Trials and active subscriptions may order; past_due, suspended and
+  // cancelled may not.
+  if (sub && sub.status !== "active" && sub.status !== "trialing") {
+    const message =
+      sub.status === "suspended"
+        ? "Your account is suspended for an unpaid balance. Settle your outstanding invoice to place new orders."
+        : "Your plan is awaiting payment. Please pay your outstanding invoice to activate your account before ordering chips.";
+    return NextResponse.json({ error: message, payment_required: true }, { status: 402 });
+  }
 
   if (sub) {
     const planName = sub.plans?.name ?? "current";
