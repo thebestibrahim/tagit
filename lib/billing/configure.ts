@@ -80,28 +80,13 @@ export function buildSubscriptionConfig(
     });
     action = "start_trial";
     isNewTrial = !existing || existing.status !== "trialing";
-  } else if (existing && existing.current_period_end && existing.status !== "trialing") {
-    // No trial on a healthy EXISTING subscription => mid-cycle edit. Never touch
-    // status/period/trial here, so an active brand's billing window is
-    // preserved (the new plan/price applies on the next invoice). This is the
-    // fix for the bug where re-saving wiped current_period_end to null.
-    action = "update_mid_cycle";
-  } else if (existing && existing.status !== "trialing") {
-    // Existing non-trial sub with NO billing period — i.e. the legacy
-    // "active with no commitment" state (never invoiced). Re-saving repairs it:
-    // park in past_due and raise the first invoice, same as a fresh no-trial
-    // setup. (Trialing subs are left untouched by the mid-cycle clauses above.)
-    Object.assign(payload, {
-      status: "past_due",
-      trial_starts_at: null,
-      trial_ends_at: null,
-      current_period_start: now.toISOString(),
-      current_period_end: null,
-    });
-    action = "activate";
-    needsFirstInvoice = true;
   } else if (existing) {
-    // Existing trialing sub, no trial change => leave the trial running.
+    // Any no-trial edit of an EXISTING subscription is a mid-cycle change:
+    // never re-bill, re-email, reset the status, or touch the period. New
+    // plan/price/limits apply on the next invoice. This is what makes editing a
+    // customer who is already on a plan (e.g. tweaking a chip allowance) safe —
+    // it must never raise a fresh "pay for your plan" invoice. It also fixes the
+    // old bug where re-saving wiped current_period_end to null.
     action = "update_mid_cycle";
   } else {
     // Brand-new subscription, no trial: activate now but make payment a

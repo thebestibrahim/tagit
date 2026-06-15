@@ -64,12 +64,20 @@ describe("buildSubscriptionConfig", () => {
     expect(r.payload).not.toHaveProperty("current_period_end");
   });
 
-  it("repairs a legacy 'active with no period' sub on re-save (raises first invoice)", () => {
-    const r = buildSubscriptionConfig({ status: "active", current_period_end: null }, input({ trialDays: 0 }), NOW);
-    expect(r.action).toBe("activate");
-    expect(r.needsFirstInvoice).toBe(true);
-    expect(r.payload.status).toBe("past_due");
-    expect(r.payload.current_period_end).toBeNull();
+  it("editing an existing sub NEVER raises a first invoice (no surprise billing)", () => {
+    // Changing only an allowance on a brand already on a plan must be a
+    // mid-cycle edit — it must not re-bill or re-email them, regardless of
+    // whether the period is set. Covers the bug where tweaking the chip
+    // allowance sent a duplicate "pay for your plan" email.
+    const noPeriod = buildSubscriptionConfig({ status: "past_due", current_period_end: null }, input({ tagLimitOverride: 100 }), NOW);
+    expect(noPeriod.action).toBe("update_mid_cycle");
+    expect(noPeriod.needsFirstInvoice).toBe(false);
+    expect(noPeriod.payload.tag_limit_override).toBe(100);
+    expect(noPeriod.payload).not.toHaveProperty("status");
+
+    const withPeriod = buildSubscriptionConfig({ status: "active", current_period_end: PERIOD_END }, input({ cardLimitOverride: 200 }), NOW);
+    expect(withPeriod.action).toBe("update_mid_cycle");
+    expect(withPeriod.needsFirstInvoice).toBe(false);
   });
 
   it("no trial on an existing trialing brand is a mid-cycle edit (trial preserved)", () => {
