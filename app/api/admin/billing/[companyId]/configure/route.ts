@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { sendTrialWelcomeEmail } from "@/lib/email";
 import { getEffectivePrice } from "@/lib/billing/pricing";
 import { buildSubscriptionConfig } from "@/lib/billing/configure";
-import { createSubscriptionInvoice, sendInvoiceEmail } from "@/lib/billing/invoices";
+import { createSubscriptionInvoice, sendPlanActivationInvoice } from "@/lib/billing/invoices";
 import { APP_URL } from "@/lib/email";
 import type { BillingInterval, VolumeTier } from "@/types/database";
 
@@ -110,7 +110,9 @@ export async function POST(
   if (needsFirstInvoice) {
     try {
       const invoice = await createSubscriptionInvoice(admin, subscription.id);
-      await sendInvoiceEmail(admin, invoice.id, "subscription");
+      // First-time welcome (you've been placed on this plan) + first invoice,
+      // not a routine recurring-invoice email.
+      await sendPlanActivationInvoice(admin, invoice.id, { planName: plan.name, interval: billing_interval });
     } catch (err) {
       log.error("admin/billing/configure", "First invoice generation failed", err);
     }

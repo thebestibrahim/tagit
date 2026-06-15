@@ -14,7 +14,7 @@ import {
   consumeDiscount,
 } from "@/lib/billing/discounts";
 import { initializeTransaction, buildReference } from "@/lib/paystack";
-import { sendBatchInvoiceEmail, sendSubscriptionInvoiceEmail, sendTrialEndedInvoiceEmail } from "@/lib/email";
+import { sendBatchInvoiceEmail, sendSubscriptionInvoiceEmail, sendTrialEndedInvoiceEmail, sendPlanActivationEmail } from "@/lib/email";
 import { generateInvoicePdf } from "@/lib/billing/invoice-pdf";
 import { log } from "@/lib/logger";
 
@@ -437,4 +437,25 @@ export async function sendTrialEndedInvoice(supabase: DB, invoiceId: string): Pr
   await sendTrialEndedInvoiceEmail(payload.email, { ...payload.common, pdf }).catch((err) =>
     log.error("billing/invoices", "Trial ended invoice email failed", err)
   );
+}
+
+// First-time plan activation email (no-trial setup), with PDF. A welcome that
+// states the plan and encloses the first invoice — distinct from a routine
+// recurring invoice. Called by the admin configure route.
+export async function sendPlanActivationInvoice(
+  supabase: DB,
+  invoiceId: string,
+  meta: { planName: string; interval: string }
+): Promise<void> {
+  const payload = await loadInvoiceEmailPayload(supabase, invoiceId);
+  if (!payload) return;
+  const pdf = await buildInvoicePdf(payload);
+  await sendPlanActivationEmail(payload.email, {
+    ...payload.common,
+    pdf,
+    planName: meta.planName,
+    interval: meta.interval,
+    periodStart: payload.periodStart,
+    periodEnd: payload.periodEnd,
+  }).catch((err) => log.error("billing/invoices", "Plan activation email failed", err));
 }

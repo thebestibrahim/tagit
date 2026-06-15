@@ -674,6 +674,35 @@ export async function sendSubscriptionInvoiceEmail(
   await resend.emails.send({ from: FROM, to, subject: `Your Tagit invoice ${opts.invoiceNumber}`, html, attachments: invoiceAttachments(opts) });
 }
 
+// First-time plan activation. Sent when an admin places a brand on a plan with
+// no trial: it welcomes them, states the plan they've been set up on, and
+// encloses the first invoice that must be paid to activate the account. Framed
+// as an onboarding moment, not a routine recurring invoice.
+export async function sendPlanActivationEmail(
+  to: string,
+  opts: InvoiceEmailOpts & { planName: string; interval: string; periodStart: string | null; periodEnd: string | null }
+) {
+  const intervalLabel = opts.interval.charAt(0).toUpperCase() + opts.interval.slice(1);
+  const period = opts.periodStart && opts.periodEnd ? `${fmtDate(opts.periodStart)} — ${fmtDate(opts.periodEnd)}` : "";
+  const html = base(
+    `
+    ${eyebrow("Welcome to Tagit")}
+    ${heading(`You're set up on the ${esc(opts.planName)} plan`)}
+    ${para(`${opts.companyName}, the Tagit team has placed your brand on the <strong style="color:${INK};font-weight:600">${esc(opts.planName)}</strong> plan. To activate your account, please settle your first invoice below.`)}
+    <table role="presentation" style="width:100%;border-collapse:collapse;margin:22px 0 8px">
+      ${keyVal("Plan", opts.planName)}
+      ${keyVal("Billing", intervalLabel)}
+      ${period ? keyVal("First period", period) : ""}
+    </table>
+    ${invoiceTable(opts)}
+    ${para(`Once this invoice is paid, your <strong style="color:${INK};font-weight:600">${esc(opts.planName)}</strong> plan is active and you can begin ordering chips. Until then, your account is awaiting payment.`)}
+    <p style="margin:20px 0 0;font-family:${SANS};font-size:13px;color:${MUTE}">Due ${fmtDate(opts.dueDate)}. A PDF copy of this invoice is attached.</p>
+  `,
+    { preheader: `Welcome to Tagit — you've been set up on the ${opts.planName} plan.` }
+  );
+  await resend.emails.send({ from: FROM, to, subject: `Welcome to Tagit — your ${opts.planName} plan`, html, attachments: invoiceAttachments(opts) });
+}
+
 export async function sendBatchInvoiceEmail(to: string, opts: InvoiceEmailOpts) {
   const html = base(
     `
