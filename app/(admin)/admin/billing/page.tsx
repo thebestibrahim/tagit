@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { formatNaira, getNextBillingDate } from "@/lib/billing/pricing";
 import { BrandsTable, type BrandRow } from "./BrandsTable";
+import { BillingReference } from "./BillingReference";
 import type { SubscriptionStatus, BillingInterval } from "@/types/database";
 
 export const dynamic = "force-dynamic";
@@ -96,6 +97,8 @@ export default async function AdminBillingPage() {
       </div>
 
       <BrandsTable brands={brands} />
+
+      <BillingReference />
     </div>
   );
 }

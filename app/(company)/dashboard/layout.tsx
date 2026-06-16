@@ -3,6 +3,7 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { CompanySidebar } from "@/components/company/Sidebar";
 import { SuspensionGuard } from "@/components/company/SuspensionGuard";
+import { PastDueBanner } from "@/components/company/PastDueBanner";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getBrandNavAlerts } from "@/lib/nav-alerts";
@@ -42,6 +43,9 @@ export default async function CompanyLayout({ children }: { children: React.Reac
     .eq("company_id", user.id)
     .maybeSingle();
   const suspended = sub?.status === "suspended";
+  // `past_due` = trial ended, first invoice unpaid. Dashboard stays usable but a
+  // persistent banner nudges payment and new chip orders are blocked server-side.
+  const pastDue = sub?.status === "past_due";
   const subRow = sub as { status: string; trial_ends_at: string | null; plans: { name: string } | null } | null;
   const billing = subRow
     ? { status: subRow.status, planName: subRow.plans?.name ?? "Plan", trialEndsAt: subRow.trial_ends_at }
@@ -60,6 +64,7 @@ export default async function CompanyLayout({ children }: { children: React.Reac
           <MobileNav label={company.name}>
             <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} alerts={alerts} />
           </MobileNav>
+          {pastDue && <PastDueBanner />}
           <main className="flex-1 overflow-y-auto overscroll-contain bg-dot-grid">
             {children}
           </main>
