@@ -29,14 +29,27 @@ export async function settleInvoice(
 
   const now = new Date();
 
-  await admin
+  // Atomic claim: flip the status to paid ONLY if it isn't already. The webhook
+  // and the redirect callback (and Paystack's own retries) can race on the same
+  // invoice; Postgres serialises the row update under READ COMMITTED, so the
+  // second writer re-evaluates the WHERE against the now-paid row, matches zero
+  // rows, and bails out here — before it can double-post a payment or advance
+  // the subscription period twice. This is the concurrency guard for settlement.
+  const { data: claimed } = await admin
     .from("invoices")
     .update({
       status: "paid",
       paid_at: now.toISOString(),
       paystack_reference: invoice.paystack_reference ?? opts.reference,
     })
-    .eq("id", invoice.id);
+    .eq("id", invoice.id)
+    .neq("status", "paid")
+    .select("id");
+
+  if (!claimed || claimed.length === 0) {
+    // Another settlement won the race and already marked this invoice paid.
+    return { alreadyPaid: true };
+  }
 
   // Record the payment. Unique on paystack_reference makes double-posting safe.
   await admin.from("payments").insert({

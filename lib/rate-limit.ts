@@ -30,6 +30,16 @@ const redis = upstashUrl && upstashToken
   ? new Redis({ url: upstashUrl, token: upstashToken })
   : null;
 
+// Fail loud, not silent: in production the in-memory fallback is per-instance,
+// so every limit is effectively multiplied by the serverless fan-out and an
+// abuser can sail past it. If we ever ship to prod without Upstash/KV wired,
+// surface it instead of quietly degrading every rate limit in the app.
+if (!redis && process.env.NODE_ENV === "production") {
+  console.error(
+    "[rate-limit] No Upstash/KV credentials in production — rate limiting is per-instance only and easily bypassed. Set KV_REST_API_* or UPSTASH_REDIS_REST_*."
+  );
+}
+
 const limiters = new Map<string, Ratelimit>();
 
 function getUpstashLimiter(limit: number, windowMs: number): Ratelimit | null {

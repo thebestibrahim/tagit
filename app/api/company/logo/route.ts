@@ -1,9 +1,9 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
+import { validateImageBytes, imageErrorResponse } from "@/lib/upload";
 
 const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
-const ALLOWED_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml"]);
 
 export async function POST(request: Request) {
   const authClient = await createServerClient();
@@ -16,23 +16,26 @@ export async function POST(request: Request) {
   if (!file || !(file instanceof File)) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
-  if (!ALLOWED_TYPES.has(file.type)) {
-    return NextResponse.json({ error: "Invalid file type. Use PNG, JPG, WebP, or SVG." }, { status: 400 });
+
+  // Authoritative validation by file content, not the client-declared MIME type
+  // or filename. SVG is rejected (stored-XSS vector); the extension and content
+  // type written to storage both come from the detected kind.
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const result = validateImageBytes(bytes, file.type, { maxBytes: MAX_SIZE });
+  if (!result.ok) {
+    const { message, status } = imageErrorResponse(result.error);
+    return NextResponse.json({ error: message }, { status });
   }
-  if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "File too large (max 2 MB)" }, { status: 413 });
-  }
+  const { mime, ext } = result.image;
 
   const admin = createAdminClient();
 
-  const ext = file.name.split(".").pop() ?? "png";
   const path = `${user.id}/logo.${ext}`;
-  const arrayBuffer = await file.arrayBuffer();
 
   const { error: uploadError } = await admin.storage
     .from("logos")
-    .upload(path, arrayBuffer, {
-      contentType: file.type,
+    .upload(path, bytes, {
+      contentType: mime,
       upsert: true,
     });
 

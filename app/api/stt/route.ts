@@ -9,6 +9,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
+  // Speech-to-text has no tag/brand to scope it to (it's generic transcription),
+  // so the per-IP limit is its only natural bound — and an abuser can rotate
+  // IPs. This platform-wide backstop caps total Whisper spend per minute so a
+  // distributed flood can't run up an unbounded bill. Generous enough that real
+  // scan-page voice usage never reaches it.
+  if (!await rateLimitAsync("stt:global", 300, 60_000)) {
+    return NextResponse.json({ error: "Service is busy. Please try again shortly." }, { status: 429 });
+  }
+
   const formData = await request.formData().catch(() => null);
   if (!formData) return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
 

@@ -81,7 +81,6 @@ export default async function EditProductPage({
       <EditProductForm
         product={product}
         industry={company.industry}
-        companyId={company.id}
       />
     </div>
   );
