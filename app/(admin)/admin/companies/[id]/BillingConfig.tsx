@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { formatNaira, getEffectivePrice } from "@/lib/billing/pricing";
 import { effectiveLimit } from "@/lib/billing/limits";
+import { billingCyclePosition, pickOpenInvoice, type CyclePosition } from "@/lib/billing/lifecycle";
 import type { Plan, Subscription, Discount, Invoice, InvoiceLineItem, VolumeTier, BillingInterval } from "@/types/database";
 
 type InvoiceWithItems = Invoice & { invoice_line_items: InvoiceLineItem[] };
@@ -46,6 +47,7 @@ export function BillingConfig({ companyId }: { companyId: string }) {
 
   return (
     <div className="space-y-8">
+      <CyclePanel data={data} />
       <SubscriptionForm companyId={companyId} data={data} onSaved={load} />
       <DiscountSection companyId={companyId} type="subscription" discount={data.subscription_discount} onChange={load} />
       <DiscountSection companyId={companyId} type="batch" discount={data.batch_discount} onChange={load} />
@@ -371,6 +373,7 @@ function PricingEditor({ companyId, data, onSaved }: { companyId: string; data: 
 
 function InvoiceHistory({ invoices, onChange }: { invoices: InvoiceWithItems[]; onChange: () => void }) {
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [remindingId, setRemindingId] = useState<string | null>(null);
 
   async function markPaid(id: string) {
     setBusyId(id);
@@ -378,6 +381,16 @@ function InvoiceHistory({ invoices, onChange }: { invoices: InvoiceWithItems[]; 
     setBusyId(null);
     if (res.ok) { toast.success("Invoice marked paid"); onChange(); }
     else toast.error("Failed");
+  }
+
+  // Manually email the brand about an open invoice (due-soon or overdue). Sending
+  // only emails; it does not change the invoice, so no reload is needed.
+  async function sendReminder(id: string) {
+    setRemindingId(id);
+    const res = await fetch(`/api/admin/billing/invoices/${id}/remind`, { method: "POST" });
+    setRemindingId(null);
+    if (res.ok) toast.success("Reminder sent");
+    else toast.error((await res.json().catch(() => null))?.error ?? "Failed to send reminder");
   }
 
   return (
@@ -393,12 +406,55 @@ function InvoiceHistory({ invoices, onChange }: { invoices: InvoiceWithItems[]; 
               <span className="text-body-sm tabular-nums" style={{ color: "var(--color-charcoal)" }}>{formatNaira(inv.amount)}</span>
               <span className="text-body-sm" style={{ color: inv.status === "paid" ? "#166534" : inv.status === "overdue" ? "#991B1B" : "var(--color-slate)" }}>{inv.status}</span>
               {inv.status !== "paid" && inv.status !== "cancelled" ? (
-                <button onClick={() => markPaid(inv.id)} disabled={busyId === inv.id} className="text-micro font-semibold px-3 py-1.5 rounded-full" style={{ backgroundColor: "var(--color-charcoal)", color: "var(--color-pearl)" }}>Mark paid</button>
+                <div className="flex items-center justify-end gap-2">
+                  {(inv.status === "sent" || inv.status === "overdue") && (
+                    <button onClick={() => sendReminder(inv.id)} disabled={remindingId === inv.id} className="text-micro font-semibold px-3 py-1.5 rounded-full" style={{ backgroundColor: "var(--color-linen)", color: "var(--color-graphite)", border: "1px solid var(--color-cream)" }}>
+                      {remindingId === inv.id ? "Sending…" : "Send reminder"}
+                    </button>
+                  )}
+                  <button onClick={() => markPaid(inv.id)} disabled={busyId === inv.id} className="text-micro font-semibold px-3 py-1.5 rounded-full" style={{ backgroundColor: "var(--color-charcoal)", color: "var(--color-pearl)" }}>Mark paid</button>
+                </div>
               ) : <span />}
             </div>
           ))}
         </div>
       )}
+    </Block>
+  );
+}
+
+const TONE_STYLE: Record<CyclePosition["tone"], { bg: string; border: string; color: string }> = {
+  neutral: { bg: "var(--color-smoke)", border: "var(--color-cream)", color: "var(--color-charcoal)" },
+  info: { bg: "var(--color-soft-gold)", border: "var(--color-champagne)", color: "var(--color-deep-gold)" },
+  warn: { bg: "#FEF3C7", border: "#FDE68A", color: "#92400E" },
+  danger: { bg: "#FEF2F2", border: "#FECACA", color: "#991B1B" },
+};
+
+// Live "where this brand sits in the billing cycle" panel. Read-only awareness —
+// computed from the subscription + the open invoice, so it always matches what
+// the daily cron will do next.
+function CyclePanel({ data }: { data: BillingData }) {
+  const sub = data.subscription;
+  const open = pickOpenInvoice(
+    data.invoices.map((i) => ({ id: i.id, status: i.status, due_date: i.due_date, created_at: i.created_at, amount: i.amount }))
+  );
+  const pos = billingCyclePosition(
+    sub ? { status: sub.status, trial_ends_at: sub.trial_ends_at, current_period_end: sub.current_period_end } : null,
+    open
+  );
+  const t = TONE_STYLE[pos.tone];
+
+  return (
+    <Block title="Billing cycle status">
+      <div className="rounded-xl px-5 py-4" style={{ backgroundColor: t.bg, border: `1px solid ${t.border}` }}>
+        <p className="text-body font-semibold" style={{ color: t.color }}>{pos.headline}</p>
+        {pos.next && <p className="text-body-sm mt-1" style={{ color: t.color, opacity: 0.9 }}>{pos.next}</p>}
+        {open && (
+          <p className="text-caption mt-2" style={{ color: t.color, opacity: 0.75 }}>
+            Open balance: {formatNaira(open.amount)} · due {new Date(open.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+          </p>
+        )}
+      </div>
     </Block>
   );
 }

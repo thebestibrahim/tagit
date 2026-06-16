@@ -820,6 +820,36 @@ export async function sendInvoiceReminderEmail(
   await resend.emails.send({ from: FROM, to, subject: opts.finalWarning ? `Final notice — invoice ${opts.invoiceNumber} overdue` : `Reminder — invoice ${opts.invoiceNumber} overdue`, html });
 }
 
+// Manually triggered reminder from the admin. Unlike the automated reminder
+// (overdue only), this also covers an invoice that is due but not yet overdue,
+// so the copy adapts: "due on <date>" vs "<n> days overdue".
+export async function sendManualInvoiceReminderEmail(
+  to: string,
+  opts: { companyName: string; invoiceNumber: string; amount: number; dueDate: string; daysOverdue: number; payUrl: string | null }
+) {
+  const overdue = opts.daysOverdue > 0;
+  const due = new Date(opts.dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const statusLine = overdue
+    ? `is now <strong style="color:${INK};font-weight:600">${opts.daysOverdue} day${opts.daysOverdue === 1 ? "" : "s"} overdue</strong>.`
+    : `is due on <strong style="color:${INK};font-weight:600">${due}</strong>.`;
+  const html = base(
+    `
+    ${eyebrow("Payment Reminder")}
+    ${heading(overdue ? "A quick reminder about your invoice" : "Your invoice is due soon")}
+    ${para(`${opts.companyName}, invoice ${opts.invoiceNumber} for <strong style="color:${INK};font-weight:600">${formatNaira(opts.amount)}</strong> ${statusLine}`)}
+    ${para(overdue ? "Please settle it to keep your account in good standing." : "You can settle it now using the link below so nothing lapses.")}
+    ${opts.payUrl ? button(`Pay ${formatNaira(opts.amount)} now`, opts.payUrl) : ""}
+  `,
+    { preheader: overdue ? `Invoice ${opts.invoiceNumber} is ${opts.daysOverdue} days overdue.` : `Invoice ${opts.invoiceNumber} is due ${due}.` }
+  );
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: overdue ? `Reminder: invoice ${opts.invoiceNumber} is overdue` : `Reminder: invoice ${opts.invoiceNumber} is due ${due}`,
+    html,
+  });
+}
+
 export async function sendAccountSuspendedEmail(
   to: string,
   opts: { companyName: string; invoiceNumber: string; amount: number; payUrl: string | null }

@@ -8,6 +8,7 @@ import {
   invoiceNumber,
 } from "@/lib/billing/invoices";
 import { getEffectivePrice } from "@/lib/billing/pricing";
+import { OVERDUE_REMINDER_DAYS, FINAL_WARNING_DAY, SUSPENSION_DAY } from "@/lib/billing/lifecycle";
 import {
   sendTrialEnding7Email,
   sendTrialEndingTomorrowEmail,
@@ -63,10 +64,14 @@ export async function GET(request: Request) {
           firstInvoiceAmount: firstAmount,
         }).catch((e) => log.error("cron/billing", "1-day trial email", e));
       } else if (endsAt <= today) {
-        // Trial over: first invoice (with PDF) + activate.
+        // Trial over: issue the first invoice (with PDF) and hold the brand in
+        // `past_due` — "awaiting first payment". The dashboard stays usable but
+        // limited (no new batch orders) until they pay; settleInvoice promotes
+        // them to `active`. If they never pay, the normal overdue escalation
+        // below suspends them at day 21.
         const invoice = await createSubscriptionInvoice(admin, s.id);
         await sendTrialEndedInvoice(admin, invoice.id);
-        await admin.from("subscriptions").update({ status: "active" }).eq("id", s.id);
+        await admin.from("subscriptions").update({ status: "past_due" }).eq("id", s.id);
         result.trials += 1;
         result.invoices += 1;
       }
@@ -121,7 +126,7 @@ export async function GET(request: Request) {
       const daysOverdue = daysBetween(dueDate, today);
       const now = new Date().toISOString();
 
-      if (daysOverdue >= 21 && !i.suspended_at) {
+      if (daysOverdue >= SUSPENSION_DAY && !i.suspended_at) {
         await admin.from("invoices").update({ status: "overdue", suspended_at: now }).eq("id", i.id);
         await admin
           .from("subscriptions")
@@ -139,7 +144,7 @@ export async function GET(request: Request) {
         continue;
       }
 
-      if (daysOverdue >= 14 && !i.reminder_14_sent_at) {
+      if (daysOverdue >= FINAL_WARNING_DAY && !i.reminder_14_sent_at) {
         if (email) {
           await sendInvoiceReminderEmail(email, {
             companyName: i.companies!.name,
@@ -152,7 +157,7 @@ export async function GET(request: Request) {
         }
         await admin.from("invoices").update({ reminder_14_sent_at: now }).eq("id", i.id);
         result.reminders += 1;
-      } else if (daysOverdue >= 7 && !i.reminder_7_sent_at) {
+      } else if (daysOverdue >= OVERDUE_REMINDER_DAYS[1] && !i.reminder_7_sent_at) {
         if (email) {
           await sendInvoiceReminderEmail(email, {
             companyName: i.companies!.name,
@@ -165,7 +170,7 @@ export async function GET(request: Request) {
         }
         await admin.from("invoices").update({ reminder_7_sent_at: now }).eq("id", i.id);
         result.reminders += 1;
-      } else if (daysOverdue >= 3 && !i.reminder_3_sent_at) {
+      } else if (daysOverdue >= OVERDUE_REMINDER_DAYS[0] && !i.reminder_3_sent_at) {
         if (email) {
           await sendInvoiceReminderEmail(email, {
             companyName: i.companies!.name,
