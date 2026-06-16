@@ -22,6 +22,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "message and tag_id required" }, { status: 400 });
   }
 
+  // Per-tag cap: bounds LLM spend on any single brand's tag even when an abuser
+  // rotates IPs to slip past the per-IP limit. Generous enough for many real
+  // visitors scanning a popular piece concurrently.
+  if (!await rateLimitAsync(`chat:tag:${tag_id}`, 120, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   if (typeof message !== "string" || message.length > 500) {
     return NextResponse.json({ error: "Message too long (max 500 characters)" }, { status: 400 });
   }

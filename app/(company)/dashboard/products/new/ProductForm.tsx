@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Loader2, ImagePlus, X, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
 import { INDUSTRY_FIELDS, groupFields } from "@/lib/industry-fields";
 import type { FieldDef } from "@/lib/industry-fields";
 
@@ -98,16 +97,17 @@ export default function ProductForm({
 
   async function uploadImages(): Promise<string[]> {
     if (images.length === 0) return [];
-    const supabase = createClient();
     const urls: string[] = [];
 
+    // Upload through the server route so each image is validated by its real
+    // bytes (rejects non-images / SVG) before it reaches the public bucket.
     for (const { file } of images) {
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `${companyId}/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("product-images").upload(path, file);
-      if (error) throw new Error(`Upload failed: ${error.message}`);
-      const { data: { publicUrl } } = supabase.storage.from("product-images").getPublicUrl(path);
-      urls.push(publicUrl);
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/company/products/upload-image", { method: "POST", body: form });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? "Upload failed");
+      urls.push(json.url);
     }
     return urls;
   }

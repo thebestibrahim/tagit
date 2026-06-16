@@ -21,6 +21,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "text and tag_id required" }, { status: 400 });
   }
 
+  // Per-tag cap: bounds voice-synthesis spend on a single brand's tag even under
+  // IP rotation. Sits alongside the per-IP limit above.
+  if (!await rateLimitAsync(`tts:tag:${tag_id}`, 120, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   // Fetch company's voice config
   const { data: tagData } = await admin
     .from("tags")
