@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { formatNaira, getEffectivePrice } from "@/lib/billing/pricing";
 import { effectiveLimit } from "@/lib/billing/limits";
-import { billingCyclePosition, pickOpenInvoice, type CyclePosition } from "@/lib/billing/lifecycle";
+import { billingCyclePosition, pickOpenInvoice, billingKeyDates, buildBillingTimeline, type CyclePosition, type TimelineEvent } from "@/lib/billing/lifecycle";
 import type { Plan, Subscription, Discount, Invoice, InvoiceLineItem, VolumeTier, BillingInterval } from "@/types/database";
 
 type InvoiceWithItems = Invoice & { invoice_line_items: InvoiceLineItem[] };
@@ -48,6 +48,7 @@ export function BillingConfig({ companyId }: { companyId: string }) {
   return (
     <div className="space-y-8">
       <CyclePanel data={data} />
+      <BillingTimeline data={data} />
       <SubscriptionForm companyId={companyId} data={data} onSaved={load} />
       <DiscountSection companyId={companyId} type="subscription" discount={data.subscription_discount} onChange={load} />
       <DiscountSection companyId={companyId} type="batch" discount={data.batch_discount} onChange={load} />
@@ -453,6 +454,81 @@ function CyclePanel({ data }: { data: BillingData }) {
           <p className="text-caption mt-2" style={{ color: t.color, opacity: 0.75 }}>
             Open balance: {formatNaira(open.amount)} · due {new Date(open.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
           </p>
+        )}
+      </div>
+    </Block>
+  );
+}
+
+const EVENT_DOT: Record<TimelineEvent["tone"], string> = {
+  neutral: "var(--color-mist)",
+  info: "var(--color-deep-gold)",
+  success: "#166534",
+  warn: "#92400E",
+  danger: "#991B1B",
+};
+
+function fmtFull(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+// Full billing lifecycle for a brand: the key dates up top, then every event in
+// the relationship (trial, invoices, payments, suspension, next renewal) in
+// chronological order. Read-only — actions live in Invoice history below.
+function BillingTimeline({ data }: { data: BillingData }) {
+  const sub = data.subscription;
+  if (!sub) return null;
+
+  const subLite = {
+    status: sub.status,
+    billing_interval: sub.billing_interval,
+    created_at: sub.created_at,
+    trial_starts_at: sub.trial_starts_at,
+    trial_ends_at: sub.trial_ends_at,
+    current_period_start: sub.current_period_start,
+    current_period_end: sub.current_period_end,
+  };
+  const invLite = data.invoices.map((i) => ({
+    id: i.id, type: i.type, amount: i.amount, status: i.status,
+    created_at: i.created_at, due_date: i.due_date, paid_at: i.paid_at, suspended_at: i.suspended_at,
+  }));
+
+  const keyDates = billingKeyDates(subLite, invLite);
+  const events = buildBillingTimeline(subLite, invLite);
+
+  return (
+    <Block title="Billing timeline">
+      {/* Key dates */}
+      <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4 rounded-xl px-5 py-4 mb-5" style={{ backgroundColor: "var(--color-smoke)", border: "1px solid var(--color-cream)" }}>
+        {keyDates.map((d) => (
+          <div key={d.label}>
+            <dt className="text-caption" style={{ color: "var(--color-mist)" }}>{d.label}</dt>
+            <dd className="mt-0.5 text-body-sm font-medium tabular-nums" style={{ color: "var(--color-charcoal)" }}>{d.value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {/* Chronological event feed */}
+      <div className="rounded-xl px-5 py-4" style={{ border: "1px solid var(--color-cream)" }}>
+        {events.length === 0 ? (
+          <p className="text-body-sm" style={{ color: "var(--color-mist)" }}>No billing activity yet.</p>
+        ) : (
+          <ol className="relative">
+            {events.map((e, i) => (
+              <li key={`${e.date}-${i}`} className="relative flex gap-3 pb-4 last:pb-0">
+                {/* connector line */}
+                {i < events.length - 1 && <span className="absolute left-[5px] top-3.5 bottom-0 w-px" style={{ backgroundColor: "var(--color-cream)" }} />}
+                <span className="relative z-10 mt-1 h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: EVENT_DOT[e.tone], outline: e.upcoming ? `2px dashed ${EVENT_DOT[e.tone]}` : "none", outlineOffset: 2, opacity: e.upcoming ? 0.6 : 1 }} />
+                <div className="min-w-0" style={{ opacity: e.upcoming ? 0.7 : 1 }}>
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <span className="text-body-sm font-medium" style={{ color: "var(--color-charcoal)" }}>{e.title}</span>
+                    <span className="text-caption tabular-nums" style={{ color: "var(--color-mist)" }}>{fmtFull(e.date)}{e.upcoming ? " (scheduled)" : ""}</span>
+                  </div>
+                  {e.detail && <p className="text-caption mt-0.5" style={{ color: "var(--color-slate)" }}>{e.detail}</p>}
+                </div>
+              </li>
+            ))}
+          </ol>
         )}
       </div>
     </Block>
