@@ -42,7 +42,7 @@ export interface CyclePosition {
   next: string | null;
   /** ISO date the account suspends if the open invoice stays unpaid, else null. */
   suspendsAt: string | null;
-  tone: "neutral" | "info" | "warn" | "danger";
+  tone: "neutral" | "info" | "success" | "warn" | "danger";
 }
 
 function startOfDayUTC(d: Date): Date {
@@ -156,7 +156,7 @@ export function billingCyclePosition(
     headline: "Active and current",
     next: sub.current_period_end ? `Next invoice ${fmt(sub.current_period_end)}.` : null,
     suspendsAt: null,
-    tone: "neutral",
+    tone: "success",
   };
 }
 

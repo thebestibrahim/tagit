@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { formatNaira, getEffectivePrice } from "@/lib/billing/pricing";
 import { effectiveLimit } from "@/lib/billing/limits";
-import { billingCyclePosition, pickOpenInvoice, billingKeyDates, buildBillingTimeline, type CyclePosition, type TimelineEvent } from "@/lib/billing/lifecycle";
+import { billingCyclePosition, pickOpenInvoice, billingKeyDates, buildBillingTimeline, type CyclePosition, type TimelineEvent, type EventKind } from "@/lib/billing/lifecycle";
+import { ChevronDown, Clock, AlertTriangle, CheckCircle2, Sparkles, Receipt, Ban, CalendarClock } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { Plan, Subscription, Discount, Invoice, InvoiceLineItem, VolumeTier, BillingInterval } from "@/types/database";
 
 type InvoiceWithItems = Invoice & { invoice_line_items: InvoiceLineItem[] };
@@ -424,14 +426,36 @@ function InvoiceHistory({ invoices, onChange }: { invoices: InvoiceWithItems[]; 
   );
 }
 
-const TONE_STYLE: Record<CyclePosition["tone"], { bg: string; border: string; color: string }> = {
-  neutral: { bg: "var(--color-smoke)", border: "var(--color-cream)", color: "var(--color-charcoal)" },
-  info: { bg: "var(--color-soft-gold)", border: "var(--color-champagne)", color: "var(--color-deep-gold)" },
-  warn: { bg: "#FEF3C7", border: "#FDE68A", color: "#92400E" },
-  danger: { bg: "#FEF2F2", border: "#FECACA", color: "#991B1B" },
+const TONE_STYLE: Record<CyclePosition["tone"], { bg: string; border: string; color: string; tint: string }> = {
+  neutral: { bg: "var(--color-smoke)", border: "var(--color-cream)", color: "var(--color-graphite)", tint: "var(--color-cream)" },
+  info: { bg: "var(--color-soft-gold)", border: "var(--color-champagne)", color: "var(--color-deep-gold)", tint: "var(--color-champagne)" },
+  success: { bg: "#ECFDF5", border: "#A7F3D0", color: "#065F46", tint: "#D1FAE5" },
+  warn: { bg: "#FEF3C7", border: "#FDE68A", color: "#92400E", tint: "#FDE68A" },
+  danger: { bg: "#FEF2F2", border: "#FECACA", color: "#991B1B", tint: "#FEE2E2" },
 };
 
-// Live "where this brand sits in the billing cycle" panel. Read-only awareness —
+const TONE_ICON: Record<CyclePosition["tone"], LucideIcon> = {
+  neutral: CalendarClock,
+  info: Sparkles,
+  success: CheckCircle2,
+  warn: Clock,
+  danger: AlertTriangle,
+};
+
+const STATE_LABEL: Record<string, string> = {
+  unconfigured: "Not set up",
+  trialing: "Trial",
+  active: "Active",
+  past_due: "Awaiting payment",
+  suspended: "Suspended",
+  cancelled: "Cancelled",
+};
+
+function fmtFull(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+// Live "where this brand sits in the billing cycle" card. Read-only awareness —
 // computed from the subscription + the open invoice, so it always matches what
 // the daily cron will do next.
 function CyclePanel({ data }: { data: BillingData }) {
@@ -444,38 +468,59 @@ function CyclePanel({ data }: { data: BillingData }) {
     open
   );
   const t = TONE_STYLE[pos.tone];
+  const Icon = TONE_ICON[pos.tone];
 
   return (
     <Block title="Billing cycle status">
-      <div className="rounded-xl px-5 py-4" style={{ backgroundColor: t.bg, border: `1px solid ${t.border}` }}>
-        <p className="text-body font-semibold" style={{ color: t.color }}>{pos.headline}</p>
-        {pos.next && <p className="text-body-sm mt-1" style={{ color: t.color, opacity: 0.9 }}>{pos.next}</p>}
-        {open && (
-          <p className="text-caption mt-2" style={{ color: t.color, opacity: 0.75 }}>
-            Open balance: {formatNaira(open.amount)} · due {new Date(open.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-          </p>
-        )}
+      <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${t.border}` }}>
+        <div className="flex items-start gap-3.5 px-5 py-4" style={{ backgroundColor: t.bg, borderLeft: `3px solid ${t.color}` }}>
+          <span className="flex h-9 w-9 items-center justify-center rounded-full shrink-0" style={{ backgroundColor: t.tint, color: t.color }}>
+            <Icon size={18} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <span className="inline-block text-micro font-semibold px-2 py-0.5 rounded-full mb-1.5" style={{ backgroundColor: t.color, color: t.bg }}>
+              {STATE_LABEL[pos.state] ?? pos.state}
+            </span>
+            <p className="text-body font-semibold leading-snug" style={{ color: t.color }}>{pos.headline}</p>
+            {pos.next && <p className="text-body-sm mt-1" style={{ color: t.color, opacity: 0.85 }}>{pos.next}</p>}
+          </div>
+          {open && (
+            <div className="text-right shrink-0 pl-2">
+              <p className="text-micro uppercase tracking-wider" style={{ color: t.color, opacity: 0.7 }}>Open balance</p>
+              <p className="text-h3 font-semibold tabular-nums leading-tight mt-0.5" style={{ color: t.color }}>{formatNaira(open.amount)}</p>
+              <p className="text-caption" style={{ color: t.color, opacity: 0.7 }}>due {fmtFull(open.due_date)}</p>
+            </div>
+          )}
+        </div>
       </div>
     </Block>
   );
 }
 
-const EVENT_DOT: Record<TimelineEvent["tone"], string> = {
-  neutral: "var(--color-mist)",
-  info: "var(--color-deep-gold)",
-  success: "#166534",
-  warn: "#92400E",
-  danger: "#991B1B",
+const EVENT_COLOR: Record<TimelineEvent["tone"], { icon: string; bg: string }> = {
+  neutral: { icon: "var(--color-slate)", bg: "var(--color-smoke)" },
+  info: { icon: "var(--color-deep-gold)", bg: "var(--color-soft-gold)" },
+  success: { icon: "#166534", bg: "#ECFDF5" },
+  warn: { icon: "#92400E", bg: "#FEF3C7" },
+  danger: { icon: "#991B1B", bg: "#FEF2F2" },
 };
 
-function fmtFull(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
+const EVENT_ICON: Record<EventKind, LucideIcon> = {
+  created: Sparkles,
+  trial_start: Sparkles,
+  trial_end: CalendarClock,
+  invoice: Receipt,
+  payment: CheckCircle2,
+  suspended: Ban,
+  scheduled: CalendarClock,
+};
 
-// Full billing lifecycle for a brand: the key dates up top, then every event in
-// the relationship (trial, invoices, payments, suspension, next renewal) in
-// chronological order. Read-only — actions live in Invoice history below.
+// Full billing lifecycle for a brand: the key dates plus every event in the
+// relationship (trial, invoices, payments, suspension, next renewal) in
+// chronological order. Collapsible and collapsed by default to keep the page
+// compact. Read-only — actions live in Invoice history below.
 function BillingTimeline({ data }: { data: BillingData }) {
+  const [open, setOpen] = useState(false);
   const sub = data.subscription;
   if (!sub) return null;
 
@@ -495,43 +540,67 @@ function BillingTimeline({ data }: { data: BillingData }) {
 
   const keyDates = billingKeyDates(subLite, invLite);
   const events = buildBillingTimeline(subLite, invLite);
+  const paidCount = events.filter((e) => e.kind === "payment").length;
+  const summary = `Since ${keyDates[0]?.value ?? "—"} · ${events.length} event${events.length === 1 ? "" : "s"} · ${paidCount} payment${paidCount === 1 ? "" : "s"}`;
 
   return (
-    <Block title="Billing timeline">
-      {/* Key dates */}
-      <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4 rounded-xl px-5 py-4 mb-5" style={{ backgroundColor: "var(--color-smoke)", border: "1px solid var(--color-cream)" }}>
-        {keyDates.map((d) => (
-          <div key={d.label}>
-            <dt className="text-caption" style={{ color: "var(--color-mist)" }}>{d.label}</dt>
-            <dd className="mt-0.5 text-body-sm font-medium tabular-nums" style={{ color: "var(--color-charcoal)" }}>{d.value}</dd>
-          </div>
-        ))}
-      </dl>
+    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--color-cream)" }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left"
+        style={{ backgroundColor: "var(--color-smoke)" }}
+      >
+        <span className="flex items-baseline gap-2.5 min-w-0">
+          <span className="text-body font-semibold shrink-0" style={{ color: "var(--color-charcoal)" }}>Billing timeline</span>
+          {!open && <span className="text-caption truncate" style={{ color: "var(--color-mist)" }}>{summary}</span>}
+        </span>
+        <ChevronDown size={18} className="shrink-0" style={{ color: "var(--color-slate)", transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+      </button>
 
-      {/* Chronological event feed */}
-      <div className="rounded-xl px-5 py-4" style={{ border: "1px solid var(--color-cream)" }}>
-        {events.length === 0 ? (
-          <p className="text-body-sm" style={{ color: "var(--color-mist)" }}>No billing activity yet.</p>
-        ) : (
-          <ol className="relative">
-            {events.map((e, i) => (
-              <li key={`${e.date}-${i}`} className="relative flex gap-3 pb-4 last:pb-0">
-                {/* connector line */}
-                {i < events.length - 1 && <span className="absolute left-[5px] top-3.5 bottom-0 w-px" style={{ backgroundColor: "var(--color-cream)" }} />}
-                <span className="relative z-10 mt-1 h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: EVENT_DOT[e.tone], outline: e.upcoming ? `2px dashed ${EVENT_DOT[e.tone]}` : "none", outlineOffset: 2, opacity: e.upcoming ? 0.6 : 1 }} />
-                <div className="min-w-0" style={{ opacity: e.upcoming ? 0.7 : 1 }}>
-                  <div className="flex flex-wrap items-baseline gap-x-2">
-                    <span className="text-body-sm font-medium" style={{ color: "var(--color-charcoal)" }}>{e.title}</span>
-                    <span className="text-caption tabular-nums" style={{ color: "var(--color-mist)" }}>{fmtFull(e.date)}{e.upcoming ? " (scheduled)" : ""}</span>
-                  </div>
-                  {e.detail && <p className="text-caption mt-0.5" style={{ color: "var(--color-slate)" }}>{e.detail}</p>}
-                </div>
-              </li>
+      {open && (
+        <div className="px-5 py-5" style={{ borderTop: "1px solid var(--color-cream)" }}>
+          {/* Key dates */}
+          <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4 rounded-xl px-5 py-4 mb-6" style={{ backgroundColor: "var(--color-smoke)", border: "1px solid var(--color-cream)" }}>
+            {keyDates.map((d) => (
+              <div key={d.label}>
+                <dt className="text-micro uppercase tracking-wider" style={{ color: "var(--color-mist)" }}>{d.label}</dt>
+                <dd className="mt-1 text-body-sm font-medium tabular-nums" style={{ color: "var(--color-charcoal)" }}>{d.value}</dd>
+              </div>
             ))}
-          </ol>
-        )}
-      </div>
-    </Block>
+          </dl>
+
+          {/* Chronological event feed */}
+          {events.length === 0 ? (
+            <p className="text-body-sm" style={{ color: "var(--color-mist)" }}>No billing activity yet.</p>
+          ) : (
+            <ol className="relative">
+              {events.map((e, i) => {
+                const c = EVENT_COLOR[e.tone];
+                const Icon = EVENT_ICON[e.kind];
+                return (
+                  <li key={`${e.date}-${i}`} className="relative flex gap-3.5 pb-5 last:pb-0">
+                    {i < events.length - 1 && <span className="absolute left-[15px] top-8 bottom-0 w-px" style={{ backgroundColor: "var(--color-cream)" }} />}
+                    <span
+                      className="relative z-10 flex h-[30px] w-[30px] items-center justify-center rounded-full shrink-0"
+                      style={{ backgroundColor: c.bg, color: c.icon, border: e.upcoming ? `1.5px dashed ${c.icon}` : "none", opacity: e.upcoming ? 0.75 : 1 }}
+                    >
+                      <Icon size={14} />
+                    </span>
+                    <div className="min-w-0 flex-1 pt-1" style={{ opacity: e.upcoming ? 0.7 : 1 }}>
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                        <span className="text-body-sm font-medium" style={{ color: "var(--color-charcoal)" }}>{e.title}</span>
+                        <span className="text-caption tabular-nums shrink-0" style={{ color: "var(--color-mist)" }}>{fmtFull(e.date)}{e.upcoming ? " · scheduled" : ""}</span>
+                      </div>
+                      {e.detail && <p className="text-caption mt-0.5" style={{ color: "var(--color-slate)" }}>{e.detail}</p>}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
