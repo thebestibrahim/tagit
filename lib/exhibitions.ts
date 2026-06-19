@@ -10,9 +10,11 @@
 import { nanoid } from "nanoid";
 import { INDUSTRY_FIELDS, resolveField, inferIndustry } from "@/lib/industry-fields";
 
-// Info codes are printed on placards whose URLs must resolve in production
-// regardless of which environment generated them — same rationale as tag URLs.
-const INFO_ORIGIN = "https://tagitlux.com";
+// Canonical public base for info-page URLs. Environment-aware (same pattern as
+// certificate URLs): a staging deploy points its QR codes at staging so brands
+// can preview before going live, while production codes resolve to production.
+// Falls back to the production domain (never localhost) when unset.
+const INFO_ORIGIN = (process.env.NEXT_PUBLIC_APP_URL || "https://tagitlux.com").trim();
 
 // Reuse the exact unguessable token shape used for tags/cards (nanoid(21),
 // ~126 bits of entropy). Info tokens are NOT HMAC-signed: they gate nothing and

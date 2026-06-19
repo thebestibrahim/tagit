@@ -102,13 +102,27 @@ export default async function BrandPage({
 
       <BrandFooter palette={palette} />
 
-      {/* Responsive grid columns: 3 desktop / 2 tablet / 1 mobile. */}
+      {/* Responsive grid columns: 3 desktop / 2 tablet / 1 mobile + interaction polish. */}
       <style>{`
         :root { --brand-cols: 3; }
         @media (max-width: 900px) { :root { --brand-cols: 2; } }
         @media (max-width: 560px) { :root { --brand-cols: 1; } }
-        .brand-cta { transition: opacity 200ms ease; }
+
+        .brand-card-media { transition: box-shadow 320ms ease; }
+        .brand-card-link:hover .brand-card-media { box-shadow: 0 22px 48px -28px rgba(0,0,0,0.4); }
+        .brand-card-name { transition: color 200ms ease; }
+        .brand-card-link:hover .brand-card-name { color: ${palette.accent}; }
+
+        .brand-cta { transition: opacity 200ms ease, transform 200ms ease; }
         .brand-cta:hover { opacity: 0.9; }
+        .brand-cta:active { transform: translateY(1px); }
+
+        .brand-card-link:focus-visible,
+        .brand-cta:focus-visible { outline: 2px solid ${palette.accent}; outline-offset: 4px; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .brand-card-media, .group img { transition: none !important; }
+        }
       `}</style>
     </main>
   );
@@ -204,8 +218,8 @@ function ProductCard({
   return (
     <article style={{ display: "flex", flexDirection: "column" }}>
       {/* Whole card (image + meta) links to the product detail page. */}
-      <Link href={`/${slug}/${product.id}`} className="group" style={{ textDecoration: "none", display: "block" }}>
-        <div style={{ position: "relative", width: "100%", aspectRatio: "4 / 5", overflow: "hidden", backgroundColor: palette.divider }}>
+      <Link href={`/${slug}/${product.id}`} className="group brand-card-link" style={{ textDecoration: "none", display: "block" }}>
+        <div className="brand-card-media" style={{ position: "relative", width: "100%", aspectRatio: "4 / 5", overflow: "hidden", backgroundColor: palette.divider }}>
           {product.photo ? (
             <Image
               src={product.photo}
@@ -245,6 +259,7 @@ function ProductCard({
         </div>
 
         <h3
+          className="brand-card-name"
           style={{
             fontFamily: FONT_DISPLAY,
             fontWeight: 400,

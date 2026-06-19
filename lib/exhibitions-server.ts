@@ -74,6 +74,16 @@ export type InfoPageResult =
       // Slug only when the brand has a published public page (else null).
       brandSlug: string | null;
       brandName: string | null;
+      // Brand theming for an on-brand expired page (null when the code/brand is
+      // unknown — then the page uses the Tagit default palette).
+      theme: {
+        logo_url: string | null;
+        brand_primary_color: string | null;
+        brand_secondary_color: string | null;
+        brand_accent_color: string | null;
+        brand_text_color: string | null;
+        brand_font: string | null;
+      } | null;
     };
 
 type CodeRow = {
@@ -130,13 +140,23 @@ export async function readInfoCode(token: string): Promise<InfoPageResult> {
   // Not found, inactive or revoked → graceful expired state. We still try to
   // surface the brand's public page link when one exists.
   if (!code || code.status !== "active") {
-    if (!code) return { status: "expired", brandSlug: null, brandName: null };
+    if (!code) return { status: "expired", brandSlug: null, brandName: null, theme: null };
     const brand = await loadBrand(admin, code.company_id);
     const hasPage = !!(brand?.page_enabled && brand?.slug);
     return {
       status: "expired",
       brandSlug: hasPage ? brand!.slug : null,
       brandName: brand?.name ?? null,
+      theme: brand
+        ? {
+            logo_url: brand.logo_url,
+            brand_primary_color: brand.brand_primary_color,
+            brand_secondary_color: brand.brand_secondary_color,
+            brand_accent_color: brand.brand_accent_color,
+            brand_text_color: brand.brand_text_color,
+            brand_font: brand.brand_font,
+          }
+        : null,
     };
   }
 

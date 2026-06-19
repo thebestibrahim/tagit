@@ -2,9 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 
-// Calm, editorial "Ask about this piece" chat for the info page. Posts to the
-// strictly-grounded /api/info/[token]/chat endpoint. No security iconography —
-// this is a reference-information helper, not an authentication tool.
+// Calm "Ask about this piece" panel for the info page. Posts to the strictly
+// grounded /api/info/[token]/chat endpoint. Fully palette-driven and free of any
+// security iconography — a reference helper, not an authentication tool.
+
+const MONO = "'JetBrains Mono', ui-monospace, monospace";
+const DISPLAY = "'Instrument Serif', Georgia, serif";
 
 type Msg = { role: "user" | "assistant"; text: string };
 
@@ -15,6 +18,7 @@ export default function InfoChat({
   textPrimary,
   textSecondary,
   background,
+  surface,
   onAccent,
   divider,
 }: {
@@ -24,6 +28,7 @@ export default function InfoChat({
   textPrimary: string;
   textSecondary: string;
   background: string;
+  surface: string;
   onAccent: string;
   divider: string;
 }) {
@@ -51,9 +56,7 @@ export default function InfoChat({
         body: JSON.stringify({ message: text }),
       });
       const data = await res.json().catch(() => ({}));
-      const reply = res.ok
-        ? data.reply
-        : "I'm sorry, I can't help with that right now.";
+      const reply = res.ok ? data.reply : "I'm sorry, I can't help with that right now.";
       setMessages((m) => [...m, { role: "assistant", text: reply }]);
     } catch {
       setMessages((m) => [...m, { role: "assistant", text: "Something went wrong. Please try again." }]);
@@ -64,45 +67,73 @@ export default function InfoChat({
 
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        style={{
-          width: "100%",
-          padding: "14px 18px",
-          borderRadius: 12,
-          border: `1px solid ${divider}`,
-          backgroundColor: "transparent",
-          color: textPrimary,
-          fontSize: 14,
-          fontWeight: 500,
-          cursor: "pointer",
-          textAlign: "left",
-        }}
-      >
-        Ask about this piece
-      </button>
+      <>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="info-ask"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 14,
+            width: "100%",
+            padding: "16px 18px",
+            border: `1px solid ${divider}`,
+            backgroundColor: surface,
+            color: textPrimary,
+            cursor: "pointer",
+            textAlign: "left",
+            borderRadius: 3,
+          }}
+        >
+          <span style={{ display: "flex", alignItems: "center", gap: 11 }}>
+            <span style={{ display: "inline-block", width: 6, height: 6, backgroundColor: accent, transform: "rotate(45deg)" }} />
+            <span style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 17 }}>Ask about this piece</span>
+          </span>
+          <span style={{ fontFamily: MONO, fontSize: 13, color: textSecondary }}>→</span>
+        </button>
+        <style>{`
+          .info-ask { transition: border-color 200ms ease, transform 200ms ease; }
+          .info-ask:hover { border-color: ${accent}; }
+          .info-ask:active { transform: translateY(1px); }
+          .info-ask:focus-visible { outline: 2px solid ${accent}; outline-offset: 3px; }
+        `}</style>
+      </>
     );
   }
 
   return (
-    <div style={{ borderRadius: 14, border: `1px solid ${divider}`, overflow: "hidden", backgroundColor: background }}>
-      <div style={{ padding: "12px 16px", borderBottom: `1px solid ${divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>{personaName}</span>
+    <div style={{ border: `1px solid ${divider}`, borderRadius: 3, overflow: "hidden", backgroundColor: surface }}>
+      <div
+        style={{
+          padding: "13px 16px",
+          borderBottom: `1px solid ${divider}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <span style={{ display: "flex", alignItems: "center", gap: 9 }}>
+          <span style={{ display: "inline-block", width: 5, height: 5, backgroundColor: accent, transform: "rotate(45deg)" }} />
+          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: textSecondary }}>
+            {personaName}
+          </span>
+        </span>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          style={{ border: "none", background: "none", color: textSecondary, fontSize: 18, cursor: "pointer", lineHeight: 1 }}
+          style={{ border: "none", background: "none", color: textSecondary, fontSize: 20, cursor: "pointer", lineHeight: 1, padding: 0 }}
           aria-label="Close"
         >
           ×
         </button>
       </div>
 
-      <div style={{ maxHeight: 280, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ maxHeight: 300, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 11 }}>
         {messages.length === 0 && (
-          <p style={{ margin: 0, fontSize: 13, color: textSecondary, lineHeight: 1.6 }}>
-            Ask me about this piece. I can only share the information recorded for it.
+          <p style={{ margin: 0, fontSize: 13.5, color: textSecondary, lineHeight: 1.6 }}>
+            Ask about this piece. I can share only the information recorded for it.
           </p>
         )}
         {messages.map((m, i) => (
@@ -110,21 +141,20 @@ export default function InfoChat({
             key={i}
             style={{
               alignSelf: m.role === "user" ? "flex-end" : "flex-start",
-              maxWidth: "85%",
-              padding: "9px 13px",
+              maxWidth: "86%",
+              padding: "10px 14px",
               borderRadius: 12,
               fontSize: 13.5,
               lineHeight: 1.5,
-              backgroundColor: m.role === "user" ? accent : "rgba(0,0,0,0.04)",
+              backgroundColor: m.role === "user" ? accent : background,
+              border: m.role === "user" ? "none" : `1px solid ${divider}`,
               color: m.role === "user" ? onAccent : textPrimary,
             }}
           >
             {m.text}
           </div>
         ))}
-        {loading && (
-          <span style={{ alignSelf: "flex-start", fontSize: 13, color: textSecondary }}>…</span>
-        )}
+        {loading && <span style={{ alignSelf: "flex-start", fontSize: 16, color: textSecondary, letterSpacing: 2 }}>···</span>}
         <div ref={endRef} />
       </div>
 
@@ -136,8 +166,8 @@ export default function InfoChat({
           placeholder="Ask a question…"
           style={{
             flex: 1,
-            padding: "10px 12px",
-            borderRadius: 9,
+            padding: "11px 13px",
+            borderRadius: 3,
             border: `1px solid ${divider}`,
             backgroundColor: background,
             color: textPrimary,
@@ -149,15 +179,18 @@ export default function InfoChat({
           type="submit"
           disabled={loading || !input.trim()}
           style={{
-            padding: "10px 16px",
-            borderRadius: 9,
+            padding: "11px 16px",
+            borderRadius: 3,
             border: "none",
             backgroundColor: accent,
             color: onAccent,
-            fontSize: 13,
+            fontFamily: MONO,
+            fontSize: 10,
             fontWeight: 600,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
             cursor: loading || !input.trim() ? "default" : "pointer",
-            opacity: loading || !input.trim() ? 0.6 : 1,
+            opacity: loading || !input.trim() ? 0.55 : 1,
           }}
         >
           Send
