@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { zipSync } from "fflate";
 import { renderInfoLabel, labelFileName } from "@/lib/exhibition-label";
 import { fetchLogoDataUrl } from "@/lib/certificate";
+import { exhibitionsEnabled } from "@/lib/exhibitions-server";
 import type { BrandColors } from "@/lib/brand-page";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,6 +20,9 @@ export async function GET(
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  if (!(await exhibitionsEnabled(user.id))) {
+    return NextResponse.json({ error: "Exhibitions is not enabled for your account." }, { status: 403 });
+  }
 
   const admin = createAdminClient() as Admin;
 

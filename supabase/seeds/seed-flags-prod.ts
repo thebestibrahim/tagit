@@ -74,6 +74,14 @@ const productionFlags = [
     enabled: false,
     rollout_percentage: 0,
     environments: ['production']
+  },
+  {
+    key: 'exhibitions',
+    name: 'Exhibitions',
+    description: 'Brands create exhibitions and generate scannable QR information placards for pieces on show',
+    enabled: false,
+    rollout_percentage: 0,
+    environments: ['production', 'staging']
   }
 ]
 

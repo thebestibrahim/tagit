@@ -4,6 +4,13 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus, Landmark, MapPin, ChevronRight } from "lucide-react";
 import LocalTime from "@/components/ui/LocalTime";
+import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
+import FeatureWall from "@/components/company/FeatureWall";
+
+const EXHIBITIONS_FEATURE = {
+  name: "Exhibitions",
+  description: "Create scannable QR information placards for the pieces in your exhibitions.",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +29,9 @@ type ExhibitionRow = {
 export default async function ExhibitionsPage() {
   const user = await getUser();
   if (!user) redirect("/auth/login");
+
+  const flags = await getCurrentBrandFlags();
+  if (!flags.exhibitions) return <FeatureWall {...EXHIBITIONS_FEATURE} />;
 
   const admin = createAdminClient() as Admin;
 

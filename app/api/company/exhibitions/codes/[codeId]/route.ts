@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { exhibitionsEnabled } from "@/lib/exhibitions-server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Admin = any;
@@ -16,6 +17,9 @@ export async function PATCH(
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  if (!(await exhibitionsEnabled(user.id))) {
+    return NextResponse.json({ error: "Exhibitions is not enabled for your account." }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => ({}));
   const { status } = body as { status?: string };

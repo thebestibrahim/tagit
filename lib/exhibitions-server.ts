@@ -3,10 +3,21 @@
 // client.
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isBrandFlagEnabled } from "@/lib/feature-flags/server";
 import { generateInfoToken, shapeInfoProduct, type InfoProduct } from "@/lib/exhibitions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Admin = any;
+
+/**
+ * Whether the Exhibitions feature is enabled for this brand. Brand-facing write
+ * and label routes enforce this so a disabled feature is rejected server-side,
+ * not just walled in the UI. The public /api/info route is intentionally NOT
+ * gated by this — already-printed placards must keep resolving.
+ */
+export function exhibitionsEnabled(userId: string): Promise<boolean> {
+  return isBrandFlagEnabled(userId, "exhibitions");
+}
 
 export type NewInfoCode = {
   id: string;

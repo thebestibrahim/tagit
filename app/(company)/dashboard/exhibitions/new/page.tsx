@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import NewExhibitionForm from "../NewExhibitionForm";
+import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
+import FeatureWall from "@/components/company/FeatureWall";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +15,16 @@ type Admin = any;
 export default async function NewExhibitionPage() {
   const user = await getUser();
   if (!user) redirect("/auth/login");
+
+  const flags = await getCurrentBrandFlags();
+  if (!flags.exhibitions) {
+    return (
+      <FeatureWall
+        name="Exhibitions"
+        description="Create scannable QR information placards for the pieces in your exhibitions."
+      />
+    );
+  }
 
   const admin = createAdminClient() as Admin;
   const { data } = await admin

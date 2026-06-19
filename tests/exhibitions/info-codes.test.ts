@@ -77,7 +77,7 @@ const h = vi.hoisted(() => {
   }
 
   const admin = { from: (t: string) => builder(t) };
-  const state: { userId: string | null } = { userId: "brand-1" };
+  const state: { userId: string | null; exhibitionsFlag: boolean } = { userId: "brand-1", exhibitionsFlag: true };
   const server = { auth: { getUser: () => Promise.resolve({ data: { user: state.userId ? { id: state.userId } : null } }) } };
 
   // Capture the system prompt sent to the model.
@@ -91,6 +91,7 @@ const h = vi.hoisted(() => {
     for (const k of Object.keys(store)) if (k !== "__id") delete (store as Record<string, unknown>)[k];
     store.__id = 0;
     state.userId = "brand-1";
+    state.exhibitionsFlag = true;
     groqState.lastSystem = null;
   }
 
@@ -100,7 +101,7 @@ const h = vi.hoisted(() => {
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => h.admin }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: () => Promise.resolve(h.server) }));
 vi.mock("@/lib/rate-limit", () => ({ rateLimitAsync: () => Promise.resolve(true), getIp: () => "1.1.1.1" }));
-vi.mock("@/lib/feature-flags/server", () => ({ isBrandFlagEnabled: () => Promise.resolve(true) }));
+vi.mock("@/lib/feature-flags/server", () => ({ isBrandFlagEnabled: (_id: string, key: string) => Promise.resolve(key === "exhibitions" ? h.state.exhibitionsFlag : true) }));
 vi.mock("next/headers", () => ({
   headers: () => Promise.resolve(new Map([["x-forwarded-for", "9.9.9.9"], ["user-agent", "vitest"]])),
 }));
@@ -200,6 +201,25 @@ describe("info token generation", () => {
     const json = await res.json();
     expect(json.code.token).toHaveLength(21);
     expect(json.url).toContain(`/info/${json.code.token}`);
+  });
+});
+
+describe("exhibitions feature flag", () => {
+  it("rejects code generation with 403 when the exhibitions flag is off", async () => {
+    seedActiveCode();
+    h.store.info_codes = [];
+    h.store.exhibition_products = [{ id: "ep-1", exhibition_id: "exh-1", product_id: "prod-1" }];
+    h.state.exhibitionsFlag = false;
+    const res = await genPost(req({ product_id: "prod-1" }), { params: Promise.resolve({ id: "exh-1" }) });
+    expect(res.status).toBe(403);
+  });
+
+  it("still serves the public info page when the brand flag is off (printed labels keep working)", async () => {
+    seedActiveCode();
+    h.state.exhibitionsFlag = false;
+    const res = await infoGet(req(undefined, "GET"), { params: Promise.resolve({ token: "tok-active-1" }) });
+    const json = await res.json();
+    expect(json.status).toBe("active");
   });
 });
 

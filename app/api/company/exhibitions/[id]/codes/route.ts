@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { infoUrl } from "@/lib/exhibitions";
-import { insertInfoCode } from "@/lib/exhibitions-server";
+import { insertInfoCode, exhibitionsEnabled } from "@/lib/exhibitions-server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Admin = any;
@@ -16,6 +16,9 @@ export async function POST(
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  if (!(await exhibitionsEnabled(user.id))) {
+    return NextResponse.json({ error: "Exhibitions is not enabled for your account." }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => ({}));
   const { product_id } = body as { product_id?: string };

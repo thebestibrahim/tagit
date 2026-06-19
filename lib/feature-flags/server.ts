@@ -13,6 +13,7 @@ const FLAG_KEYS: FlagKey[] = [
   'bulk_tag_creation',
   'tag_migration',
   'intelligence_reports',
+  'exhibitions',
 ]
 
 const DEFAULT_MAP: FlagMap = FLAG_KEYS.reduce((acc, key) => {

@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { exhibitionsEnabled } from "@/lib/exhibitions-server";
 
 // Exhibitions are the brand-facing container for QR info codes. Auth follows the
 // rest of /api/company: verify the session, then act through the service-role
@@ -14,6 +15,9 @@ export async function POST(request: Request) {
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  if (!(await exhibitionsEnabled(user.id))) {
+    return NextResponse.json({ error: "Exhibitions is not enabled for your account." }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => ({}));
   const { name, location, start_date, end_date, product_ids } = body as {

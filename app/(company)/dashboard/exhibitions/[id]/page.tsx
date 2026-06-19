@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ChevronLeft, MapPin } from "lucide-react";
 import LocalTime from "@/components/ui/LocalTime";
 import { infoUrl } from "@/lib/exhibitions";
+import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
+import FeatureWall from "@/components/company/FeatureWall";
 import ExhibitionDetailClient, { type ProductRow } from "./ExhibitionDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +22,16 @@ export default async function ExhibitionDetailPage({
   const { id } = await params;
   const user = await getUser();
   if (!user) redirect("/auth/login");
+
+  const flags = await getCurrentBrandFlags();
+  if (!flags.exhibitions) {
+    return (
+      <FeatureWall
+        name="Exhibitions"
+        description="Create scannable QR information placards for the pieces in your exhibitions."
+      />
+    );
+  }
 
   const admin = createAdminClient() as Admin;
 
