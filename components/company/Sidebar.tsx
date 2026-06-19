@@ -22,6 +22,7 @@ import {
   KeyRound,
   CreditCard,
   Lock,
+  Landmark,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useFlags } from "@/lib/feature-flags/client";
@@ -56,6 +57,7 @@ const idKeysNav = {
 
 const bottomNav = [
   { label: "Ownership",     href: "/dashboard/ownership",     icon: Users },
+  { label: "Exhibitions",   href: "/dashboard/exhibitions",   icon: Landmark },
   { label: "Certificates",  href: "/dashboard/certificates",  icon: Award },
   { label: "Customization", href: "/dashboard/customization", icon: Paintbrush },
   { label: "AI Persona",    href: "/dashboard/ai-persona",    icon: Bot },
