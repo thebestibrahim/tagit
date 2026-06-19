@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Plus, Landmark, MapPin } from "lucide-react";
+import { Plus, Landmark, MapPin, ChevronRight } from "lucide-react";
 import LocalTime from "@/components/ui/LocalTime";
 
 export const dynamic = "force-dynamic";
@@ -51,16 +51,21 @@ export default async function ExhibitionsPage() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
-      <div className="flex items-start justify-between mb-8">
+      <div className="page-header mb-8 flex items-end justify-between gap-6">
         <div>
-          <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>Exhibitions</h1>
+          <p className="text-micro font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
+            On View
+          </p>
+          <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+            Exhibitions
+          </h1>
           <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-            QR information placards for pieces on show. Reference information only — separate from chip authentication.
+            Scannable QR placards for pieces on show. Reference information only, separate from chip authentication.
           </p>
         </div>
         <Link
           href="/dashboard/exhibitions/new"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-body-sm font-medium"
+          className="ex-primary inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-body-sm font-medium shrink-0"
           style={{ backgroundColor: "var(--color-charcoal)", color: "#fff" }}
         >
           <Plus size={16} /> New exhibition
@@ -68,66 +73,124 @@ export default async function ExhibitionsPage() {
       </div>
 
       {exhibitions.length === 0 ? (
-        <div
-          className="flex flex-col items-center justify-center text-center py-20 rounded-xl"
-          style={{ border: "1px dashed var(--color-stone)", backgroundColor: "#fff" }}
-        >
-          <Landmark size={28} style={{ color: "var(--color-mist)" }} />
-          <p className="mt-4 text-body font-medium" style={{ color: "var(--color-charcoal)" }}>No exhibitions yet</p>
-          <p className="mt-1 max-w-sm" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <div className="card-raised rounded-xl flex flex-col items-center justify-center text-center py-20 px-6">
+          <div
+            className="flex items-center justify-center rounded-full mb-5"
+            style={{ width: 56, height: 56, backgroundColor: "var(--color-soft-gold)" }}
+          >
+            <Landmark size={24} style={{ color: "var(--color-deep-gold)" }} />
+          </div>
+          <p className="font-display" style={{ fontSize: 22, color: "var(--color-charcoal)", letterSpacing: "-0.01em" }}>
+            No exhibitions yet
+          </p>
+          <p className="mt-2 max-w-sm" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)", lineHeight: 1.6 }}>
             Create an exhibition, attach the pieces on show, and generate a scannable QR placard for each one.
           </p>
           <Link
             href="/dashboard/exhibitions/new"
-            className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-body-sm font-medium"
+            className="ex-primary mt-7 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-body-sm font-medium"
             style={{ backgroundColor: "var(--color-charcoal)", color: "#fff" }}
           >
             <Plus size={16} /> New exhibition
           </Link>
         </div>
       ) : (
-        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--color-stone)", backgroundColor: "#fff" }}>
-          <table className="w-full text-left">
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--color-stone)" }}>
-                {["Exhibition", "Dates", "Products", "Active codes"].map((h) => (
-                  <th key={h} className="px-5 py-3 text-micro uppercase tracking-wider" style={{ color: "var(--color-mist)", fontWeight: 600 }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {exhibitions.map((e) => (
-                <tr key={e.id} className="group" style={{ borderBottom: "1px solid var(--color-linen)" }}>
-                  <td className="px-5 py-4">
-                    <Link href={`/dashboard/exhibitions/${e.id}`} className="block">
-                      <span className="text-body-sm font-medium" style={{ color: "var(--color-charcoal)" }}>{e.name}</span>
-                      {e.location && (
-                        <span className="flex items-center gap-1 mt-0.5 text-micro" style={{ color: "var(--color-slate)" }}>
-                          <MapPin size={11} /> {e.location}
-                        </span>
-                      )}
-                    </Link>
-                  </td>
-                  <td className="px-5 py-4 text-body-sm" style={{ color: "var(--color-slate)" }}>
-                    {e.start_date ? (
-                      <span>
-                        <LocalTime iso={e.start_date} pattern="d MMM yyyy" />
-                        {e.end_date ? <> — <LocalTime iso={e.end_date} pattern="d MMM yyyy" /></> : null}
-                      </span>
-                    ) : (
-                      <span style={{ color: "var(--color-mist)" }}>—</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-4 text-body-sm" style={{ color: "var(--color-slate)" }}>{productCounts.get(e.id) ?? 0}</td>
-                  <td className="px-5 py-4 text-body-sm" style={{ color: "var(--color-slate)" }}>{activeCounts.get(e.id) ?? 0}</td>
+        <div className="card-raised rounded-xl overflow-hidden" style={{ padding: 0 }}>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
+                  {["Exhibition", "Dates", "Pieces", "Active codes", ""].map((h) => (
+                    <th
+                      key={h}
+                      className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider"
+                      style={{ color: "var(--color-slate)" }}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {exhibitions.map((e, i) => {
+                  const active = activeCounts.get(e.id) ?? 0;
+                  return (
+                    <tr
+                      key={e.id}
+                      className="ex-row"
+                      style={{
+                        backgroundColor: "var(--color-pearl)",
+                        borderBottom: i < exhibitions.length - 1 ? "1px solid var(--color-cream)" : "none",
+                      }}
+                    >
+                      <td className="px-5 py-4">
+                        <Link href={`/dashboard/exhibitions/${e.id}`} className="block" style={{ textDecoration: "none" }}>
+                          <span className="font-medium" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>
+                            {e.name}
+                          </span>
+                          {e.location && (
+                            <span className="flex items-center gap-1 mt-0.5" style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}>
+                              <MapPin size={11} /> {e.location}
+                            </span>
+                          )}
+                        </Link>
+                      </td>
+                      <td className="px-5 py-4" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+                        {e.start_date ? (
+                          <span>
+                            <LocalTime iso={e.start_date} pattern="d MMM yyyy" />
+                            {e.end_date ? <> &ndash; <LocalTime iso={e.end_date} pattern="d MMM yyyy" /></> : null}
+                          </span>
+                        ) : (
+                          <span style={{ color: "var(--color-mist)" }}>&mdash;</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-4" style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+                        {productCounts.get(e.id) ?? 0}
+                      </td>
+                      <td className="px-5 py-4">
+                        <span
+                          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-micro font-medium"
+                          style={
+                            active > 0
+                              ? { backgroundColor: "var(--color-verified-tint)", color: "var(--color-verified)" }
+                              : { backgroundColor: "var(--color-linen)", color: "var(--color-slate)" }
+                          }
+                        >
+                          <span
+                            className="rounded-full"
+                            style={{ width: 5, height: 5, backgroundColor: active > 0 ? "var(--color-verified)" : "var(--color-mist)" }}
+                          />
+                          {active} active
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <Link
+                          href={`/dashboard/exhibitions/${e.id}`}
+                          className="ex-open inline-flex items-center gap-1"
+                          style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)", textDecoration: "none" }}
+                        >
+                          Open <ChevronRight size={14} />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
+
+      <style>{`
+        .ex-primary { transition: opacity 180ms ease, transform 180ms ease; }
+        .ex-primary:hover { opacity: 0.9; }
+        .ex-primary:active { transform: translateY(1px); }
+        .ex-row { transition: background-color 160ms ease; }
+        .ex-row:hover { background-color: var(--color-smoke) !important; }
+        .ex-open { transition: gap 160ms ease, color 160ms ease; }
+        .ex-row:hover .ex-open { color: var(--color-deep-gold); gap: 7px; }
+      `}</style>
     </div>
   );
 }

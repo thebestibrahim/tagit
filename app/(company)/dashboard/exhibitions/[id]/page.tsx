@@ -71,26 +71,43 @@ export default async function ExhibitionDetailPage({
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      <Link href="/dashboard/exhibitions" className="inline-flex items-center gap-1 text-body-sm mb-6" style={{ color: "var(--color-slate)" }}>
+      <Link
+        href="/dashboard/exhibitions"
+        className="inline-flex items-center gap-1 text-body-sm mb-6 ex-back"
+        style={{ color: "var(--color-slate)" }}
+      >
         <ChevronLeft size={15} /> Back to exhibitions
       </Link>
 
-      <div className="mb-2">
-        <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>{ex.name}</h1>
-      </div>
-      <div className="flex items-center gap-4 mb-8 text-body-sm" style={{ color: "var(--color-slate)" }}>
-        {ex.location && (
-          <span className="flex items-center gap-1"><MapPin size={13} /> {ex.location}</span>
-        )}
-        {ex.start_date && (
-          <span>
-            <LocalTime iso={ex.start_date} pattern="d MMM yyyy" />
-            {ex.end_date ? <> — <LocalTime iso={ex.end_date} pattern="d MMM yyyy" /></> : null}
-          </span>
-        )}
+      <div className="page-header mb-8">
+        <p className="text-micro font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
+          Exhibition
+        </p>
+        <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+          {ex.name}
+        </h1>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+          {ex.location && (
+            <span className="flex items-center gap-1.5"><MapPin size={13} /> {ex.location}</span>
+          )}
+          {ex.start_date && (
+            <span className="flex items-center gap-1.5">
+              <LocalTime iso={ex.start_date} pattern="d MMM yyyy" />
+              {ex.end_date ? <> &ndash; <LocalTime iso={ex.end_date} pattern="d MMM yyyy" /></> : null}
+            </span>
+          )}
+          {!ex.location && !ex.start_date && (
+            <span style={{ color: "var(--color-mist)" }}>Manage info codes for the pieces on show</span>
+          )}
+        </div>
       </div>
 
       <ExhibitionDetailClient exhibitionId={ex.id} initialProducts={products} />
+
+      <style>{`
+        .ex-back { transition: color 160ms ease, gap 160ms ease; }
+        .ex-back:hover { color: var(--color-deep-gold); }
+      `}</style>
     </div>
   );
 }

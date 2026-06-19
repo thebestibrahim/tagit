@@ -130,7 +130,7 @@ export default function ExhibitionDetailClient({
 
   if (products.length === 0) {
     return (
-      <div className="rounded-xl py-16 text-center" style={{ border: "1px dashed var(--color-stone)", backgroundColor: "#fff" }}>
+      <div className="card-raised rounded-xl py-16 text-center">
         <p className="text-body-sm" style={{ color: "var(--color-slate)" }}>No products attached to this exhibition.</p>
       </div>
     );
@@ -144,7 +144,7 @@ export default function ExhibitionDetailClient({
           type="button"
           onClick={bulkGenerate}
           disabled={bulkBusy !== null}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-body-sm font-medium"
+          className="ex-primary inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-body-sm font-medium"
           style={{ backgroundColor: "var(--color-charcoal)", color: "#fff", opacity: bulkBusy ? 0.6 : 1 }}
         >
           {bulkBusy === "generate" ? <Loader2 size={15} className="animate-spin" /> : <QrCode size={15} />}
@@ -155,20 +155,23 @@ export default function ExhibitionDetailClient({
             type="button"
             onClick={bulkDownload}
             disabled={activeCount === 0}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-body-sm font-medium"
-            style={{ border: "1px solid var(--color-stone)", backgroundColor: "#fff", color: "var(--color-charcoal)", opacity: activeCount === 0 ? 0.5 : 1 }}
+            className="ex-secondary inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-body-sm font-medium"
+            style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)", color: "var(--color-charcoal)", opacity: activeCount === 0 ? 0.5 : 1 }}
           >
             <Download size={15} /> Download all labels
           </button>
         )}
       </div>
 
-      <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--color-stone)", backgroundColor: "#fff" }}>
+      <div className="card-raised rounded-xl overflow-hidden" style={{ padding: 0 }}>
         {products.map((p, i) => (
           <div
             key={p.product_id}
-            className="flex items-center gap-4 px-4 py-3"
-            style={{ borderBottom: i < products.length - 1 ? "1px solid var(--color-linen)" : "none" }}
+            className="ex-prow flex items-center gap-4 px-5 py-3.5"
+            style={{
+              backgroundColor: "var(--color-pearl)",
+              borderBottom: i < products.length - 1 ? "1px solid var(--color-cream)" : "none",
+            }}
           >
             <div className="w-12 h-12 rounded-md overflow-hidden flex items-center justify-center shrink-0" style={{ backgroundColor: "var(--color-linen)" }}>
               {p.photo ? (
@@ -189,7 +192,7 @@ export default function ExhibitionDetailClient({
                   type="button"
                   onClick={() => generate(p)}
                   disabled={busy === p.product_id}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-micro font-medium"
+                  className="ex-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-micro font-medium"
                   style={{ backgroundColor: "var(--color-charcoal)", color: "#fff", opacity: busy === p.product_id ? 0.6 : 1 }}
                 >
                   {busy === p.product_id ? <Loader2 size={13} className="animate-spin" /> : <QrCode size={13} />}
@@ -220,19 +223,43 @@ export default function ExhibitionDetailClient({
           onConfirm={confirmRegenerate}
         />
       )}
+
+      <style>{`
+        .ex-primary { transition: opacity 180ms ease, transform 180ms ease; }
+        .ex-primary:hover { opacity: 0.9; }
+        .ex-primary:active { transform: translateY(1px); }
+        .ex-secondary { transition: border-color 180ms ease, background-color 180ms ease; }
+        .ex-secondary:hover { border-color: var(--color-gold); background-color: var(--color-smoke); }
+        .ex-prow { transition: background-color 160ms ease; }
+        .ex-prow:hover { background-color: var(--color-smoke) !important; }
+        .ex-icon { transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease; }
+        .ex-icon:hover { border-color: var(--color-gold); color: var(--color-deep-gold); background-color: var(--color-smoke); }
+      `}</style>
     </div>
   );
 }
 
 function StatusLabel({ code }: { code: CodeInfo | null }) {
   if (!code) {
-    return <span className="text-micro" style={{ color: "var(--color-mist)" }}>No code</span>;
+    return <span className="text-micro inline-block mt-1" style={{ color: "var(--color-mist)" }}>No code yet</span>;
   }
   const active = code.status === "active";
   return (
-    <span className="flex items-center gap-1.5 text-micro" style={{ color: "var(--color-slate)" }}>
-      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: active ? "#22A06B" : "var(--color-mist)" }} />
-      {active ? "Active" : "Off"} · {code.scan_count} scan{code.scan_count === 1 ? "" : "s"}
+    <span className="flex items-center gap-2.5 mt-1.5">
+      <span
+        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-micro font-medium"
+        style={
+          active
+            ? { backgroundColor: "var(--color-verified-tint)", color: "var(--color-verified)" }
+            : { backgroundColor: "var(--color-linen)", color: "var(--color-slate)" }
+        }
+      >
+        <span className="rounded-full" style={{ width: 5, height: 5, backgroundColor: active ? "var(--color-verified)" : "var(--color-mist)" }} />
+        {active ? "Active" : "Off"}
+      </span>
+      <span className="text-micro" style={{ color: "var(--color-mist)" }}>
+        {code.scan_count} scan{code.scan_count === 1 ? "" : "s"}
+      </span>
     </span>
   );
 }
@@ -253,7 +280,7 @@ function ToggleSwitch({ on, disabled, onChange }: { on: boolean; disabled?: bool
         border: "none",
         padding: 2,
         cursor: disabled ? "default" : "pointer",
-        backgroundColor: on ? "#22A06B" : "var(--color-stone)",
+        backgroundColor: on ? "var(--color-verified)" : "var(--color-cream)",
         transition: "background-color 0.15s",
         display: "flex",
         justifyContent: on ? "flex-end" : "flex-start",
@@ -272,8 +299,8 @@ function IconBtn({ title, onClick, children }: { title: string; onClick: () => v
       type="button"
       title={title}
       onClick={onClick}
-      className="w-8 h-8 rounded-md flex items-center justify-center"
-      style={{ border: "1px solid var(--color-stone)", backgroundColor: "#fff", color: "var(--color-slate)" }}
+      className="ex-icon w-9 h-9 rounded-lg flex items-center justify-center"
+      style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)", color: "var(--color-slate)" }}
     >
       {children}
     </button>
