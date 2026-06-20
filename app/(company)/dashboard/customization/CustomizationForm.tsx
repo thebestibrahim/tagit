@@ -5,7 +5,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import {
   Loader2, Save, Smartphone, Upload, X, Shield,
-  Award, Palette, Globe, PenLine, Landmark,
+  Award, Palette, Globe, PenLine, Landmark, Globe2, FileText, ChevronDown,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -331,25 +331,150 @@ function InfoPagePreview({
   );
 }
 
+// ─── Brand web page preview ─────────────────────────────────────────────────
+// Mirrors app/[slug]: a centred editorial hero (logo, serif name, bio, rotated
+// gold rule) over a product grid. Themed via resolvePalette, exactly like the
+// live page.
+
+function BrandWebPreview({
+  companyName, logoUrl, primary, secondary, accent, textColor, font,
+}: {
+  companyName: string; logoUrl: string | null; primary: string; secondary: string;
+  accent: string; textColor: string; font: string;
+}) {
+  const palette = resolvePalette({ brand_primary_color: primary, brand_secondary_color: secondary, brand_accent_color: accent, brand_text_color: textColor });
+  const fontFamily = FONT_CSS[font] ?? FONT_CSS.body;
+  return (
+    <div style={{
+      width: "100%", aspectRatio: "9/16", borderRadius: 28, overflow: "hidden",
+      border: "8px solid #1A1612", boxShadow: "0 0 0 2px #2E2A1E, 0 24px 64px rgba(0,0,0,0.4)",
+      backgroundColor: palette.background, fontFamily, position: "relative",
+      display: "flex", flexDirection: "column", padding: "26px 16px 14px",
+    }}>
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 80, height: 18, backgroundColor: "#1A1612", borderRadius: "0 0 14px 14px", zIndex: 10 }} />
+      {/* Hero */}
+      <div style={{ textAlign: "center", marginBottom: 16 }}>
+        {logoUrl
+          /* eslint-disable-next-line @next/next/no-img-element */
+          ? <img src={logoUrl} alt="" style={{ height: 22, maxWidth: 90, objectFit: "contain", margin: "0 auto 8px" }} />
+          : null}
+        <p style={{ margin: 0, fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 26, fontWeight: 300, lineHeight: 1.05, color: palette.textPrimary, letterSpacing: "-0.01em" }}>{companyName}</p>
+        <p style={{ margin: "8px auto 0", maxWidth: "85%", fontSize: 8, lineHeight: 1.6, color: palette.textSecondary }}>Crafted in Lagos. Worn worldwide.</p>
+        <div style={{ width: 26, height: 1, backgroundColor: palette.accent, margin: "12px auto 0", transform: "rotate(-30deg)" }} />
+      </div>
+      {/* Product grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {["Sample Piece", "Atelier No. 2"].map((nm, i) => (
+          <div key={nm}>
+            <div style={{ width: "100%", aspectRatio: "4/5", backgroundColor: palette.divider, borderRadius: 2, position: "relative" }}>
+              <span style={{ position: "absolute", top: 5, left: 5, fontFamily: "monospace", fontSize: 5, letterSpacing: "0.1em", textTransform: "uppercase", padding: "2px 4px", borderRadius: 1, backgroundColor: i === 0 ? palette.accent : "transparent", color: i === 0 ? palette.onAccent : palette.textSecondary, boxShadow: i === 0 ? "none" : `inset 0 0 0 1px ${palette.divider}` }}>{i === 0 ? "Available" : "Owned"}</span>
+            </div>
+            <p style={{ margin: "6px 0 1px", fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 11, color: palette.textPrimary, lineHeight: 1.1 }}>{nm}</p>
+            <p style={{ margin: 0, fontSize: 8, fontWeight: 500, color: palette.textPrimary }}>NGN 150,000</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── QR placard (PDF) preview ───────────────────────────────────────────────
+// A small museum placard mirroring lib/exhibition-label: a modern rounded QR as
+// the hero, the piece name, and a quiet Powered-by line.
+
+function FauxQr({ dark }: { dark: string }) {
+  // A fixed, QR-like field of rounded modules (illustrative — not a real code).
+  const pattern = [
+    "001011010", "010100101", "101101011", "011010100",
+    "100101101", "010110010", "101001011", "011100100", "100011010",
+  ];
+  return (
+    <div style={{ position: "relative", width: 92, height: 92, padding: 8, backgroundColor: "#fff", borderRadius: 10, border: "1px solid #ECECEC" }}>
+      <div style={{ position: "relative", width: "100%", height: "100%" }}>
+        {/* module field */}
+        <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: "repeat(9,1fr)", gridTemplateRows: "repeat(9,1fr)", gap: 1 }}>
+          {pattern.flatMap((row, r) => row.split("").map((cell, c) => {
+            const corner = (r < 3 && c < 3) || (r < 3 && c > 5) || (r > 5 && c < 3);
+            return <div key={`${r}-${c}`} style={{ borderRadius: 1.5, backgroundColor: cell === "1" && !corner ? dark : "transparent" }} />;
+          }))}
+        </div>
+        {/* rounded finder eyes */}
+        {[[0, 0], [0, "auto"], ["auto", 0]].map(([t, l], i) => (
+          <div key={i} style={{ position: "absolute", top: t === 0 ? 0 : undefined, bottom: t === "auto" ? 0 : undefined, left: l === 0 ? 0 : undefined, right: l === "auto" ? 0 : undefined, width: "30%", height: "30%", border: `2.5px solid ${dark}`, borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: "42%", height: "42%", backgroundColor: dark, borderRadius: 2 }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PlacardPreview({
+  companyName, logoUrl, primary, secondary, accent, textColor,
+}: {
+  companyName: string; logoUrl: string | null; primary: string; secondary: string; accent: string; textColor: string; font?: string;
+}) {
+  const palette = resolvePalette({ brand_primary_color: primary, brand_secondary_color: secondary, brand_accent_color: accent, brand_text_color: textColor });
+  return (
+    <div style={{
+      width: "100%", aspectRatio: "1/1.414", backgroundColor: palette.background,
+      borderRadius: 6, overflow: "hidden", boxShadow: "0 2px 14px rgba(0,0,0,0.12)",
+      display: "flex", flexDirection: "column", alignItems: "center", padding: "18px 16px 14px",
+    }}>
+      {logoUrl
+        /* eslint-disable-next-line @next/next/no-img-element */
+        ? <img src={logoUrl} alt="" style={{ height: 16, maxWidth: 80, objectFit: "contain" }} />
+        : <span style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontStyle: "italic", fontSize: 12, color: palette.textPrimary }}>{companyName}</span>}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
+        <FauxQr dark="#0B0B0C" />
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{ width: 4, height: 4, backgroundColor: palette.accent, transform: "rotate(45deg)" }} />
+          <span style={{ fontFamily: "monospace", fontSize: 6, letterSpacing: "0.12em", textTransform: "uppercase", color: palette.accent }}>Scan for more information</span>
+          <span style={{ width: 4, height: 4, backgroundColor: palette.accent, transform: "rotate(45deg)" }} />
+        </div>
+        <span style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 15, color: palette.textPrimary }}>Sample Piece</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 4, opacity: 0.7 }}>
+        <span style={{ width: 3, height: 3, backgroundColor: palette.accent, transform: "rotate(45deg)" }} />
+        <span style={{ fontFamily: "monospace", fontSize: 5.5, letterSpacing: "0.16em", textTransform: "uppercase", color: palette.textSecondary }}>Powered by Tagit</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Tab types ──────────────────────────────────────────────────────────────
 
-type Tab = "brand" | "scan" | "certificates" | "info";
+// Editing groups (what you change). Previewing is decoupled: the preview panel
+// has its own surface switcher, so any surface can be previewed from any tab.
+type Tab = "brand" | "scan" | "certificates";
 
-const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: "brand",        label: "Brand identity", icon: <Palette size={14} /> },
-  { id: "scan",         label: "Scan page",       icon: <Smartphone size={14} /> },
-  { id: "info",         label: "Info page",       icon: <Landmark size={14} /> },
-  { id: "certificates", label: "Certificates",    icon: <Award size={14} /> },
+const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  { id: "brand",        label: "Brand identity",  icon: <Palette size={14} /> },
+  { id: "scan",         label: "Scan layout",     icon: <Smartphone size={14} /> },
+  { id: "certificates", label: "Certificate",     icon: <Award size={14} /> },
+];
+
+// Surfaces you can preview. Each one is themed by the same brand settings.
+type Surface = "scan" | "web" | "info" | "certificate" | "placard";
+
+const SURFACE_META: { id: Surface; label: string; icon: React.ReactNode; kind: "phone" | "paper"; exhibition?: boolean }[] = [
+  { id: "scan",        label: "Scan page",        icon: <Smartphone size={13} />, kind: "phone" },
+  { id: "web",         label: "Brand web page",   icon: <Globe2 size={13} />,     kind: "phone" },
+  { id: "info",        label: "Info page",        icon: <Landmark size={13} />,   kind: "phone", exhibition: true },
+  { id: "certificate", label: "Certificate (PDF)", icon: <Award size={13} />,     kind: "paper" },
+  { id: "placard",     label: "QR placard (PDF)", icon: <FileText size={13} />,   kind: "paper", exhibition: true },
 ];
 
 // ─── Main form ──────────────────────────────────────────────────────────────
 
 export default function CustomizationForm({ company, showExhibitions = false }: { company: Company; showExhibitions?: boolean }) {
   const [activeTab, setActiveTab] = useState<Tab>("brand");
+  const [previewSurface, setPreviewSurface] = useState<Surface>("scan");
   const [loading, setLoading] = useState(false);
 
-  // The Info page tab is only relevant when the brand has the Exhibitions feature.
-  const TABS = ALL_TABS.filter((t) => t.id !== "info" || showExhibitions);
+  // Exhibition-only surfaces (info page + QR placard) are hidden unless the
+  // brand has the Exhibitions feature.
+  const surfaces = SURFACE_META.filter((s) => !s.exhibition || showExhibitions);
 
   // Logo
   const [logoUploading, setLogoUploading] = useState(false);
@@ -475,6 +600,75 @@ export default function CustomizationForm({ company, showExhibitions = false }: 
     form.cert_template === "heritage" ? <CertPreviewHeritage {...certPreviewProps} /> :
     form.cert_template === "minimal"  ? <CertPreviewMinimal  {...certPreviewProps} /> :
                                         <CertPreviewClassic  {...certPreviewProps} />;
+
+  // Shared brand props for every previewed surface.
+  const surfaceProps = {
+    companyName: company.name,
+    logoUrl: logoPreview,
+    primary: form.brand_primary_color,
+    secondary: form.brand_secondary_color,
+    accent: form.brand_accent_color,
+    textColor: form.brand_text_color,
+    font: form.brand_font,
+  };
+
+  function renderSurface(surface: Surface) {
+    switch (surface) {
+      case "web":         return <BrandWebPreview {...surfaceProps} />;
+      case "info":        return <InfoPagePreview {...surfaceProps} />;
+      case "certificate": return activeCertPreview;
+      case "placard":     return <PlacardPreview {...surfaceProps} />;
+      default:            return <ScanPagePreview {...surfaceProps} headerText={form.custom_header_text} template={form.brand_template} />;
+    }
+  }
+
+  const activeSurface = surfaces.find((s) => s.id === previewSurface) ?? surfaces[0];
+
+  // The switchable preview, shared by the desktop sticky rail and the mobile
+  // block. `phone` surfaces are tall and self-framed; `paper` surfaces (the
+  // PDFs) get a narrower column.
+  const previewPanel = (
+    <div>
+      <p className="font-semibold uppercase tracking-widest mb-3" style={{ fontSize: "var(--text-micro)", color: "var(--color-slate)" }}>
+        Live preview
+      </p>
+
+      {/* Surface switcher */}
+      <div className="relative mb-4">
+        <select
+          value={previewSurface}
+          onChange={(e) => setPreviewSurface(e.target.value as Surface)}
+          aria-label="Choose what to preview"
+          className="w-full appearance-none rounded-lg font-medium"
+          style={{
+            padding: "10px 36px 10px 12px",
+            fontSize: "var(--text-body-sm)",
+            color: "var(--color-charcoal)",
+            backgroundColor: "#fff",
+            border: "1px solid var(--color-cream)",
+            cursor: "pointer",
+            boxShadow: "var(--shadow-sm)",
+          }}
+        >
+          {surfaces.map((s) => (
+            <option key={s.id} value={s.id}>{s.label}</option>
+          ))}
+        </select>
+        <ChevronDown size={15} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "var(--color-mist)", pointerEvents: "none" }} />
+      </div>
+
+      {/* The preview itself */}
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <div style={{ width: "100%", maxWidth: activeSurface.kind === "phone" ? 232 : 252 }}>
+          {renderSurface(previewSurface)}
+        </div>
+      </div>
+
+      <p className="mt-3 text-center" style={{ fontSize: 10, color: "var(--color-mist)" }}>
+        {activeSurface.kind === "paper" ? "Print-ready design · " : ""}Updates live · save to publish
+      </p>
+    </div>
+  );
 
   return (
     <form onSubmit={handleSubmit}>
@@ -670,78 +864,6 @@ export default function CustomizationForm({ company, showExhibitions = false }: 
           )}
 
           {/* ════════════════════════════════════════════════════════════
-              TAB — EXHIBITION INFO PAGE
-          ════════════════════════════════════════════════════════════ */}
-          {activeTab === "info" && showExhibitions && (
-            <div className="space-y-6">
-
-              {/* What it is */}
-              <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, var(--color-soft-gold) 0%, var(--color-pearl) 100%)", border: "1px solid var(--color-cream)" }}>
-                <div className="flex items-start gap-4">
-                  <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: "var(--color-gold)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Landmark size={22} color="#fff" />
-                  </div>
-                  <div>
-                    <h2 className="font-semibold mb-1" style={{ fontSize: "var(--text-body)", color: "var(--color-charcoal)" }}>Exhibition info page</h2>
-                    <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)", lineHeight: 1.65 }}>
-                      When a visitor scans an exhibition QR placard, they see a calm reference page about the piece. It is purely informational, distinct from the Verified Authentic scan page, and never shows ownership. Your brand colours and typeface are applied to it automatically.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile preview (the sticky panel is desktop-only) */}
-              <section className="rounded-2xl p-6 lg:hidden" style={{ backgroundColor: "var(--color-pearl)", border: "1px solid var(--color-cream)" }}>
-                <h2 className="font-semibold mb-4" style={{ fontSize: "var(--text-body)", color: "var(--color-charcoal)" }}>Preview</h2>
-                <div style={{ maxWidth: 240, margin: "0 auto" }}>
-                  <InfoPagePreview
-                    companyName={company.name}
-                    logoUrl={logoPreview}
-                    primary={form.brand_primary_color}
-                    secondary={form.brand_secondary_color}
-                    accent={form.brand_accent_color}
-                    textColor={form.brand_text_color}
-                    font={form.brand_font}
-                  />
-                </div>
-              </section>
-
-              {/* Inherited styling note */}
-              <div className="rounded-2xl p-5" style={{ backgroundColor: "var(--color-soft-gold)", border: "1px solid var(--color-cream)" }}>
-                <p className="font-medium mb-1" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-deep-gold)" }}>
-                  Themed by your Brand identity
-                </p>
-                <p style={{ fontSize: "var(--text-caption)", color: "var(--color-graphite)", lineHeight: 1.6 }}>
-                  The page background, ink, accent and font all come from the Brand identity tab. Tagit keeps text legible automatically, so the page reads well in light or dark shades. The printed QR placard uses these same colours.
-                </p>
-              </div>
-
-              {/* What's on it */}
-              <section className="rounded-2xl p-6" style={{ backgroundColor: "var(--color-pearl)", border: "1px solid var(--color-cream)" }}>
-                <h2 className="font-semibold mb-4" style={{ fontSize: "var(--text-body)", color: "var(--color-charcoal)" }}>What the info page shows</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    ["Your logo & a Reference badge", "A persistent label, never a verification badge"],
-                    ["Photos & the piece's name", "From the product you registered"],
-                    ["Medium, dimensions & story", "Only the registration fields, never ownership"],
-                    ["Optional AI chat", "Shown when AI Persona is enabled, scoped to this piece"],
-                    ["Enquiry button", "Opens WhatsApp using your contact number"],
-                    ["Powered by Tagit", "A small, tappable Tagit credit"],
-                  ].map(([title, sub]) => (
-                    <div key={title} className="flex items-start gap-3 p-3 rounded-xl" style={{ backgroundColor: "var(--color-smoke)" }}>
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--color-gold)", marginTop: 6, flexShrink: 0 }} />
-                      <div>
-                        <p className="font-medium" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)", marginBottom: 2 }}>{title}</p>
-                        <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>{sub}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </div>
-          )}
-
-          {/* ════════════════════════════════════════════════════════════
               TAB 3 — CERTIFICATES
           ════════════════════════════════════════════════════════════ */}
           {activeTab === "certificates" && (
@@ -856,71 +978,18 @@ export default function CustomizationForm({ company, showExhibitions = false }: 
 
         </div>
 
-        {/* ── Right: persistent dual preview panel ──────────────────────── */}
+        {/* ── Right: switchable live preview (desktop) ──────────────────── */}
         <div className="hidden lg:block">
-          <div style={{ position: "sticky", top: 24, display: "flex", flexDirection: "column", gap: 14 }}>
-
-            <p
-              className="font-semibold uppercase tracking-widest text-center"
-              style={{ fontSize: "var(--text-micro)", color: "var(--color-slate)" }}
-            >
-              Live preview
-            </p>
-
-            {/* Primary preview: the info page on its tab, otherwise the scan page */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
-                {activeTab === "info"
-                  ? <Landmark size={11} style={{ color: "var(--color-gold)" }} />
-                  : <Smartphone size={11} style={{ color: "var(--color-gold)" }} />}
-                <p style={{ fontSize: 10, fontWeight: 600, color: "var(--color-slate)", textTransform: "uppercase", letterSpacing: "0.06em", margin: 0 }}>
-                  {activeTab === "info" ? "Info page" : "Scan page"}
-                </p>
-              </div>
-              <div style={{ maxHeight: 300, overflow: "hidden", borderRadius: 20 }}>
-                {activeTab === "info" ? (
-                  <InfoPagePreview
-                    companyName={company.name}
-                    logoUrl={logoPreview}
-                    primary={form.brand_primary_color}
-                    secondary={form.brand_secondary_color}
-                    accent={form.brand_accent_color}
-                    textColor={form.brand_text_color}
-                    font={form.brand_font}
-                  />
-                ) : (
-                  <ScanPagePreview
-                    companyName={company.name}
-                    logoUrl={logoPreview}
-                    primary={form.brand_primary_color}
-                    secondary={form.brand_secondary_color}
-                    accent={form.brand_accent_color}
-                    textColor={form.brand_text_color}
-                    font={form.brand_font}
-                    headerText={form.custom_header_text}
-                    template={form.brand_template}
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Certificate preview */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
-                <Award size={11} style={{ color: "var(--color-gold)" }} />
-                <p style={{ fontSize: 10, fontWeight: 600, color: "var(--color-slate)", textTransform: "uppercase", letterSpacing: "0.06em", margin: 0 }}>Certificate</p>
-              </div>
-              <div style={{ maxHeight: 200, overflow: "hidden", borderRadius: 6, boxShadow: "0 2px 12px rgba(0,0,0,0.12)" }}>
-                {activeCertPreview}
-              </div>
-            </div>
-
-            <p style={{ fontSize: 10, color: "var(--color-mist)", textAlign: "center", margin: 0 }}>
-              Updates live · save to publish
-            </p>
+          <div style={{ position: "sticky", top: 24 }}>
+            {previewPanel}
           </div>
         </div>
 
+      </div>
+
+      {/* ── Mobile live preview (the rail is desktop-only) ──────────────── */}
+      <div className="lg:hidden mt-8 rounded-2xl p-6" style={{ backgroundColor: "var(--color-pearl)", border: "1px solid var(--color-cream)" }}>
+        {previewPanel}
       </div>
 
       {/* ── Save button ──────────────────────────────────────────────────── */}
