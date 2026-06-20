@@ -5,11 +5,12 @@ import Image from "next/image";
 import { toast } from "sonner";
 import {
   Loader2, Save, Smartphone, Upload, X, Shield,
-  Award, Palette, Globe, PenLine,
+  Award, Palette, Globe, PenLine, Landmark,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SignaturePanel } from "./SignaturePanel";
+import { resolvePalette } from "@/lib/brand-page";
 
 type Company = {
   name: string;
@@ -251,21 +252,104 @@ function ScanPagePreview({
   );
 }
 
+// ─── Exhibition info-page preview ───────────────────────────────────────────
+// Mirrors app/info/[token]: a calm, editorial reference placard themed by the
+// same brand palette (via resolvePalette, exactly as the live page does), so the
+// brand sees their colours and font on it before publishing.
+
+function InfoPagePreview({
+  companyName, logoUrl, primary, secondary, accent, textColor, font,
+}: {
+  companyName: string; logoUrl: string | null; primary: string; secondary: string;
+  accent: string; textColor: string; font: string;
+}) {
+  const palette = resolvePalette({
+    brand_primary_color: primary,
+    brand_secondary_color: secondary,
+    brand_accent_color: accent,
+    brand_text_color: textColor,
+  });
+  const fontFamily = FONT_CSS[font] ?? FONT_CSS.body;
+  const light = (() => {
+    const int = parseInt(palette.background.replace("#", ""), 16);
+    const ch = [(int >> 16) & 255, (int >> 8) & 255, int & 255].map((v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; });
+    return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2] > 0.42;
+  })();
+  const surface = light ? "#FFFFFF" : "rgba(255,255,255,0.05)";
+
+  return (
+    <div style={{
+      width: "100%", aspectRatio: "9/16", borderRadius: 28, overflow: "hidden",
+      border: "8px solid #1A1612", boxShadow: "0 0 0 2px #2E2A1E, 0 24px 64px rgba(0,0,0,0.4)",
+      backgroundColor: palette.background, fontFamily, position: "relative",
+      display: "flex", flexDirection: "column", padding: "22px 14px 14px",
+    }}>
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 80, height: 18, backgroundColor: "#1A1612", borderRadius: "0 0 14px 14px", zIndex: 10 }} />
+
+      {/* top: logo + reference marker */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        {logoUrl
+          /* eslint-disable-next-line @next/next/no-img-element */
+          ? <img src={logoUrl} alt="" style={{ height: 16, maxWidth: 70, objectFit: "contain" }} />
+          : <span style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontStyle: "italic", fontSize: 12, color: palette.textPrimary }}>{companyName}</span>}
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 7px", borderRadius: 99, backgroundColor: palette.badgeBg, border: `1px solid ${palette.divider}` }}>
+          <span style={{ width: 3, height: 3, backgroundColor: palette.accent, transform: "rotate(45deg)" }} />
+          <span style={{ fontFamily: "monospace", fontSize: 5.5, letterSpacing: "0.12em", textTransform: "uppercase", color: palette.badgeText }}>Reference</span>
+        </span>
+      </div>
+
+      {/* photo mat */}
+      <div style={{ backgroundColor: surface, border: `1px solid ${palette.divider}`, borderRadius: 4, aspectRatio: "1/1", padding: 8 }}>
+        <div style={{ width: "100%", height: "100%", border: `1px solid ${palette.divider}` }} />
+      </div>
+
+      {/* title + brand */}
+      <p style={{ margin: "12px 0 2px", fontFamily: "'Instrument Serif',Georgia,serif", fontStyle: "italic", fontSize: 19, lineHeight: 1.05, color: palette.textPrimary, letterSpacing: "-0.02em" }}>Sample Piece</p>
+      <p style={{ margin: 0, fontFamily: "monospace", fontSize: 6.5, letterSpacing: "0.14em", textTransform: "uppercase", color: palette.textSecondary }}>{companyName}</p>
+
+      {/* lozenge divider */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "12px 0" }}>
+        <span style={{ flex: 1, height: 1, backgroundColor: palette.divider }} />
+        <span style={{ width: 5, height: 5, backgroundColor: palette.accent, transform: "rotate(45deg)" }} />
+        <span style={{ flex: 1, height: 1, backgroundColor: palette.divider }} />
+      </div>
+
+      {/* spec rows */}
+      {[["Medium", "Oil on canvas"], ["Dimensions", "90 × 120 cm"]].map(([k, v], i) => (
+        <div key={k} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "6px 0", borderTop: i === 0 ? "none" : `1px solid ${palette.divider}` }}>
+          <span style={{ fontFamily: "monospace", fontSize: 6, letterSpacing: "0.1em", textTransform: "uppercase", color: palette.textSecondary }}>{k}</span>
+          <span style={{ fontSize: 9, color: palette.textPrimary }}>{v}</span>
+        </div>
+      ))}
+
+      <div style={{ flex: 1 }} />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, opacity: 0.7 }}>
+        <span style={{ width: 3, height: 3, backgroundColor: palette.accent, transform: "rotate(45deg)" }} />
+        <span style={{ fontFamily: "monospace", fontSize: 5.5, letterSpacing: "0.18em", textTransform: "uppercase", color: palette.textSecondary }}>Powered by Tagit</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Tab types ──────────────────────────────────────────────────────────────
 
-type Tab = "brand" | "scan" | "certificates";
+type Tab = "brand" | "scan" | "certificates" | "info";
 
-const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "brand",        label: "Brand identity", icon: <Palette size={14} /> },
   { id: "scan",         label: "Scan page",       icon: <Smartphone size={14} /> },
+  { id: "info",         label: "Info page",       icon: <Landmark size={14} /> },
   { id: "certificates", label: "Certificates",    icon: <Award size={14} /> },
 ];
 
 // ─── Main form ──────────────────────────────────────────────────────────────
 
-export default function CustomizationForm({ company }: { company: Company }) {
+export default function CustomizationForm({ company, showExhibitions = false }: { company: Company; showExhibitions?: boolean }) {
   const [activeTab, setActiveTab] = useState<Tab>("brand");
   const [loading, setLoading] = useState(false);
+
+  // The Info page tab is only relevant when the brand has the Exhibitions feature.
+  const TABS = ALL_TABS.filter((t) => t.id !== "info" || showExhibitions);
 
   // Logo
   const [logoUploading, setLogoUploading] = useState(false);
@@ -586,6 +670,78 @@ export default function CustomizationForm({ company }: { company: Company }) {
           )}
 
           {/* ════════════════════════════════════════════════════════════
+              TAB — EXHIBITION INFO PAGE
+          ════════════════════════════════════════════════════════════ */}
+          {activeTab === "info" && showExhibitions && (
+            <div className="space-y-6">
+
+              {/* What it is */}
+              <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, var(--color-soft-gold) 0%, var(--color-pearl) 100%)", border: "1px solid var(--color-cream)" }}>
+                <div className="flex items-start gap-4">
+                  <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: "var(--color-gold)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Landmark size={22} color="#fff" />
+                  </div>
+                  <div>
+                    <h2 className="font-semibold mb-1" style={{ fontSize: "var(--text-body)", color: "var(--color-charcoal)" }}>Exhibition info page</h2>
+                    <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)", lineHeight: 1.65 }}>
+                      When a visitor scans an exhibition QR placard, they see a calm reference page about the piece. It is purely informational, distinct from the Verified Authentic scan page, and never shows ownership. Your brand colours and typeface are applied to it automatically.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile preview (the sticky panel is desktop-only) */}
+              <section className="rounded-2xl p-6 lg:hidden" style={{ backgroundColor: "var(--color-pearl)", border: "1px solid var(--color-cream)" }}>
+                <h2 className="font-semibold mb-4" style={{ fontSize: "var(--text-body)", color: "var(--color-charcoal)" }}>Preview</h2>
+                <div style={{ maxWidth: 240, margin: "0 auto" }}>
+                  <InfoPagePreview
+                    companyName={company.name}
+                    logoUrl={logoPreview}
+                    primary={form.brand_primary_color}
+                    secondary={form.brand_secondary_color}
+                    accent={form.brand_accent_color}
+                    textColor={form.brand_text_color}
+                    font={form.brand_font}
+                  />
+                </div>
+              </section>
+
+              {/* Inherited styling note */}
+              <div className="rounded-2xl p-5" style={{ backgroundColor: "var(--color-soft-gold)", border: "1px solid var(--color-cream)" }}>
+                <p className="font-medium mb-1" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-deep-gold)" }}>
+                  Themed by your Brand identity
+                </p>
+                <p style={{ fontSize: "var(--text-caption)", color: "var(--color-graphite)", lineHeight: 1.6 }}>
+                  The page background, ink, accent and font all come from the Brand identity tab. Tagit keeps text legible automatically, so the page reads well in light or dark shades. The printed QR placard uses these same colours.
+                </p>
+              </div>
+
+              {/* What's on it */}
+              <section className="rounded-2xl p-6" style={{ backgroundColor: "var(--color-pearl)", border: "1px solid var(--color-cream)" }}>
+                <h2 className="font-semibold mb-4" style={{ fontSize: "var(--text-body)", color: "var(--color-charcoal)" }}>What the info page shows</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    ["Your logo & a Reference badge", "A persistent label, never a verification badge"],
+                    ["Photos & the piece's name", "From the product you registered"],
+                    ["Medium, dimensions & story", "Only the registration fields, never ownership"],
+                    ["Optional AI chat", "Shown when AI Persona is enabled, scoped to this piece"],
+                    ["Enquiry button", "Opens WhatsApp using your contact number"],
+                    ["Powered by Tagit", "A small, tappable Tagit credit"],
+                  ].map(([title, sub]) => (
+                    <div key={title} className="flex items-start gap-3 p-3 rounded-xl" style={{ backgroundColor: "var(--color-smoke)" }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--color-gold)", marginTop: 6, flexShrink: 0 }} />
+                      <div>
+                        <p className="font-medium" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)", marginBottom: 2 }}>{title}</p>
+                        <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>{sub}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* ════════════════════════════════════════════════════════════
               TAB 3 — CERTIFICATES
           ════════════════════════════════════════════════════════════ */}
           {activeTab === "certificates" && (
@@ -711,24 +867,40 @@ export default function CustomizationForm({ company }: { company: Company }) {
               Live preview
             </p>
 
-            {/* Scan page preview */}
+            {/* Primary preview: the info page on its tab, otherwise the scan page */}
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
-                <Smartphone size={11} style={{ color: "var(--color-gold)" }} />
-                <p style={{ fontSize: 10, fontWeight: 600, color: "var(--color-slate)", textTransform: "uppercase", letterSpacing: "0.06em", margin: 0 }}>Scan page</p>
+                {activeTab === "info"
+                  ? <Landmark size={11} style={{ color: "var(--color-gold)" }} />
+                  : <Smartphone size={11} style={{ color: "var(--color-gold)" }} />}
+                <p style={{ fontSize: 10, fontWeight: 600, color: "var(--color-slate)", textTransform: "uppercase", letterSpacing: "0.06em", margin: 0 }}>
+                  {activeTab === "info" ? "Info page" : "Scan page"}
+                </p>
               </div>
               <div style={{ maxHeight: 300, overflow: "hidden", borderRadius: 20 }}>
-                <ScanPagePreview
-                  companyName={company.name}
-                  logoUrl={logoPreview}
-                  primary={form.brand_primary_color}
-                  secondary={form.brand_secondary_color}
-                  accent={form.brand_accent_color}
-                  textColor={form.brand_text_color}
-                  font={form.brand_font}
-                  headerText={form.custom_header_text}
-                  template={form.brand_template}
-                />
+                {activeTab === "info" ? (
+                  <InfoPagePreview
+                    companyName={company.name}
+                    logoUrl={logoPreview}
+                    primary={form.brand_primary_color}
+                    secondary={form.brand_secondary_color}
+                    accent={form.brand_accent_color}
+                    textColor={form.brand_text_color}
+                    font={form.brand_font}
+                  />
+                ) : (
+                  <ScanPagePreview
+                    companyName={company.name}
+                    logoUrl={logoPreview}
+                    primary={form.brand_primary_color}
+                    secondary={form.brand_secondary_color}
+                    accent={form.brand_accent_color}
+                    textColor={form.brand_text_color}
+                    font={form.brand_font}
+                    headerText={form.custom_header_text}
+                    template={form.brand_template}
+                  />
+                )}
               </div>
             </div>
 

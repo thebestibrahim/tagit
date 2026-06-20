@@ -300,12 +300,18 @@ export default async function InfoPage({
         </p>
 
         {/* ── Small footer ── */}
-        <div style={{ marginTop: 26, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: 0.7 }}>
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="tg-powered"
+          style={{ marginTop: 26, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: 0.7, textDecoration: "none" }}
+        >
           <Lozenge color={palette.accent} size={4} />
           <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.2em", textTransform: "uppercase", color: palette.textSecondary }}>
             Powered by Tagit
           </span>
-        </div>
+        </a>
       </article>
 
       <style>{`
@@ -313,6 +319,9 @@ export default async function InfoPage({
         .info-cta:hover { opacity: 0.92; }
         .info-cta:active { transform: translateY(1px); }
         .info-cta:focus-visible { outline: 2px solid ${palette.accent}; outline-offset: 3px; }
+        .tg-powered { transition: opacity 200ms ease; }
+        .tg-powered:hover { opacity: 1; }
+        .tg-powered:focus-visible { outline: 2px solid ${palette.accent}; outline-offset: 3px; }
       `}</style>
     </div>
   );
@@ -394,12 +403,18 @@ function ExpiredState({
           </Link>
         )}
 
-        <div style={{ marginTop: 36, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: 0.7 }}>
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="tg-powered"
+          style={{ marginTop: 36, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: 0.7, textDecoration: "none" }}
+        >
           <Lozenge color={palette.accent} size={4} />
           <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.2em", textTransform: "uppercase", color: palette.textSecondary }}>
             Powered by Tagit
           </span>
-        </div>
+        </a>
       </div>
 
       <style>{`
@@ -407,6 +422,9 @@ function ExpiredState({
         .info-cta:hover { opacity: 0.92; }
         .info-cta:active { transform: translateY(1px); }
         .info-cta:focus-visible { outline: 2px solid ${palette.accent}; outline-offset: 3px; }
+        .tg-powered { transition: opacity 200ms ease; }
+        .tg-powered:hover { opacity: 1; }
+        .tg-powered:focus-visible { outline: 2px solid ${palette.accent}; outline-offset: 3px; }
       `}</style>
     </div>
   );

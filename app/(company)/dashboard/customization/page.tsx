@@ -82,7 +82,7 @@ export default async function CustomizationPage() {
         </p>
       </div>
 
-      <CustomizationForm company={company} />
+      <CustomizationForm company={company} showExhibitions={flags.exhibitions} />
     </div>
   );
 }
