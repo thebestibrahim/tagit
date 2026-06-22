@@ -89,8 +89,10 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
           </div>
         </div>
 
-        {unpaid && invoice.paystack_payment_link && (
-          <a href={invoice.paystack_payment_link} target="_blank" rel="noopener noreferrer" className="mt-8 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold" style={{ backgroundColor: "var(--color-charcoal)", color: "var(--color-pearl)", fontSize: "var(--text-body-sm)" }}>
+        {unpaid && invoice.amount > 0 && (
+          // Route through the self-healing pay endpoint so the button works even
+          // if the Paystack link wasn't minted at invoice creation time.
+          <a href={`/api/billing/pay/${invoice.id}`} className="mt-8 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold" style={{ backgroundColor: "var(--color-charcoal)", color: "var(--color-pearl)", fontSize: "var(--text-body-sm)" }}>
             Pay {formatNaira(invoice.amount)} now <ArrowRight size={15} />
           </a>
         )}

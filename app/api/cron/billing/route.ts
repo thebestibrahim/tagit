@@ -6,6 +6,7 @@ import {
   sendInvoiceEmail,
   sendTrialEndedInvoice,
   invoiceNumber,
+  invoicePayUrl,
 } from "@/lib/billing/invoices";
 import { getEffectivePrice } from "@/lib/billing/pricing";
 import { OVERDUE_REMINDER_DAYS, FINAL_WARNING_DAY, SUSPENSION_DAY } from "@/lib/billing/lifecycle";
@@ -137,7 +138,7 @@ export async function GET(request: Request) {
             companyName: i.companies!.name,
             invoiceNumber: invoiceNumber(i),
             amount: i.amount,
-            payUrl: i.paystack_payment_link,
+            payUrl: invoicePayUrl(i.id),
           }).catch((e) => log.error("cron/billing", "Suspension email", e));
         }
         result.suspensions += 1;
@@ -151,7 +152,7 @@ export async function GET(request: Request) {
             invoiceNumber: invoiceNumber(i),
             amount: i.amount,
             daysOverdue,
-            payUrl: i.paystack_payment_link,
+            payUrl: invoicePayUrl(i.id),
             finalWarning: true,
           }).catch((e) => log.error("cron/billing", "Day 14 email", e));
         }
@@ -164,7 +165,7 @@ export async function GET(request: Request) {
             invoiceNumber: invoiceNumber(i),
             amount: i.amount,
             daysOverdue,
-            payUrl: i.paystack_payment_link,
+            payUrl: invoicePayUrl(i.id),
             finalWarning: false,
           }).catch((e) => log.error("cron/billing", "Day 7 email", e));
         }
@@ -177,7 +178,7 @@ export async function GET(request: Request) {
             invoiceNumber: invoiceNumber(i),
             amount: i.amount,
             daysOverdue,
-            payUrl: i.paystack_payment_link,
+            payUrl: invoicePayUrl(i.id),
             finalWarning: false,
           }).catch((e) => log.error("cron/billing", "Day 3 email", e));
         }

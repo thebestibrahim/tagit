@@ -314,6 +314,39 @@ async function generatePaystackLinkForInvoice(
   }
 }
 
+// Stable, self-healing pay URL used by every Pay button (emails + dashboard).
+// It points at our own /api/billing/pay route rather than the raw Paystack
+// link, so the button always renders even when the link wasn't generated yet —
+// the route mints it on demand. Returns null only when we have no app URL to
+// build an absolute link from (e.g. local scripts without NEXT_PUBLIC_APP_URL).
+export function invoicePayUrl(invoiceId: string): string | null {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  return appUrl ? `${appUrl}/api/billing/pay/${invoiceId}` : null;
+}
+
+// Ensure an unpaid invoice has a Paystack checkout link, minting one on demand
+// if the upfront generation at creation time failed or never ran. Returns the
+// checkout URL, or null if the invoice is settled/free or generation fails.
+// This is the safety net behind the /api/billing/pay route: a single transient
+// Paystack outage at invoice creation no longer leaves an invoice unpayable.
+export async function ensurePaystackLink(
+  supabase: DB,
+  invoiceId: string
+): Promise<string | null> {
+  const { data: invoice } = await supabase
+    .from("invoices")
+    .select("*")
+    .eq("id", invoiceId)
+    .single();
+  if (!invoice) return null;
+  if (invoice.status === "paid" || invoice.status === "cancelled") return null;
+  if (invoice.amount <= 0) return null;
+  if (invoice.paystack_payment_link) return invoice.paystack_payment_link;
+
+  await generatePaystackLinkForInvoice(supabase, invoice as Invoice, invoice.company_id);
+  return invoice.paystack_payment_link ?? null;
+}
+
 export interface InvoiceEmailPayload {
   email: string;
   type: InvoiceType;
@@ -373,7 +406,9 @@ export async function loadInvoiceEmailPayload(
       discountPercentage: invoice.discount_percentage,
       amount: invoice.amount,
       dueDate: invoice.due_date,
-      payUrl: invoice.paystack_payment_link,
+      // Route the Pay button through our self-healing pay endpoint so it always
+      // renders and works, even if the raw Paystack link wasn't minted yet.
+      payUrl: invoice.status === "paid" ? null : invoicePayUrl(invoice.id),
       paid: invoice.status === "paid",
       lineItems: (items ?? []).map((i) => ({ description: i.description, total: i.total })),
     },

@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { log } from "@/lib/logger";
 import { NextResponse } from "next/server";
-import { invoiceNumber } from "@/lib/billing/invoices";
+import { invoiceNumber, invoicePayUrl } from "@/lib/billing/invoices";
 import { sendManualInvoiceReminderEmail } from "@/lib/email";
 
 // POST /api/admin/billing/invoices/[invoiceId]/remind
@@ -56,7 +56,7 @@ export async function POST(
       amount: invoice.amount,
       dueDate: invoice.due_date,
       daysOverdue,
-      payUrl: invoice.paystack_payment_link,
+      payUrl: invoicePayUrl(invoice.id),
     });
     return NextResponse.json({ success: true });
   } catch (err) {
