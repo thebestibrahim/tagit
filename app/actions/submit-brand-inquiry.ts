@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import type { Database } from "@/types/database";
 import { sendInquiryReceivedEmail } from "@/lib/email";
+import { log } from "@/lib/logger";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "Tagit <info@tagitlux.com>";
@@ -29,10 +30,21 @@ export async function submitBrandInquiry(data: {
     status: "new",
   });
 
-  // Send emails (best-effort; don't throw if Resend isn't configured)
+  // Send emails (best-effort; don't throw if Resend isn't configured).
+  // Sequential, not parallel: Resend's rate limit (~2 req/s) means firing both
+  // sends at once can intermittently drop one, and the applicant's confirmation
+  // was the one going missing. So send it FIRST and on its own, then notify the
+  // team. Each send is awaited and logged so a failure is visible in the logs
+  // instead of being silently swallowed.
   if (process.env.RESEND_API_KEY) {
-    await Promise.allSettled([
-      resend.emails.send({
+    try {
+      await sendInquiryReceivedEmail(email, { name, company });
+    } catch (err) {
+      log.error("brand-inquiry", "Applicant confirmation email failed", err);
+    }
+
+    try {
+      await resend.emails.send({
         from: FROM,
         to: "business@tagitlux.com",
         subject: `New brand access request from ${company}`,
@@ -49,8 +61,9 @@ export async function submitBrandInquiry(data: {
           </div>
         `,
         replyTo: email,
-      }),
-      sendInquiryReceivedEmail(email, { name, company }),
-    ]);
+      });
+    } catch (err) {
+      log.error("brand-inquiry", "Internal notification email failed", err);
+    }
   }
 }
