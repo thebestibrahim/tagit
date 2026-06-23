@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Tag, Plus } from "lucide-react";
 import ProductForm, { type ProductDefaults } from "./ProductForm";
 import type { CompanyStatus } from "@/types/database";
 
@@ -67,6 +67,11 @@ export default async function NewProductPage({
   const tags = all.filter((t) => t.medium !== "card");
   const cards = all.filter((t) => t.medium === "card");
 
+  // A product must be linked to a physical tag or card. With none unassigned,
+  // the form is a dead end: show a focused prompt instead, so requesting a batch
+  // is a clear, intentional choice rather than a buried error.
+  const noKeys = tags.length === 0 && cards.length === 0;
+
   return (
     <div className="p-8 max-w-3xl mx-auto">
       <Link
@@ -89,7 +94,34 @@ export default async function NewProductPage({
         </p>
       </div>
 
-      <ProductForm tags={tags} cards={cards} industry={company.industry} companyId={company.id} defaults={defaults} />
+      {noKeys ? (
+        <div className="rounded-2xl p-10 text-center" style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)" }}>
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "var(--color-linen)" }}>
+            <Tag size={24} style={{ color: "var(--color-gold)" }} />
+          </div>
+          <h2 className="font-semibold mb-2" style={{ fontSize: "var(--text-body)", color: "var(--color-charcoal)" }}>
+            You need a tag or card first
+          </h2>
+          <p className="mb-6 mx-auto" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)", maxWidth: "26rem" }}>
+            Every product is linked to a physical tag or card. You don&apos;t have any unassigned ones right now. Whenever you&apos;re ready, request a batch and we&apos;ll have them prepared for you.
+          </p>
+          <Link
+            href="/dashboard/batches/request"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium"
+            style={{ backgroundColor: "var(--color-onyx)", color: "var(--color-pearl)", textDecoration: "none", fontSize: "var(--text-body-sm)" }}
+          >
+            <Plus size={14} />
+            Request a batch
+          </Link>
+          <p className="mt-4">
+            <Link href="/dashboard/products" style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)", textDecoration: "none" }}>
+              Maybe later
+            </Link>
+          </p>
+        </div>
+      ) : (
+        <ProductForm tags={tags} cards={cards} industry={company.industry} companyId={company.id} defaults={defaults} />
+      )}
     </div>
   );
 }
