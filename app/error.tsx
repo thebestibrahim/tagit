@@ -92,6 +92,9 @@ export default function Error({
         >
           Try again
         </button>
+        {/* Deliberate hard navigation: the React tree has errored, so a full
+            page load recovers cleanly where a soft <Link> may not. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a
           href="/dashboard"
           style={{
