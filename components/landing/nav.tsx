@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
 import { Wordmark } from "@/components/ui/Wordmark";
-import MagneticButton from "./interactive/magnetic-button";
 import { RequestAccessButton } from "./request-access-modal";
 
 export default function LandingNav() {
@@ -61,18 +60,16 @@ export default function LandingNav() {
           >
             Sign in
           </Link>
-          <MagneticButton>
-            <RequestAccessButton
-              style={{
-                fontSize: 13, fontWeight: 550,
-                color: "#FAFAF8", backgroundColor: "#0A0A0B",
-                padding: "9px 18px", borderRadius: 7,
-                letterSpacing: "-0.005em",
-              }}
-            >
-              Request Access
-            </RequestAccessButton>
-          </MagneticButton>
+          <RequestAccessButton
+            style={{
+              fontSize: 13, fontWeight: 550,
+              color: "#FAFAF8", backgroundColor: "#0A0A0B",
+              padding: "9px 18px", borderRadius: 7,
+              letterSpacing: "-0.005em",
+            }}
+          >
+            Request Access
+          </RequestAccessButton>
         </div>
       </div>
     </motion.nav>

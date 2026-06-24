@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { motion } from "motion/react";
+import { RequestAccessButton } from "@/components/landing/request-access-modal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -250,9 +251,9 @@ export default function LoginForm() {
 
           <p style={{ marginTop: 24, fontSize: 13, color: "#9E9EA3", letterSpacing: "-0.003em" }}>
             New brand partner?{" "}
-            <Link href="/auth/register" style={{ color: "#4A4A4F", textDecoration: "none", borderBottom: "1px solid #E8E2D5" }}>
-              Apply for access →
-            </Link>
+            <RequestAccessButton style={{ color: "#4A4A4F", textDecoration: "none", borderBottom: "1px solid #E8E2D5" }}>
+              Request access →
+            </RequestAccessButton>
           </p>
         </motion.div>
       </div>

@@ -434,9 +434,9 @@ export async function sendBrandInvitationEmail(
     ${heading(`Welcome, ${esc(opts.company)}`)}
     ${para(`${esc(firstName)}, I’m Fawaz, founder of Tagit. I reviewed your application personally, and it is my pleasure to welcome you in.`)}
     ${para("You are joining a small, considered group of houses building something rare: a permanent identity for every piece they create. From today, your products can carry proof of their origin, their craftsmanship, and their ownership, verifiable by anyone, for the life of the object.")}
-    ${para("Your dashboard is ready. Register your first products, assign their Tagit identities, and begin building provenance for your brand.")}
-    ${button("Enter your dashboard", opts.loginUrl)}
-    <p style="margin:18px 0 0;font-family:${SANS};font-size:13px;color:${MUTE}">Or sign in at <a href="${opts.loginUrl}" style="color:${INK}">${opts.loginUrl}</a></p>
+    ${para("Your account is ready. Set your password below to access your dashboard, register your first products, assign their Tagit identities, and begin building provenance for your brand.")}
+    ${button("Set your password", opts.loginUrl)}
+    <p style="margin:18px 0 0;font-family:${SANS};font-size:13px;color:${MUTE}">Or open this link directly: <a href="${opts.loginUrl}" style="color:${INK}">${opts.loginUrl}</a></p>
 
     <table role="presentation" width="100%" style="margin:30px 0 0"><tr><td style="border-top:1px solid ${LINE};padding-top:24px">
       <p style="margin:0 0 4px;font-family:${SANS};font-size:15px;line-height:1.6;color:${INK}">We are honored to have you.</p>
@@ -448,7 +448,7 @@ export async function sendBrandInvitationEmail(
     { preheader: `Welcome to Tagit, ${opts.company}. Your dashboard is ready.` }
   );
 
-  const text = `${firstName}, I'm Fawaz, founder of Tagit. I reviewed your application personally, and it is my pleasure to welcome you in.\n\nYou are joining a small, considered group of houses building something rare: a permanent identity for every piece they create. From today, your products can carry proof of their origin, their craftsmanship, and their ownership, verifiable by anyone, for the life of the object.\n\nYour dashboard is ready. Register your first products, assign their Tagit identities, and begin building provenance for your brand.\n\nEnter your dashboard:\n${opts.loginUrl}\n\nWe are honored to have you.\n\nFawaz Ibrahim\nFounder, Tagit\n\nReply to this note anytime. I read every one.`;
+  const text = `${firstName}, I'm Fawaz, founder of Tagit. I reviewed your application personally, and it is my pleasure to welcome you in.\n\nYou are joining a small, considered group of houses building something rare: a permanent identity for every piece they create. From today, your products can carry proof of their origin, their craftsmanship, and their ownership, verifiable by anyone, for the life of the object.\n\nYour account is ready. Set your password to access your dashboard, register your first products, assign their Tagit identities, and begin building provenance for your brand.\n\nSet your password:\n${opts.loginUrl}\n\nWe are honored to have you.\n\nFawaz Ibrahim\nFounder, Tagit\n\nReply to this note anytime. I read every one.`;
 
   await resend.emails.send({
     from: FROM,

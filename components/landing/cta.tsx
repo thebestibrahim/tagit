@@ -1,6 +1,5 @@
 "use client";
 import { motion } from "motion/react";
-import MagneticButton from "./interactive/magnetic-button";
 import { RequestAccessButton } from "./request-access-modal";
 
 export default function CtaSection() {
@@ -48,18 +47,16 @@ export default function CtaSection() {
               Request access or book a live walkthrough — we respond within 48 hours.
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              <MagneticButton>
-                <RequestAccessButton
-                  style={{
-                    display: "inline-flex", alignItems: "center",
-                    padding: "13px 28px",
-                    backgroundColor: "#B8945D", color: "#fff",
-                    borderRadius: 8, fontWeight: 550, fontSize: 14, letterSpacing: "-0.01em",
-                  }}
-                >
-                  Request Access
-                </RequestAccessButton>
-              </MagneticButton>
+              <RequestAccessButton
+                style={{
+                  display: "inline-flex", alignItems: "center",
+                  padding: "13px 28px",
+                  backgroundColor: "#B8945D", color: "#fff",
+                  borderRadius: 8, fontWeight: 550, fontSize: 14, letterSpacing: "-0.01em",
+                }}
+              >
+                Request Access
+              </RequestAccessButton>
               <a
                 href="mailto:business@tagitlux.com?subject=Demo Request"
                 style={{

@@ -1,7 +1,6 @@
 "use client";
 import { motion } from "motion/react";
 import { useState } from "react";
-import MagneticButton from "./interactive/magnetic-button";
 import VerifiedCard from "./interactive/verified-card";
 import OwnershipLedger from "./interactive/ownership-ledger";
 import { RequestAccessButton } from "./request-access-modal";
@@ -215,19 +214,17 @@ export default function Hero() {
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 36, alignItems: "center" }}>
               {/* Request Access — opens modal */}
-              <MagneticButton>
-                <RequestAccessButton
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 8,
-                    padding: "13px 24px",
-                    backgroundColor: "#0A0A0B", color: "#FAFAF8",
-                    borderRadius: 8, fontWeight: 550, fontSize: 14,
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  Request Access
-                </RequestAccessButton>
-              </MagneticButton>
+              <RequestAccessButton
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "13px 24px",
+                  backgroundColor: "#0A0A0B", color: "#FAFAF8",
+                  borderRadius: 8, fontWeight: 550, fontSize: 14,
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                Request Access
+              </RequestAccessButton>
 
               {/* Request a Demo — live call / mailto */}
               <a
