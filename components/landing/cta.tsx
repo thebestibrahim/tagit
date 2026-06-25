@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "motion/react";
-import { RequestAccessButton } from "./request-access-modal";
+import Link from "next/link";
 
 export default function CtaSection() {
   return (
@@ -44,19 +44,21 @@ export default function CtaSection() {
               margin: "0 auto 40px", lineHeight: 1.7, letterSpacing: "-0.005em",
             }}>
               Tagit is currently working with a select group of founding brands.
-              Request access or book a live walkthrough — we respond within 48 hours.
+              Apply for access or book a live walkthrough — we respond within 48 hours.
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              <RequestAccessButton
+              <Link
+                href="/auth/register"
                 style={{
                   display: "inline-flex", alignItems: "center",
                   padding: "13px 28px",
                   backgroundColor: "#B8945D", color: "#fff",
                   borderRadius: 8, fontWeight: 550, fontSize: 14, letterSpacing: "-0.01em",
+                  textDecoration: "none",
                 }}
               >
-                Request Access
-              </RequestAccessButton>
+                Apply for Access
+              </Link>
               <a
                 href="mailto:business@tagitlux.com?subject=Demo Request"
                 style={{

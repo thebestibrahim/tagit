@@ -1,9 +1,9 @@
 "use client";
 import { motion } from "motion/react";
 import { useState } from "react";
+import Link from "next/link";
 import VerifiedCard from "./interactive/verified-card";
 import OwnershipLedger from "./interactive/ownership-ledger";
-import { RequestAccessButton } from "./request-access-modal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -213,18 +213,19 @@ export default function Hero() {
             </p>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 36, alignItems: "center" }}>
-              {/* Request Access — opens modal */}
-              <RequestAccessButton
+              {/* Apply for Access — straight to self-serve registration */}
+              <Link
+                href="/auth/register"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 8,
                   padding: "13px 24px",
                   backgroundColor: "#0A0A0B", color: "#FAFAF8",
                   borderRadius: 8, fontWeight: 550, fontSize: 14,
-                  letterSpacing: "-0.01em",
+                  letterSpacing: "-0.01em", textDecoration: "none",
                 }}
               >
-                Request Access
-              </RequestAccessButton>
+                Apply for Access
+              </Link>
 
               {/* Request a Demo — live call / mailto */}
               <a

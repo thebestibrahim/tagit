@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
 import { Wordmark } from "@/components/ui/Wordmark";
-import { RequestAccessButton } from "./request-access-modal";
 
 export default function LandingNav() {
   const { scrollY } = useScroll();
@@ -60,16 +59,17 @@ export default function LandingNav() {
           >
             Sign in
           </Link>
-          <RequestAccessButton
+          <Link
+            href="/auth/register"
             style={{
               fontSize: 13, fontWeight: 550,
               color: "#FAFAF8", backgroundColor: "#0A0A0B",
               padding: "9px 18px", borderRadius: 7,
-              letterSpacing: "-0.005em",
+              letterSpacing: "-0.005em", textDecoration: "none",
             }}
           >
-            Request Access
-          </RequestAccessButton>
+            Apply for Access
+          </Link>
         </div>
       </div>
     </motion.nav>
