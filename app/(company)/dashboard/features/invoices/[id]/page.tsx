@@ -21,8 +21,9 @@ const STATUS: Record<Invoice["status"], { label: string; bg: string; color: stri
   cancelled: { label: "Cancelled", bg: "var(--color-cream)", color: "var(--color-mist)" },
 };
 
-export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function InvoiceDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ pay_error?: string }> }) {
   const { id } = await params;
+  const { pay_error } = await searchParams;
   const user = await getUser();
   if (!user) redirect("/auth/login");
 
@@ -88,6 +89,15 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
             <span className="font-display tabular-nums" style={{ fontSize: "24px", color: "var(--color-charcoal)" }}>{formatNaira(invoice.amount)}</span>
           </div>
         </div>
+
+        {pay_error === "1" && (
+          <div className="mt-8 p-4 rounded-xl" style={{ backgroundColor: "#FEF2F2", border: "1px solid #FECACA" }}>
+            <p className="font-semibold" style={{ color: "#991B1B", fontSize: "var(--text-body-sm)" }}>We couldn&apos;t start checkout</p>
+            <p className="mt-1" style={{ color: "#991B1B", fontSize: "var(--text-body-sm)" }}>
+              Something went wrong reaching our payment processor. Please try again in a moment, or contact us if this keeps happening.
+            </p>
+          </div>
+        )}
 
         {unpaid && invoice.amount > 0 && (
           // Route through the self-healing pay endpoint so the button works even

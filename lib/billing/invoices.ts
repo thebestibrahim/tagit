@@ -286,7 +286,10 @@ async function generatePaystackLinkForInvoice(
     .select("email")
     .eq("id", companyId)
     .single();
-  if (!company?.email) return;
+  if (!company?.email) {
+    log.error("billing/invoices", `Cannot generate Paystack link for invoice ${invoice.id}: company ${companyId} has no email`);
+    return;
+  }
 
   try {
     const reference = buildReference(invoice.id);
@@ -324,6 +327,14 @@ export function invoicePayUrl(invoiceId: string): string | null {
   return appUrl ? `${appUrl}/api/billing/pay/${invoiceId}` : null;
 }
 
+export interface EnsurePaystackLinkResult {
+  url: string | null;
+  // Set when a link was needed but Paystack generation failed (vs. legitimately
+  // not needing one because the invoice is missing/settled/free) — lets the
+  // pay route show the brand a real error instead of a silent dead end.
+  failed: boolean;
+}
+
 // Ensure an unpaid invoice has a Paystack checkout link, minting one on demand
 // if the upfront generation at creation time failed or never ran. Returns the
 // checkout URL, or null if the invoice is settled/free or generation fails.
@@ -332,19 +343,20 @@ export function invoicePayUrl(invoiceId: string): string | null {
 export async function ensurePaystackLink(
   supabase: DB,
   invoiceId: string
-): Promise<string | null> {
+): Promise<EnsurePaystackLinkResult> {
   const { data: invoice } = await supabase
     .from("invoices")
     .select("*")
     .eq("id", invoiceId)
     .single();
-  if (!invoice) return null;
-  if (invoice.status === "paid" || invoice.status === "cancelled") return null;
-  if (invoice.amount <= 0) return null;
-  if (invoice.paystack_payment_link) return invoice.paystack_payment_link;
+  if (!invoice) return { url: null, failed: false };
+  if (invoice.status === "paid" || invoice.status === "cancelled") return { url: null, failed: false };
+  if (invoice.amount <= 0) return { url: null, failed: false };
+  if (invoice.paystack_payment_link) return { url: invoice.paystack_payment_link, failed: false };
 
   await generatePaystackLinkForInvoice(supabase, invoice as Invoice, invoice.company_id);
-  return invoice.paystack_payment_link ?? null;
+  const url = invoice.paystack_payment_link ?? null;
+  return { url, failed: url === null };
 }
 
 export interface InvoiceEmailPayload {

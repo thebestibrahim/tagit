@@ -20,10 +20,12 @@ export async function GET(
 
   try {
     const admin = createAdminClient();
-    const link = await ensurePaystackLink(admin, invoiceId);
-    // No link means the invoice is paid, cancelled, free, or generation failed.
-    // Send the brand to the invoice page, which reflects its real state.
-    return NextResponse.redirect(link ?? invoicePage);
+    const { url, failed } = await ensurePaystackLink(admin, invoiceId);
+    if (url) return NextResponse.redirect(url);
+    // Generation failed (e.g. Paystack API rejected the request) — tell the
+    // brand instead of silently bouncing them back with no explanation.
+    if (failed) invoicePage.searchParams.set("pay_error", "1");
+    return NextResponse.redirect(invoicePage);
   } catch (err) {
     log.error("billing/pay", `Pay redirect failed for invoice ${invoiceId}`, err);
     return NextResponse.redirect(billingHome);
