@@ -13,6 +13,7 @@ const defaultFlags: FlagMap = {
   tag_migration: false,
   intelligence_reports: false,
   exhibitions: false,
+  custom_domain: false,
 }
 
 const FlagContext = createContext<FlagMap>(defaultFlags)

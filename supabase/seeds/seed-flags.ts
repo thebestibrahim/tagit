@@ -90,6 +90,14 @@ const initialFlags = [
     enabled: true,
     rollout_percentage: 100,
     environments: ['production', 'staging']
+  },
+  {
+    key: 'custom_domain',
+    name: 'Custom Domain',
+    description: 'Brands can connect their own domain (e.g. bushuaart.com) to serve their Tagit brand page. Admin must enable per brand — being on Atelier or above is the suggested baseline, not an automatic unlock.',
+    enabled: false,
+    rollout_percentage: 0,
+    environments: ['production', 'staging']
   }
 ]
 

@@ -14,6 +14,7 @@ const FLAG_KEYS: FlagKey[] = [
   'tag_migration',
   'intelligence_reports',
   'exhibitions',
+  'custom_domain',
 ]
 
 const DEFAULT_MAP: FlagMap = FLAG_KEYS.reduce((acc, key) => {

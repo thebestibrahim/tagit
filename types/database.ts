@@ -1275,6 +1275,53 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_domains: {
+        Row: {
+          id: string
+          company_id: string
+          domain: string
+          status: 'pending' | 'verified' | 'failed' | 'removed'
+          vercel_domain_id: string | null
+          verification_records: Json | null
+          failure_reason: string | null
+          verified_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          domain: string
+          status?: 'pending' | 'verified' | 'failed' | 'removed'
+          vercel_domain_id?: string | null
+          verification_records?: Json | null
+          failure_reason?: string | null
+          verified_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          domain?: string
+          status?: 'pending' | 'verified' | 'failed' | 'removed'
+          vercel_domain_id?: string | null
+          verification_records?: Json | null
+          failure_reason?: string | null
+          verified_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_domains_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1473,3 +1520,7 @@ export interface VolumeTier {
   max: number | null;
   price_per_unit: number; // kobo
 }
+
+// ── Domains ───────────────────────────────────────────────────────────────────
+export type CustomDomain = Database["public"]["Tables"]["custom_domains"]["Row"];
+export type CustomDomainStatus = CustomDomain["status"];

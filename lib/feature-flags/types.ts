@@ -9,6 +9,7 @@ export type FlagKey =
   | 'tag_migration'
   | 'intelligence_reports'
   | 'exhibitions'
+  | 'custom_domain'
 
 export type FlagMap = Record<FlagKey, boolean>
 

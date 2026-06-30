@@ -6,6 +6,7 @@ import Image from "next/image";
 import type { CompanyStatus, Industry } from "@/types/database";
 import ReviewActions from "./ReviewActions";
 import { BillingConfig } from "./BillingConfig";
+import { FeatureFlagOverrides } from "./FeatureFlagOverrides";
 import LocalTime from "@/components/ui/LocalTime";
 
 type Company = {
@@ -211,6 +212,20 @@ export default async function CompanyDetailPage({
             </tbody>
           </table></div>
         )}
+      </div>
+
+      {/* Feature flag overrides */}
+      <div
+        className="rounded-xl p-6 mb-6"
+        style={{ backgroundColor: "var(--color-pearl)", border: "1px solid var(--color-cream)", boxShadow: "var(--shadow-sm)" }}
+      >
+        <h2 className="text-body font-semibold mb-1" style={{ color: "var(--color-charcoal)" }}>
+          Feature access
+        </h2>
+        <p className="mb-5 text-body-sm" style={{ color: "var(--color-slate)" }}>
+          Per-brand overrides. These always win over the global flag state, even when the master switch is off.
+        </p>
+        <FeatureFlagOverrides companyId={company.id} />
       </div>
 
       {/* Billing */}
