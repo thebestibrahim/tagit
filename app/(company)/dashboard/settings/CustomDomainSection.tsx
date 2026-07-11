@@ -105,11 +105,6 @@ export function CustomDomainSection({ enabled, initialDomain }: Props) {
     navigator.clipboard.writeText(value).then(() => toast.success("Copied to clipboard"));
   }
 
-  const slug = typeof window !== "undefined"
-    ? window.location.hostname
-    : "";
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://tagitlux.com";
-
   return (
     <section
       className="rounded-2xl p-6 mt-6"

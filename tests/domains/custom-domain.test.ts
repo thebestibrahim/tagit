@@ -324,7 +324,7 @@ describe("POST /api/company/domain/check", () => {
 
   it("returns pending status without error when domain is not yet verified", async () => {
     const { POST } = await import("@/app/api/company/domain/check/route");
-    const res = await POST(new Request("http://localhost/api/company/domain/check", { method: "POST" }));
+    const res = await POST();
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.domain?.status).toBe("pending");
@@ -334,7 +334,7 @@ describe("POST /api/company/domain/check", () => {
     state.vercelVerified = true;
     state.updatedDomain = { ...state.existingDomain, status: "verified", verified_at: new Date().toISOString() };
     const { POST } = await import("@/app/api/company/domain/check/route");
-    const res = await POST(new Request("http://localhost/api/company/domain/check", { method: "POST" }));
+    const res = await POST();
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.domain?.status).toBe("verified");
@@ -343,7 +343,7 @@ describe("POST /api/company/domain/check", () => {
   it("returns current pending state on transient Vercel error, never marks failed", async () => {
     state.vercelError = new Error("network error");
     const { POST } = await import("@/app/api/company/domain/check/route");
-    const res = await POST(new Request("http://localhost/api/company/domain/check", { method: "POST" }));
+    const res = await POST();
     expect(res.status).toBe(200);
     const body = await res.json();
     // Should still be pending, not failed
@@ -353,7 +353,7 @@ describe("POST /api/company/domain/check", () => {
   it("returns 404 when no domain row exists", async () => {
     state.existingDomain = null;
     const { POST } = await import("@/app/api/company/domain/check/route");
-    const res = await POST(new Request("http://localhost/api/company/domain/check", { method: "POST" }));
+    const res = await POST();
     expect(res.status).toBe(404);
   });
 });
@@ -369,7 +369,7 @@ describe("DELETE /api/company/domain", () => {
 
   it("sets status to removed after disconnecting", async () => {
     const { DELETE } = await import("@/app/api/company/domain/route");
-    const res = await DELETE(makeReq(undefined, "DELETE"));
+    const res = await DELETE();
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.success).toBe(true);
@@ -378,14 +378,14 @@ describe("DELETE /api/company/domain", () => {
   it("returns 404 when no active domain exists", async () => {
     state.existingDomain = null;
     const { DELETE } = await import("@/app/api/company/domain/route");
-    const res = await DELETE(makeReq(undefined, "DELETE"));
+    const res = await DELETE();
     expect(res.status).toBe(404);
   });
 
   it("returns 404 when domain is already removed", async () => {
     state.existingDomain = { id: "cd-1", company_id: "brand-1", domain: "bushuaart.com", status: "removed" };
     const { DELETE } = await import("@/app/api/company/domain/route");
-    const res = await DELETE(makeReq(undefined, "DELETE"));
+    const res = await DELETE();
     expect(res.status).toBe(404);
   });
 });
