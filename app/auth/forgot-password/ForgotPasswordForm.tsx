@@ -34,6 +34,10 @@ export default function ForgotPasswordForm() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState(linkExpired ? "That reset link has expired. Enter your email to send a new one." : "");
 
+  // Admins have their own portal — /auth/login is the brand-only form and
+  // rejects non-company roles outright.
+  const loginHref = isAdmin ? "/control/signin" : "/auth/login";
+
   function focusInput(e: React.FocusEvent<HTMLInputElement>) {
     e.currentTarget.style.borderColor = "#B8945D";
     e.currentTarget.style.boxShadow = "0 0 0 3px rgba(184,148,93,0.12)";
@@ -127,7 +131,7 @@ export default function ForgotPasswordForm() {
 
         <div style={{ marginBottom: 48 }}>
           <Link
-            href="/auth/login"
+            href={loginHref}
             style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#9E9EA3", textDecoration: "none", letterSpacing: "-0.005em" }}
           >
             <ArrowLeft size={13} />

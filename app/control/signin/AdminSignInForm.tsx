@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ShieldCheck } from "lucide-react";
+import { ENV } from "@/lib/environment";
 
 const inputBase: React.CSSProperties = {
   width: "100%",
@@ -46,7 +48,9 @@ export default function AdminSignInForm() {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error || !data?.user) {
-        toast.error(error?.message ?? "Invalid credentials.");
+        // Generic in production — don't leak account/role existence through
+        // Supabase's raw error text. Staging shows the real message for debugging.
+        toast.error(ENV.isStaging ? error?.message ?? "Invalid credentials." : "Invalid credentials.");
         setLoading(false);
         return;
       }
@@ -133,12 +137,17 @@ export default function AdminSignInForm() {
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#9E9EA3", marginBottom: 8 }}
-            >
-              Password
-            </label>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <label
+                htmlFor="password"
+                style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#9E9EA3" }}
+              >
+                Password
+              </label>
+              <Link href="/auth/forgot-password?type=admin" style={{ fontSize: 12, color: "#6E6E73", textDecoration: "none" }}>
+                Forgot password?
+              </Link>
+            </div>
             <input
               id="password"
               type="password"

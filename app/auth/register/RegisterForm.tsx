@@ -258,10 +258,11 @@ export default function RegisterForm() {
 
                 {/* Brand name */}
                 <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
+                  <label htmlFor="name" style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
                     Brand / company name
                   </label>
                   <input
+                    id="name"
                     type="text"
                     placeholder="e.g. Maison Lagos"
                     value={form.name}
@@ -275,10 +276,11 @@ export default function RegisterForm() {
 
                 {/* Contact name */}
                 <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
+                  <label htmlFor="contact_name" style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
                     Your full name
                   </label>
                   <input
+                    id="contact_name"
                     type="text"
                     placeholder="e.g. Amara Okonkwo"
                     value={form.contact_name}
@@ -292,10 +294,11 @@ export default function RegisterForm() {
 
                 {/* Email */}
                 <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
+                  <label htmlFor="email" style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
                     Business email
                   </label>
                   <input
+                    id="email"
                     type="email"
                     placeholder="hello@yourbrand.com"
                     value={form.email}
@@ -309,10 +312,11 @@ export default function RegisterForm() {
 
                 {/* Phone */}
                 <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
+                  <label htmlFor="contact_phone" style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
                     Phone / WhatsApp <span style={{ color: "#C7C7CC", fontWeight: 400 }}>(optional)</span>
                   </label>
                   <input
+                    id="contact_phone"
                     type="tel"
                     placeholder="+234 800 000 0000"
                     value={form.contact_phone}
@@ -364,10 +368,11 @@ export default function RegisterForm() {
 
                 {/* Password */}
                 <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
+                  <label htmlFor="password" style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
                     Password
                   </label>
                   <input
+                    id="password"
                     type="password"
                     placeholder="Minimum 8 characters"
                     value={form.password}

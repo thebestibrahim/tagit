@@ -28,7 +28,9 @@ export default function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get("type") === "admin";
-  const loginHref = isAdmin ? "/auth/login?type=admin" : "/auth/login";
+  // Admins have their own portal — /auth/login is the brand-only form and
+  // rejects non-company roles outright.
+  const loginHref = isAdmin ? "/control/signin" : "/auth/login";
   const forgotHref = isAdmin ? "/auth/forgot-password?type=admin" : "/auth/forgot-password";
   const [ready, setReady] = useState(false);
   const [sessionError, setSessionError] = useState("");

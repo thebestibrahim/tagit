@@ -76,7 +76,9 @@ export async function proxy(request: NextRequest) {
   // Admin routes: must be authenticated with tagit_admin role
   if (pathname.startsWith("/admin")) {
     if (!user) {
-      return NextResponse.redirect(new URL("/auth/login?type=admin", request.url));
+      // Staff have their own portal — /auth/login is the brand-only form and
+      // rejects non-company roles outright, so send admins to /control/signin.
+      return NextResponse.redirect(new URL("/control/signin", request.url));
     }
     const role = user.app_metadata?.role;
     if (role !== "tagit_admin") {
