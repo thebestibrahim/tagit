@@ -27,9 +27,11 @@ function strength(pw: string): { label: string; color: string; pct: number } {
   return              { label: "Strong", color: "#16A34A", pct: 100 };
 }
 
-export default function ChangePasswordForm() {
+export default function ChangePasswordForm({ email }: { email: string }) {
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm]         = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew]         = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading]         = useState(false);
@@ -50,17 +52,33 @@ export default function ChangePasswordForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!currentPassword) { setError("Enter your current password."); return; }
     if (newPassword !== confirm) { setError("Passwords do not match."); return; }
     if (newPassword.length < 8)  { setError("Password must be at least 8 characters."); return; }
     setError("");
     setLoading(true);
 
     const supabase = createClient();
+
+    // Re-authenticate first to verify the current password — this is the
+    // admin account, so a hijacked session must not be able to silently
+    // lock the real admin out by changing the password unchallenged.
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password: currentPassword,
+    });
+    if (signInError) {
+      setError("Current password is incorrect.");
+      setLoading(false);
+      return;
+    }
+
     const { error: err } = await supabase.auth.updateUser({ password: newPassword });
     setLoading(false);
 
     if (err) { setError(err.message); return; }
     setDone(true);
+    setCurrentPassword("");
     setNewPassword("");
     setConfirm("");
   }
@@ -90,6 +108,32 @@ export default function ChangePasswordForm() {
           <p style={{ margin: 0, fontSize: 13, color: "#B85C5C" }}>{error}</p>
         </div>
       )}
+
+      {/* Current password */}
+      <div>
+        <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#4A4A4F", marginBottom: 8, letterSpacing: "-0.003em" }}>
+          Current password
+        </label>
+        <div style={{ position: "relative" }}>
+          <input
+            type={showCurrent ? "text" : "password"}
+            placeholder="Enter your current password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+            onFocus={focusInput}
+            onBlur={blurInput}
+            style={{ ...inputBase, paddingRight: 42 }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowCurrent((v) => !v)}
+            style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 0, color: "#9E9EA3", display: "flex" }}
+          >
+            {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+      </div>
 
       {/* New password */}
       <div>

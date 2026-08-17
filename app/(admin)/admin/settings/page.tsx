@@ -1,6 +1,11 @@
+import { getUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import ChangePasswordForm from "./ChangePasswordForm";
 
-export default function AdminSettingsPage() {
+export default async function AdminSettingsPage() {
+  const user = await getUser();
+  if (!user?.email) redirect("/control/signin");
+
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <div className="page-header mb-10">
@@ -22,7 +27,7 @@ export default function AdminSettingsPage() {
         <p style={{ fontSize: 13, color: "var(--color-slate)", marginBottom: 28 }}>
           Set a new password for your admin account.
         </p>
-        <ChangePasswordForm />
+        <ChangePasswordForm email={user.email} />
       </div>
     </div>
   );
