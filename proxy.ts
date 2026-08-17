@@ -1,33 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { isTagitHostname } from "@/lib/domains/validate";
 import { NextResponse, type NextRequest } from "next/server";
-
-// Tagit-controlled hostnames — these always use normal routing, never custom domain resolution.
-const TAGIT_HOSTS = new Set([
-  "tagitlux.com",
-  "www.tagitlux.com",
-  "staging.tagitlux.com",
-]);
-
-function isTagitHost(host: string): boolean {
-  if (TAGIT_HOSTS.has(host)) return true;
-  if (host === "localhost" || host.startsWith("localhost:")) return true;
-  if (host.endsWith(".vercel.app")) return true;
-  return false;
-}
 
 // Look up a verified custom domain and return the brand slug, or null.
 // Only 'verified' rows are matched — pending/failed/removed are invisible.
 async function resolveCustomDomain(host: string): Promise<string | null> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceKey) return null;
-
-  const client = createSupabaseClient(supabaseUrl, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
-  const { data } = await client
+  const { data } = await createAdminClient()
     .from("custom_domains")
     .select("companies(slug)")
     .eq("domain", host)
@@ -45,7 +24,7 @@ export async function proxy(request: NextRequest) {
 
   // Custom domain resolution: if this request is coming from a brand's own domain
   // (not tagitlux.com), look up the slug and rewrite to /{slug}.
-  if (!isTagitHost(host)) {
+  if (!isTagitHostname(host)) {
     const skipPaths =
       pathname.startsWith("/_next") ||
       pathname.startsWith("/api") ||

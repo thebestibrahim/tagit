@@ -10,6 +10,14 @@ const TAGIT_HOSTNAMES = new Set([
   'localhost',
 ])
 
+// Shared predicate: is this hostname one Tagit already controls (so it can
+// never be claimed as a brand's custom domain), or a Vercel system host.
+// Exported for proxy.ts, which needs the same check on the raw request Host
+// to decide whether to leave routing alone.
+export function isTagitHostname(host: string): boolean {
+  return TAGIT_HOSTNAMES.has(host) || host.endsWith('.tagitlux.com') || host.endsWith('.vercel.app')
+}
+
 // Simple label regex: 1-63 chars, alphanumeric + hyphens, no leading/trailing hyphen
 const LABEL_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/i
 
@@ -68,7 +76,7 @@ export function normaliseDomain(input: string): NormaliseResult {
   }
 
   // Reject Tagit-controlled hostnames
-  if (TAGIT_HOSTNAMES.has(apex) || apex.endsWith('.tagitlux.com') || apex.endsWith('.vercel.app')) {
+  if (isTagitHostname(apex)) {
     return { ok: false, error: 'You cannot connect a Tagit or Vercel system domain.' }
   }
 

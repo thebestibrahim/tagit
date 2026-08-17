@@ -7,6 +7,9 @@ const state = vi.hoisted(() => ({
   user: { id: "brand-1", app_metadata: { role: "brand" } } as Record<string, unknown> | null,
   flagEnabled: false,
   existingDomain: null as Record<string, unknown> | null,
+  // proxy.ts's custom_domains -> companies(slug) lookup, keyed separately from
+  // existingDomain since both queries hit the same mocked table.
+  proxyLookup: null as { companies: { slug: string | null } | null } | null,
   vercelResult: { vercelDomainId: "dom_1", verificationRecords: [{ type: "CNAME", name: "@", value: "cname.vercel-dns.com" }] } as Record<string, unknown> | null,
   vercelVerified: false,
   vercelError: null as Error | null,
@@ -37,10 +40,17 @@ vi.mock("@/lib/supabase/admin", () => ({
       const b: Record<string, unknown> = {};
 
       if (table === "custom_domains") {
-        b.select = vi.fn(() => b);
+        let isProxyLookup = false;
+        b.select = vi.fn((cols: string) => {
+          isProxyLookup = typeof cols === "string" && cols.includes("companies(");
+          return b;
+        });
         b.eq = vi.fn(() => b);
         b.maybeSingle = vi.fn(() =>
-          Promise.resolve({ data: state.existingDomain, error: null })
+          Promise.resolve({
+            data: isProxyLookup ? state.proxyLookup : state.existingDomain,
+            error: null,
+          })
         );
         b.upsert = vi.fn(() => ({
           select: vi.fn(() => ({
@@ -105,6 +115,15 @@ vi.mock("@/lib/domains/vercel", () => ({
 
 vi.mock("@/lib/logger", () => ({
   log: { error: vi.fn(), warn: vi.fn() },
+}));
+
+// proxy.ts's session check for /admin and /dashboard — unrelated to custom
+// domain routing, but proxy() always constructs this client, so it needs a
+// deterministic mock rather than hitting a real (fake) Supabase URL.
+vi.mock("@supabase/ssr", () => ({
+  createServerClient: vi.fn(() => ({
+    auth: { getUser: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })) },
+  })),
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -416,29 +435,73 @@ describe("GET /api/company/domain", () => {
   });
 });
 
-// ── 8. Middleware ─────────────────────────────────────────────────────────────
+// ── 8. isTagitHostname ────────────────────────────────────────────────────────
 
-// We test the pure logic of the middleware helper — the actual Supabase lookup
-// is tested via the mock state above.
-
-describe("normaliseDomain — middleware domain matching logic", () => {
-  it("middleware would fall through for tagitlux.com host (isTagitHost)", async () => {
-    // Since middleware.ts is a module with top-level imports we can't easily
-    // import dynamically in tests, we verify the lookup logic via the validate module.
-    // The isTagitHost guard is confirmed by the fact that tagitlux.com normalisation is rejected:
-    const r = normaliseDomain("tagitlux.com");
-    expect(r.ok).toBe(false);
+describe("isTagitHostname", () => {
+  it("matches the apex domain, www, and staging", async () => {
+    const { isTagitHostname } = await import("@/lib/domains/validate");
+    expect(isTagitHostname("tagitlux.com")).toBe(true);
+    expect(isTagitHostname("www.tagitlux.com")).toBe(true);
+    expect(isTagitHostname("staging.tagitlux.com")).toBe(true);
   });
 
-  it("a valid third-party domain would be looked up (valid CNAME target)", () => {
-    const r = normaliseDomain("bushuaart.com");
-    expect(r.ok).toBe(true);
+  it("matches any *.vercel.app preview host", async () => {
+    const { isTagitHostname } = await import("@/lib/domains/validate");
+    expect(isTagitHostname("tagit-abc123.vercel.app")).toBe(true);
   });
 
-  it("pending domain should NOT match (only verified domains route)", () => {
-    // The middleware filters status = 'verified' at the DB query level.
-    // This is confirmed by the route query logic and is enforced in the DB index.
-    // We document this invariant here.
-    expect(true).toBe(true);
+  it("does not match a brand's custom domain", async () => {
+    const { isTagitHostname } = await import("@/lib/domains/validate");
+    expect(isTagitHostname("bushuaart.com")).toBe(false);
+  });
+});
+
+// ── 9. proxy — custom domain routing ──────────────────────────────────────────
+
+describe("proxy (custom domain routing)", () => {
+  beforeEach(() => {
+    state.proxyLookup = null;
+  });
+
+  it("leaves tagitlux.com requests untouched (no rewrite)", async () => {
+    const { proxy } = await import("@/proxy");
+    const { NextRequest } = await import("next/server");
+    const res = await proxy(new NextRequest("https://tagitlux.com/some-slug"));
+    // NextResponse.next() carries this header marking it a pass-through, not a rewrite.
+    expect(res.headers.get("x-middleware-rewrite")).toBeNull();
+  });
+
+  it("leaves a *.vercel.app preview request untouched", async () => {
+    const { proxy } = await import("@/proxy");
+    const { NextRequest } = await import("next/server");
+    const res = await proxy(new NextRequest("https://tagit-preview.vercel.app/"));
+    expect(res.headers.get("x-middleware-rewrite")).toBeNull();
+  });
+
+  it("rewrites a verified custom domain's root to /[slug]", async () => {
+    state.proxyLookup = { companies: { slug: "bushuaart" } };
+    const { proxy } = await import("@/proxy");
+    const { NextRequest } = await import("next/server");
+    const res = await proxy(new NextRequest("https://bushuaart.com/"));
+    const rewritten = res.headers.get("x-middleware-rewrite");
+    expect(rewritten).not.toBeNull();
+    expect(new URL(rewritten!).pathname).toBe("/bushuaart");
+  });
+
+  it("rewrites a product sub-path to /[slug]/[id]", async () => {
+    state.proxyLookup = { companies: { slug: "bushuaart" } };
+    const { proxy } = await import("@/proxy");
+    const { NextRequest } = await import("next/server");
+    const res = await proxy(new NextRequest("https://bushuaart.com/prod-123"));
+    const rewritten = res.headers.get("x-middleware-rewrite");
+    expect(new URL(rewritten!).pathname).toBe("/bushuaart/prod-123");
+  });
+
+  it("falls through untouched when the domain has no verified row (unconnected/pending/failed)", async () => {
+    state.proxyLookup = null;
+    const { proxy } = await import("@/proxy");
+    const { NextRequest } = await import("next/server");
+    const res = await proxy(new NextRequest("https://not-yet-verified.com/"));
+    expect(res.headers.get("x-middleware-rewrite")).toBeNull();
   });
 });
