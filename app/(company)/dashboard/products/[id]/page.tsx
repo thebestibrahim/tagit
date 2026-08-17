@@ -417,7 +417,7 @@ export default async function ProductDetailPage({
                       {t.short_id}
                     </span>
                     {/* Each tag/card carries its own unique consumer link. */}
-                    <CopyLinkButton url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${t.token}`} label="Copy link" />
+                    <CopyLinkButton url={`${(process.env.NEXT_PUBLIC_APP_URL ?? "").trim()}/v/${t.token}`} label="Copy link" />
                     {/* Swap a broken/missing chip for a fresh one — gated by the
                         "Replace Tags and Cards" feature flag. */}
                     {flags.tag_migration && (

@@ -81,8 +81,9 @@ const STONE = "#E8E2D5";
 
 // Canonical public base for certificate verify URLs. Falls back to the
 // production domain (never localhost) so a scanned QR always resolves even if
-// NEXT_PUBLIC_APP_URL is unset in the deployment environment.
-const PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://tagitlux.com";
+// NEXT_PUBLIC_APP_URL is unset in the deployment environment. .trim() guards
+// against stray whitespace/newlines in the deployment env var.
+const PUBLIC_APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://tagitlux.com").trim();
 
 export function certificateUrl(certId: string): string {
   return `${PUBLIC_APP_URL}/certificate/${certId}`;

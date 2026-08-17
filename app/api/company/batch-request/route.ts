@@ -75,6 +75,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message, payment_required: true }, { status: 402 });
   }
 
+  // A brand can have overdue batch invoices with no subscription row at all
+  // (chip orders never require a plan), which the check above can't see — the
+  // billing cron still marks those invoices 'overdue' past day 21, so gate on
+  // that directly rather than relying on subscription status.
+  const { data: overdueInvoice } = await admin
+    .from("invoices")
+    .select("id")
+    .eq("company_id", user.id)
+    .eq("status", "overdue")
+    .limit(1)
+    .maybeSingle();
+  if (overdueInvoice) {
+    return NextResponse.json(
+      {
+        error: "Your account has an unpaid balance overdue. Settle your outstanding invoice to place new orders.",
+        payment_required: true,
+      },
+      { status: 402 }
+    );
+  }
+
   if (sub) {
     const planName = sub.plans?.name ?? "current";
     if (tagsQty > 0) {

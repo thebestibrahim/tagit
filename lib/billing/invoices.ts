@@ -293,7 +293,11 @@ async function generatePaystackLinkForInvoice(
 
   try {
     const reference = buildReference(invoice.id);
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+    // .trim() guards against stray whitespace/newlines in the deployment env
+    // var — bit us in production: a trailing \n in NEXT_PUBLIC_APP_URL was
+    // silently embedded in the Paystack callback_url (raw string concat, not
+    // URL-parsed, so nothing normalized it away before it reached Paystack).
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").trim();
     const result = await initializeTransaction({
       email: company.email,
       amount: invoice.amount,
@@ -323,7 +327,7 @@ async function generatePaystackLinkForInvoice(
 // the route mints it on demand. Returns null only when we have no app URL to
 // build an absolute link from (e.g. local scripts without NEXT_PUBLIC_APP_URL).
 export function invoicePayUrl(invoiceId: string): string | null {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").trim();
   return appUrl ? `${appUrl}/api/billing/pay/${invoiceId}` : null;
 }
 

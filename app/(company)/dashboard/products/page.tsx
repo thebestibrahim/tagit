@@ -161,7 +161,7 @@ export default async function ProductsPage({
                 {filtered.map((product, i) => {
                   const badge = tagStatusColor(product.tags[0]?.status ?? "");
                   const scanUrl = product.tags[0]?.token
-                    ? `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/v/${product.tags[0].token}`
+                    ? `${(process.env.NEXT_PUBLIC_APP_URL ?? "").trim()}/v/${product.tags[0].token}`
                     : null;
 
                   return (

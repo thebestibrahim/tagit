@@ -27,7 +27,7 @@ export type DisplayChip = {
  * resolves in the environment it's viewed in.
  */
 export function chipScanLink(token: string, appUrl: string = process.env.NEXT_PUBLIC_APP_URL ?? ""): string {
-  const base = appUrl.replace(/\/+$/, "");
+  const base = appUrl.trim().replace(/\/+$/, "");
   return `${base}/v/${token}`;
 }
 

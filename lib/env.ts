@@ -22,7 +22,7 @@ export const env = {
   hmacSecret: process.env.TAGIT_HMAC_SECRET!,
   resendApiKey: process.env.RESEND_API_KEY!,
   resendFromEmail: process.env.RESEND_FROM_EMAIL ?? "info@tagitlux.com",
-  appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  appUrl: (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").trim(),
   groqApiKey: process.env.GROQ_API_KEY,
   elevenLabsApiKey: process.env.ELEVENLABS_API_KEY,
   upstashRedisUrl: process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL,

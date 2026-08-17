@@ -3,7 +3,9 @@ import { formatNaira } from "@/lib/billing/pricing";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "Tagit <info@tagitlux.com>";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+// .trim() guards against stray whitespace/newlines in the deployment env var
+// (bit us once in production — see lib/exhibitions.ts for the same guard).
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").trim();
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 // Mirrors the scan/certificate pages so email feels like the product, not a
