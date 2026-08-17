@@ -19,18 +19,25 @@ export async function GET(request: Request) {
 
   try {
     const admin = createAdminClient();
-    const { data: invoice } = await admin
-      .from("invoices")
-      .select("*")
-      .eq("paystack_reference", reference)
-      .maybeSingle();
+
+    // Verify first so we have `metadata.invoice_id` — the stable key. A brand
+    // can click "Pay now" more than once (each click mints a fresh Paystack
+    // reference via ensurePaystackLink), so `paystack_reference` on the invoice
+    // row is whatever was minted LAST, not necessarily the one that just paid.
+    // Matching by reference alone would miss the invoice if an earlier, still-
+    // valid checkout tab is the one that actually completed.
+    const verified = await verifyTransaction(reference);
+    const invoiceId = verified?.metadata?.invoice_id as string | undefined;
+
+    const { data: invoice } = invoiceId
+      ? await admin.from("invoices").select("*").eq("id", invoiceId).maybeSingle()
+      : await admin.from("invoices").select("*").eq("paystack_reference", reference).maybeSingle();
 
     if (!invoice) {
       log.warn("billing/callback", `No invoice for reference ${reference}`);
       return NextResponse.redirect(billingHome);
     }
 
-    const verified = await verifyTransaction(reference);
     if (verified?.status === "success") {
       await settleInvoice(admin, invoice, {
         reference,

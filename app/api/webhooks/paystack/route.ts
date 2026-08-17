@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
-  let event: { event?: string; data?: { reference?: string; amount?: number } };
+  let event: { event?: string; data?: { reference?: string; amount?: number; metadata?: Record<string, unknown> | null } };
   try {
     event = JSON.parse(rawBody);
   } catch {
@@ -32,11 +32,14 @@ export async function POST(request: Request) {
     const admin = createAdminClient();
     const reference = event.data.reference;
 
-    const { data: invoice } = await admin
-      .from("invoices")
-      .select("*")
-      .eq("paystack_reference", reference)
-      .maybeSingle();
+    // Prefer metadata.invoice_id — the stable key. A brand can click "Pay now"
+    // more than once (each click mints a fresh reference via ensurePaystackLink),
+    // so the invoice's single `paystack_reference` column reflects whatever was
+    // minted last, not necessarily the reference this webhook is reporting on.
+    const invoiceId = event.data.metadata?.invoice_id as string | undefined;
+    const { data: invoice } = invoiceId
+      ? await admin.from("invoices").select("*").eq("id", invoiceId).maybeSingle()
+      : await admin.from("invoices").select("*").eq("paystack_reference", reference).maybeSingle();
 
     if (!invoice) {
       log.warn("webhooks/paystack", `No invoice for reference ${reference}`);

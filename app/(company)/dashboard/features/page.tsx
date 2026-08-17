@@ -147,8 +147,11 @@ export default async function BillingPage() {
                   <span className="font-medium tabular-nums" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-sm)" }}>{formatNaira(inv.amount)}</span>
                   {inv.status === "paid" ? (
                     <span className="shrink-0 text-micro font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: "#DCFCE7", color: "#166534" }}>● Paid</span>
-                  ) : unpaid && inv.paystack_payment_link ? (
-                    <a href={inv.paystack_payment_link} target="_blank" rel="noopener noreferrer" className="shrink-0 inline-flex items-center gap-1 text-micro font-semibold px-3 py-1.5 rounded-full" style={{ backgroundColor: "var(--color-charcoal)", color: "var(--color-pearl)" }}>
+                  ) : unpaid ? (
+                    // Routed through the self-healing pay endpoint, not the raw
+                    // stored link — Paystack checkout sessions expire, and an
+                    // invoice can sit unpaid for weeks before someone clicks this.
+                    <a href={`/api/billing/pay/${inv.id}`} target="_blank" rel="noopener noreferrer" className="shrink-0 inline-flex items-center gap-1 text-micro font-semibold px-3 py-1.5 rounded-full" style={{ backgroundColor: "var(--color-charcoal)", color: "var(--color-pearl)" }}>
                       Pay now <ArrowRight size={11} />
                     </a>
                   ) : (
@@ -309,8 +312,11 @@ function StatusBanner({ sub, nextAmount, discountedNext, subDiscount, batchDisco
           <div className="flex-1">
             <p className="font-medium" style={{ color: "#7F1D1D" }}>{title}</p>
             <p className="mt-1" style={{ color: "#991B1B", fontSize: "var(--text-body-sm)" }}>{detail}</p>
-            {openInvoice?.paystack_payment_link && (
-              <a href={openInvoice.paystack_payment_link} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-micro font-semibold px-4 py-2 rounded-full" style={{ backgroundColor: "#B91C1C", color: "#fff" }}>
+            {openInvoice && (
+              // Routed through the self-healing pay endpoint, not the raw stored
+              // link — Paystack checkout sessions expire long before a lapsed
+              // subscription's invoice gets paid.
+              <a href={`/api/billing/pay/${openInvoice.id}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-micro font-semibold px-4 py-2 rounded-full" style={{ backgroundColor: "#B91C1C", color: "#fff" }}>
                 Pay {formatNaira(amount)} now <ArrowRight size={12} />
               </a>
             )}

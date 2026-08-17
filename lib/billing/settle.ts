@@ -40,7 +40,11 @@ export async function settleInvoice(
     .update({
       status: "paid",
       paid_at: now.toISOString(),
-      paystack_reference: invoice.paystack_reference ?? opts.reference,
+      // Record whichever reference actually paid — the stored one can be stale
+      // (ensurePaystackLink mints a fresh reference on every "Pay now" click, so
+      // an invoice can accumulate several over its lifetime; this must reflect
+      // the one that settled, not just whatever was last generated).
+      paystack_reference: opts.reference,
     })
     .eq("id", invoice.id)
     .neq("status", "paid")

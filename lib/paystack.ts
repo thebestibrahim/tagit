@@ -69,19 +69,19 @@ export async function initializeTransaction(
 // dashboard webhook being configured.
 export async function verifyTransaction(
   reference: string
-): Promise<{ status: string; amount: number } | null> {
+): Promise<{ status: string; amount: number; metadata: Record<string, unknown> | null } | null> {
   const res = await fetch(`${PAYSTACK_BASE}/transaction/verify/${encodeURIComponent(reference)}`, {
     headers: { Authorization: `Bearer ${secretKey()}` },
   });
   const json = (await res.json()) as {
     status: boolean;
-    data?: { status: string; amount: number };
+    data?: { status: string; amount: number; metadata?: Record<string, unknown> | null };
   };
   if (!res.ok || !json.status || !json.data) {
     log.error("paystack", "verifyTransaction failed", json);
     return null;
   }
-  return { status: json.data.status, amount: json.data.amount };
+  return { status: json.data.status, amount: json.data.amount, metadata: json.data.metadata ?? null };
 }
 
 // Verify a Paystack webhook signature. Paystack signs the raw request body with

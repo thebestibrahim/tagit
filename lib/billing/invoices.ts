@@ -339,11 +339,19 @@ export interface EnsurePaystackLinkResult {
   failed: boolean;
 }
 
-// Ensure an unpaid invoice has a Paystack checkout link, minting one on demand
-// if the upfront generation at creation time failed or never ran. Returns the
-// checkout URL, or null if the invoice is settled/free or generation fails.
-// This is the safety net behind the /api/billing/pay route: a single transient
-// Paystack outage at invoice creation no longer leaves an invoice unpayable.
+// Ensure an unpaid invoice has a LIVE Paystack checkout link, minting a fresh
+// one on every call rather than trusting whatever is cached on the row.
+// Paystack authorization_urls expire (they're single-use, short-lived hosted
+// sessions) — an invoice can sit unpaid for weeks (overdue reminders run for
+// 21 days before suspension), so the link generated at invoice-creation time
+// is long dead by the time a brand actually clicks "Pay now". Reusing it
+// produced Paystack's "We could not start this transaction" error. Regenerating
+// is cheap and safe: settlement matches the invoice by `metadata.invoice_id`
+// (see the webhook + callback routes), not by the single mutable
+// `paystack_reference` column, so an old still-open checkout tab from a
+// previous click keeps working even after this mints a newer one.
+// Returns the checkout URL, or null if the invoice is settled/free or
+// generation fails. This is the safety net behind the /api/billing/pay route.
 export async function ensurePaystackLink(
   supabase: DB,
   invoiceId: string
@@ -356,10 +364,9 @@ export async function ensurePaystackLink(
   if (!invoice) return { url: null, failed: false };
   if (invoice.status === "paid" || invoice.status === "cancelled") return { url: null, failed: false };
   if (invoice.amount <= 0) return { url: null, failed: false };
-  if (invoice.paystack_payment_link) return { url: invoice.paystack_payment_link, failed: false };
 
   await generatePaystackLinkForInvoice(supabase, invoice as Invoice, invoice.company_id);
-  const url = invoice.paystack_payment_link ?? null;
+  const url = (invoice as Invoice).paystack_payment_link ?? null;
   return { url, failed: url === null };
 }
 

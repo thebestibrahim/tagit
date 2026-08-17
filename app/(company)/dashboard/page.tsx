@@ -355,8 +355,11 @@ function PlanStatus({
             {suspended ? "Pay your outstanding balance to restore dashboard access. Chip scanning is never affected." : "Pay now to avoid account suspension."}
           </p>
         </div>
-        {openInvoice?.paystack_payment_link ? (
-          <a href={openInvoice.paystack_payment_link} target="_blank" rel="noopener noreferrer" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-micro font-semibold" style={{ backgroundColor: "#B91C1C", color: "#fff" }}>
+        {openInvoice ? (
+          // Routed through the self-healing pay endpoint, not the raw stored
+          // link — Paystack checkout sessions expire long before a lapsed
+          // subscription's invoice gets paid.
+          <a href={`/api/billing/pay/${openInvoice.id}`} target="_blank" rel="noopener noreferrer" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-micro font-semibold" style={{ backgroundColor: "#B91C1C", color: "#fff" }}>
             Pay {formatNaira(amount)} <ArrowRight size={12} />
           </a>
         ) : (
