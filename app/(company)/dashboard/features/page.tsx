@@ -249,7 +249,15 @@ function cap(s: string): string {
 
 function invoiceLabel(inv: Invoice): string {
   if (inv.type === "batch") return "Chip order";
-  if (inv.period_start) return `${new Date(inv.period_start).toLocaleDateString("en-GB", { month: "long" })} subscription`;
+  // Day + month, not just month — a subscription can have more than one invoice
+  // in the same calendar month (mid-cycle plan changes, a restarted trial), and
+  // month-only labels rendered as visually identical rows ("June subscription"
+  // repeated), which reads as a duplicate-invoice bug even though each is a
+  // distinct invoice (the number + full date below already prove that, but the
+  // bold label should too).
+  if (inv.period_start) {
+    return `${new Date(inv.period_start).toLocaleDateString("en-GB", { day: "numeric", month: "long" })} subscription`;
+  }
   return "Subscription";
 }
 
