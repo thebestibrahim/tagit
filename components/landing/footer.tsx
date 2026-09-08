@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/ui/Wordmark";
+import { c, type } from "./styles";
 
 const COLS = [
   {
@@ -8,62 +9,55 @@ const COLS = [
       { label: "How it works", href: "#how-it-works" },
       { label: "Industries", href: "#industries" },
       { label: "Pricing", href: "#pricing" },
-      { label: "Request a Demo", href: "mailto:business@tagitlux.com" },
     ],
   },
   {
     label: "Company",
     links: [
-      { label: "About", href: "#" },
-      { label: "Contact", href: "mailto:business@tagitlux.com" },
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Terms of Service", href: "/terms" },
+      { label: "Contact us", href: "mailto:business@tagitlux.com" },
+      { label: "Privacy policy", href: "/privacy" },
+      { label: "Terms of service", href: "/terms" },
     ],
   },
   {
-    label: "Brand Login",
+    label: "For brands",
     links: [
-      { label: "Brand dashboard", href: "/auth/login" },
       { label: "Sign in", href: "/auth/login" },
+      { label: "Apply for access", href: "/auth/register" },
     ],
   },
 ];
 
 export default function LandingFooter() {
   return (
-    <footer style={{ borderTop: "1px solid #E8E2D5", backgroundColor: "#FAFAF8" }}>
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "56px 32px 32px" }}>
-        {/* Top */}
+    <footer style={{ borderTop: `1px solid ${c.line}`, backgroundColor: c.paper }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "64px 32px 32px" }}>
         <div className="footer-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 48 }}>
-          {/* Brand */}
           <div className="footer-brand">
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 14 }}>
-              <Wordmark height={22} withIcon />
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+              <Wordmark height={24} withIcon />
             </div>
-            <p style={{ fontSize: 13, color: "#6E6E73", lineHeight: 1.65, maxWidth: 240, margin: "0 0 16px" }}>
-              Every luxury piece deserves a permanent record. Tagit gives your work a life beyond the point of sale.
+            <p style={{ ...type.small, color: c.body, maxWidth: 260, marginBottom: 16 }}>
+              Every luxury piece deserves a permanent record. Tagit gives your work a life
+              beyond the point of sale.
             </p>
             <a
               href="mailto:business@tagitlux.com"
-              style={{ fontSize: 13, color: "#B8945D", textDecoration: "none", fontWeight: 450 }}
+              style={{ fontSize: 15, color: c.goldText, textDecoration: "none", fontWeight: 500 }}
             >
               business@tagitlux.com
             </a>
           </div>
 
-          {/* Columns */}
           {COLS.map((col) => (
             <div key={col.label}>
-              <p style={{ margin: "0 0 14px", fontFamily: "var(--font-mono)", fontSize: 10, color: "#9E9EA3", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: c.inkSoft, margin: "0 0 16px", letterSpacing: "-0.008em" }}>
                 {col.label}
-              </p>
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 9 }}>
+              </h3>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 11 }}>
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      style={{ fontSize: 13, color: "#6E6E73", textDecoration: "none", lineHeight: 1 }}
-                    >
+                    <Link href={link.href} style={{ fontSize: 15, color: c.body, textDecoration: "none" }}>
                       {link.label}
                     </Link>
                   </li>
@@ -73,23 +67,9 @@ export default function LandingFooter() {
           ))}
         </div>
 
-        {/* Bottom bar */}
-        <div
-          style={{
-            paddingTop: 24,
-            borderTop: "1px solid #E8E2D5",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 12,
-          }}
-        >
-          <p style={{ margin: 0, fontSize: 12, color: "#9E9EA3" }}>
+        <div style={{ paddingTop: 24, borderTop: `1px solid ${c.line}` }}>
+          <p style={{ margin: 0, fontSize: 14, color: c.quiet }}>
             © {new Date().getFullYear()} Tagit. All rights reserved.
-          </p>
-          <p style={{ margin: 0, fontFamily: "var(--font-mono)", fontSize: 10, color: "#C7C7CC", letterSpacing: "0.06em" }}>
-            BUILT FOR THOSE WHO BUILD TO LAST
           </p>
         </div>
       </div>

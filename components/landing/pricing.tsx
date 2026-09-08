@@ -1,15 +1,16 @@
 "use client";
 import { motion } from "motion/react";
+import { c, type, rise } from "./styles";
 
 const INCLUDED = [
-  "Physical tag, created and ready to embed",
+  "Physical tags, programmed and ready to embed",
   "Every piece registered with its full story",
-  "Verified genuine — on every scan, anywhere",
-  "Full ownership history for every piece",
-  "Your branded experience when customers scan",
+  "Authenticity confirmed on every scan, anywhere",
+  "Complete ownership history for each piece",
+  "Your own branded experience when customers scan",
   "Your brand's voice, heard on every scan",
-  "Insights into where your work travels",
-  "EU compliance, built in from day one",
+  "Insight into where your work travels",
+  "EU compliance built in from day one",
 ];
 
 export default function Pricing() {
@@ -17,159 +18,102 @@ export default function Pricing() {
     <section
       id="pricing"
       className="lp-section-padding"
-      style={{ padding: "112px 32px", backgroundColor: "#FAFAF8", borderTop: "1px solid #E8E2D5" }}
+      style={{ padding: "120px 32px", backgroundColor: c.paper, borderTop: `1px solid ${c.line}` }}
     >
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <motion.div
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          style={{ textAlign: "center", marginBottom: 56 }}
-        >
-          <p style={{ margin: "0 0 12px", fontFamily: "var(--font-mono)", fontSize: 10, color: "#B8945D", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-            Pricing
-          </p>
-          <h2
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(32px, 3.8vw, 50px)",
-              fontWeight: 400,
-              color: "#0A0A0B",
-              letterSpacing: "-0.03em",
-              lineHeight: 1.08,
-              margin: "0 0 14px",
-            }}
-          >
-            Priced for your{" "}
-            <em style={{ fontStyle: "italic", color: "#8B6F3F" }}>catalogue.</em>
+      <div style={{ maxWidth: 940, margin: "0 auto" }}>
+        <motion.div {...rise()} style={{ marginBottom: 48, maxWidth: 560 }}>
+          <h2 style={{ ...type.h2, color: c.ink, marginBottom: 18 }}>
+            Pricing that follows your catalogue.
           </h2>
-          <p style={{ margin: 0, fontSize: 15, color: "#6E6E73", letterSpacing: "-0.005em", maxWidth: 480, marginInline: "auto", lineHeight: 1.65 }}>
-            Every brand is different. Pricing is based on catalogue size and tag volume.
-            Talk to us and we&apos;ll build the right structure together.
+          <p style={{ ...type.lead, color: c.body }}>
+            There are no fixed tiers and no per-seat fees. You pay for the tags you
+            activate, so the cost tracks the size of your catalogue and nothing else.
           </p>
         </motion.div>
 
-        {/* Single card */}
         <motion.div
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          {...rise(0.08)}
           className="pricing-card"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            gap: 0,
             backgroundColor: "#fff",
-            border: "1px solid #E8E2D5",
+            border: `1px solid ${c.line}`,
             borderRadius: 20,
             overflow: "hidden",
             boxShadow: "0 4px 24px rgba(10,10,11,0.06)",
           }}
         >
-          {/* Left — what's included */}
-          <div className="pricing-left" style={{ padding: "44px 40px", borderRight: "1px solid #E8E2D5" }}>
-            <p style={{ margin: "0 0 24px", fontFamily: "var(--font-mono)", fontSize: 10, color: "#9E9EA3", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              Everything included
-            </p>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 11 }}>
+          <div className="pricing-left" style={{ padding: "44px 40px", borderRight: `1px solid ${c.line}` }}>
+            <h3 style={{ fontSize: 17, fontWeight: 600, color: c.inkSoft, margin: "0 0 24px", letterSpacing: "-0.01em" }}>
+              Everything is included
+            </h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 14 }}>
               {INCLUDED.map((item) => (
-                <li key={item} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="7" cy="7" r="6" stroke="#2D6A4F" strokeWidth="1.2" />
-                    <path d="M 4 7 L 6.2 9.2 L 10 5" stroke="#2D6A4F" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <svg width="16" height="16" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 3 }} aria-hidden="true">
+                    <circle cx="7" cy="7" r="6" stroke={c.verified} strokeWidth="1.2" />
+                    <path d="M 4 7 L 6.2 9.2 L 10 5" stroke={c.verified} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <span style={{ fontSize: 13, color: "#4A4A4F", letterSpacing: "-0.003em" }}>{item}</span>
+                  <span style={{ ...type.small, color: c.body }}>{item}</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Right — CTA */}
           <div
             style={{
               padding: "44px 40px",
-              backgroundColor: "#0A0A0B",
+              backgroundColor: c.night,
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              position: "relative",
-              overflow: "hidden",
             }}
           >
-            {/* Glow */}
-            <div
+            <h3
               style={{
-                position: "absolute",
-                top: 0,
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: 400,
-                height: 300,
-                background: "radial-gradient(ellipse at 50% 0%, rgba(184,148,93,0.14) 0%, transparent 70%)",
-                pointerEvents: "none",
+                fontFamily: "var(--font-display)",
+                fontSize: 36,
+                fontWeight: 400,
+                color: c.onDark,
+                letterSpacing: "-0.028em",
+                lineHeight: 1.15,
+                margin: "0 0 16px",
               }}
-            />
-            <div style={{ position: "relative" }}>
-              <p style={{ margin: "0 0 8px", fontFamily: "var(--font-mono)", fontSize: 10, color: "#B8945D", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                Custom pricing
-              </p>
-              <p
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: 36,
-                  fontStyle: "italic",
-                  color: "#FAFAF8",
-                  letterSpacing: "-0.025em",
-                  lineHeight: 1.15,
-                  margin: "0 0 16px",
-                }}
-              >
-                Built around<br />your brand.
-              </p>
-              <p style={{ fontSize: 13, color: "#71717A", lineHeight: 1.65, margin: "0 0 32px", letterSpacing: "-0.003em" }}>
-                No fixed tiers. No per-seat fees. We structure pricing around the number of tags
-                you activate — so it scales exactly with your product catalogue.
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <a
-                  href="mailto:business@tagitlux.com"
-                  style={{
-                    display: "block",
-                    textAlign: "center",
-                    padding: "12px 20px",
-                    borderRadius: 8,
-                    fontWeight: 550,
-                    fontSize: 13,
-                    textDecoration: "none",
-                    letterSpacing: "-0.005em",
-                    backgroundColor: "#B8945D",
-                    color: "#fff",
-                  }}
-                >
-                  Request a Demo
-                </a>
-                <a
-                  href="mailto:business@tagitlux.com"
-                  style={{
-                    display: "block",
-                    textAlign: "center",
-                    padding: "12px 20px",
-                    borderRadius: 8,
-                    fontWeight: 450,
-                    fontSize: 13,
-                    textDecoration: "none",
-                    letterSpacing: "-0.005em",
-                    backgroundColor: "transparent",
-                    color: "#9E9EA3",
-                    border: "1px solid rgba(212,182,138,0.15)",
-                  }}
-                >
-                  Send us a message
-                </a>
-              </div>
-            </div>
+            >
+              Built around
+              <br />
+              your brand.
+            </h3>
+            <p style={{ ...type.body, color: c.onDarkBody, margin: "0 0 32px" }}>
+              Tell us your catalogue size and how many pieces you make in a year, and we
+              will put a structure together with you.
+            </p>
+
+            <a
+              href="mailto:business@tagitlux.com?subject=Tagit pricing"
+              style={{
+                display: "block",
+                textAlign: "center",
+                padding: "14px 20px",
+                borderRadius: 8,
+                fontWeight: 550,
+                fontSize: 15,
+                textDecoration: "none",
+                letterSpacing: "-0.005em",
+                backgroundColor: c.gold,
+                color: "#fff",
+                marginBottom: 16,
+              }}
+            >
+              Talk to us about pricing
+            </a>
+            <p style={{ ...type.small, color: c.onDarkQuiet, textAlign: "center" }}>
+              Or email{" "}
+              <a href="mailto:business@tagitlux.com" style={{ color: c.champagne, textDecoration: "none" }}>
+                business@tagitlux.com
+              </a>
+            </p>
           </div>
         </motion.div>
       </div>

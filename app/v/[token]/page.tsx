@@ -270,9 +270,9 @@ export default async function ScanPage({
             <span
               style={{
                 fontFamily: "'JetBrains Mono',monospace",
-                fontSize: 8,
+                fontSize: 11,
                 color: accent,
-                letterSpacing: "0.14em",
+                letterSpacing: "0.08em",
                 textTransform: "uppercase",
               }}
             >
@@ -301,22 +301,22 @@ export default async function ScanPage({
             <span
               style={{
                 fontFamily: "'JetBrains Mono',monospace",
-                fontSize: 9,
+                fontSize: 12,
                 color: hmacValid ? "#4ADE80" : "#B8945D",
-                letterSpacing: "0.1em",
+                letterSpacing: "0.05em",
                 textTransform: "uppercase",
               }}
             >
-              {hmacValid ? "Verified Authentic · HMAC Signed" : "Tagit Registered"}
+              {hmacValid ? "Verified authentic" : "Tagit registered"}
             </span>
           </div>
           <span
             style={{
               fontFamily: "'JetBrains Mono',monospace",
-              fontSize: 9,
+              fontSize: 11,
               color: hmacValid ? "#4ADE80" : "#B8945D",
-              opacity: 0.6,
-              letterSpacing: "0.08em",
+              opacity: 0.7,
+              letterSpacing: "0.03em",
             }}
           >
             #{tag.short_id}
@@ -461,17 +461,8 @@ export default async function ScanPage({
               Tagit
             </span>
           </div>
-          <p
-            style={{
-              margin: 0,
-              fontFamily: "'JetBrains Mono',monospace",
-              fontSize: 9,
-              color: "#C7C7CC",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-            }}
-          >
-            Identity Infrastructure for Physical Luxury
+          <p style={{ margin: 0, fontSize: 12, color: "#9E9EA3", letterSpacing: "0.01em" }}>
+            Verified by Tagit
           </p>
         </div>
       </div>
@@ -502,19 +493,19 @@ function ProvenanceCollapsible({ ownershipRecords, accent }: { ownershipRecords:
               )}
             </div>
             <div style={{ paddingBottom: i < ownershipRecords.length - 1 ? 16 : 0 }}>
-              <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: r.is_current ? 600 : 500, color: r.is_current ? "#1F1F22" : "#6E6E73", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: r.is_current ? 600 : 500, color: r.is_current ? "#1F1F22" : "#6E6E73", display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
                 {r.owner_name}
                 {r.is_current ? (
-                  <span style={{ fontSize: 9, padding: "2px 7px", backgroundColor: "#DCEEE3", color: "#2D6A4F", borderRadius: 99, fontFamily: "'JetBrains Mono',monospace", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                  <span style={{ fontSize: 11, padding: "2px 8px", backgroundColor: "#DCEEE3", color: "#2D6A4F", borderRadius: 99, fontWeight: 600, letterSpacing: "0.01em" }}>
                     Current owner
                   </span>
                 ) : (
-                  <span style={{ fontSize: 9, padding: "2px 7px", backgroundColor: "#F0EDE8", color: "#9E9EA3", borderRadius: 99, fontFamily: "'JetBrains Mono',monospace", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                  <span style={{ fontSize: 11, padding: "2px 8px", backgroundColor: "#F0EDE8", color: "#9E9EA3", borderRadius: 99, fontWeight: 600, letterSpacing: "0.01em" }}>
                     Previous
                   </span>
                 )}
               </p>
-              <p style={{ margin: 0, fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", letterSpacing: "0.04em" }}>
+              <p style={{ margin: 0, fontSize: 12.5, color: "#9E9EA3" }}>
                 {r.acquisition_type === "origin" ? "Brand origin" : "Transfer"} ·{" "}
                 <LocalTime iso={r.acquired_at} pattern="d MMM yyyy" />
                 {r.sale_price ? ` · ${r.currency} ${r.sale_price.toLocaleString()}` : ""}
@@ -581,7 +572,7 @@ function ProductSection({
             {product.name}
           </h1>
           {product.retail_price && (
-            <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "#9E9EA3", letterSpacing: "0.06em", margin: "0 0 20px" }}>
+            <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, color: "#1F1F22", fontWeight: 500, letterSpacing: "0.02em", margin: "0 0 20px" }}>
               {product.currency} {product.retail_price.toLocaleString()}
             </p>
           )}
@@ -589,8 +580,8 @@ function ProductSection({
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
               {highlightFields.slice(0, 3).map((f) => (
                 <div key={f.key} style={{ padding: "6px 12px", backgroundColor: "#F5F2EC", borderRadius: 99, border: "1px solid #EDE8DF" }}>
-                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", textTransform: "uppercase", letterSpacing: "0.06em" }}>{f.label} </span>
-                  <span style={{ fontSize: 12, color: "#1F1F22", fontWeight: 500 }}>{String(product.industry_fields[f.key])}</span>
+                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "#9E9EA3", textTransform: "uppercase", letterSpacing: "0.04em" }}>{f.label} </span>
+                  <span style={{ fontSize: 13, color: "#1F1F22", fontWeight: 500 }}>{String(product.industry_fields[f.key])}</span>
                 </div>
               ))}
             </div>
@@ -611,7 +602,7 @@ function ProductSection({
     return (
       <>
         <div style={{ padding: "28px 24px 0" }}>
-          <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: accent, letterSpacing: "0.16em", textTransform: "uppercase", margin: "0 0 12px" }}>
+          <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: accent, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 12px" }}>
             {industryLabel}
           </p>
           <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 38, fontWeight: 400, fontStyle: "italic", color: "#0A0A0B", letterSpacing: "-0.03em", lineHeight: 1.05, margin: "0 0 20px" }}>
@@ -631,14 +622,14 @@ function ProductSection({
             <div style={{ borderTop: "1px solid #F0EDE8" }}>
               {highlightFields.map((f) => (
                 <div key={f.key} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #F0EDE8", gap: 16 }}>
-                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", letterSpacing: "0.08em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>{f.label}</span>
-                  <span style={{ fontSize: 13, color: "#1F1F22", fontWeight: 500, textAlign: "right", lineHeight: 1.4 }}>{String(product.industry_fields[f.key])}</span>
+                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "#9E9EA3", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>{f.label}</span>
+                  <span style={{ fontSize: 14, color: "#1F1F22", fontWeight: 500, textAlign: "right", lineHeight: 1.4 }}>{String(product.industry_fields[f.key])}</span>
                 </div>
               ))}
             </div>
           )}
           {product.retail_price && (
-            <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "#9E9EA3", letterSpacing: "0.06em", margin: "16px 0 0" }}>
+            <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, color: "#1F1F22", fontWeight: 500, letterSpacing: "0.02em", margin: "16px 0 0" }}>
               {product.currency} {product.retail_price.toLocaleString()}
             </p>
           )}
@@ -650,8 +641,8 @@ function ProductSection({
                 <div style={{ padding: "4px 24px 20px" }}>
                   {detailFields.map((f, i) => (
                     <div key={f.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "9px 0", borderBottom: i < detailFields.length - 1 ? "1px solid #F5F2EC" : "none", gap: 12 }}>
-                      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>{f.label}</span>
-                      <span style={{ fontSize: 12, color: "#1F1F22", fontWeight: 500, textAlign: "right", lineHeight: 1.5 }}>{String(product.industry_fields[f.key])}</span>
+                      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "#9E9EA3", letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>{f.label}</span>
+                      <span style={{ fontSize: 13, color: "#1F1F22", fontWeight: 500, textAlign: "right", lineHeight: 1.5 }}>{String(product.industry_fields[f.key])}</span>
                     </div>
                   ))}
                 </div>
@@ -681,14 +672,14 @@ function ProductSection({
         </div>
       )}
       <div style={{ padding: "24px 24px 0" }}>
-        <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: accent, letterSpacing: "0.16em", textTransform: "uppercase", margin: "0 0 10px" }}>
+        <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: accent, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 10px" }}>
           {industryLabel}
         </p>
         <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 30, fontWeight: 400, fontStyle: "italic", color: "#0A0A0B", letterSpacing: "-0.025em", lineHeight: 1.1, margin: "0 0 10px" }}>
           {product.name}
         </h1>
         {product.retail_price && (
-          <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "#9E9EA3", letterSpacing: "0.06em", margin: "0 0 20px" }}>
+          <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, color: "#1F1F22", fontWeight: 500, letterSpacing: "0.02em", margin: "0 0 20px" }}>
             {product.currency} {product.retail_price.toLocaleString()}
           </p>
         )}
@@ -696,8 +687,8 @@ function ProductSection({
           <div style={{ borderTop: "1px solid #F0EDE8" }}>
             {highlightFields.map((f) => (
               <div key={f.key} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #F0EDE8", gap: 16 }}>
-                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", letterSpacing: "0.08em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>{f.label}</span>
-                <span style={{ fontSize: 13, color: "#1F1F22", fontWeight: 500, textAlign: "right", lineHeight: 1.4 }}>{String(product.industry_fields[f.key])}</span>
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "#9E9EA3", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>{f.label}</span>
+                <span style={{ fontSize: 14, color: "#1F1F22", fontWeight: 500, textAlign: "right", lineHeight: 1.4 }}>{String(product.industry_fields[f.key])}</span>
               </div>
             ))}
           </div>
@@ -710,8 +701,8 @@ function ProductSection({
               <div style={{ padding: "4px 24px 20px" }}>
                 {detailFields.map((f, i) => (
                   <div key={f.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "9px 0", borderBottom: i < detailFields.length - 1 ? "1px solid #F5F2EC" : "none", gap: 12 }}>
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: "#9E9EA3", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>{f.label}</span>
-                    <span style={{ fontSize: 12, color: "#1F1F22", fontWeight: 500, textAlign: "right", lineHeight: 1.5 }}>{String(product.industry_fields[f.key])}</span>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "#9E9EA3", letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>{f.label}</span>
+                    <span style={{ fontSize: 13, color: "#1F1F22", fontWeight: 500, textAlign: "right", lineHeight: 1.5 }}>{String(product.industry_fields[f.key])}</span>
                   </div>
                 ))}
               </div>
@@ -781,9 +772,9 @@ function ActionSection({
               <span
                 style={{
                   fontFamily: "'JetBrains Mono',monospace",
-                  fontSize: 9,
+                  fontSize: 11,
                   color: accent,
-                  letterSpacing: "0.14em",
+                  letterSpacing: "0.1em",
                   textTransform: "uppercase",
                 }}
               >
@@ -804,14 +795,14 @@ function ActionSection({
             </p>
             <p
               style={{
-                fontSize: 13,
+                fontSize: 14,
                 color: "#6E6E73",
                 margin: 0,
                 lineHeight: 1.6,
                 letterSpacing: "-0.003em",
               }}
             >
-              Register ownership and join the permanent provenance record.
+              Confirm you own this piece and add yourself to its permanent record.
             </p>
           </div>
           <ClaimForm
@@ -844,16 +835,16 @@ function ActionSection({
             <p
               style={{
                 margin: "0 0 3px",
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: 600,
                 color: "#B85C00",
               }}
             >
               Ownership claim pending
             </p>
-            <p style={{ margin: 0, fontSize: 12, color: "#8B6F3F", lineHeight: 1.55 }}>
-              A claim has been submitted and confirms automatically within 24 hours
-              unless the brand objects.
+            <p style={{ margin: 0, fontSize: 13, color: "#8B6F3F", lineHeight: 1.55 }}>
+              A claim has been submitted for this piece. It confirms automatically
+              in 24 hours unless the brand flags it.
             </p>
           </div>
         </div>
@@ -922,7 +913,7 @@ function NotRegisteredYet() {
       >
         Not yet registered
       </p>
-      <p style={{ margin: 0, fontSize: 13, color: "#9E9EA3", lineHeight: 1.6 }}>
+      <p style={{ margin: 0, fontSize: 14, color: "#9E9EA3", lineHeight: 1.6 }}>
         This tag has not been registered to a product yet.
       </p>
     </div>
@@ -945,10 +936,10 @@ function FlaggedItem() {
     >
       <AlertTriangle size={16} color="#B85C5C" style={{ marginTop: 2, flexShrink: 0 }} />
       <div>
-        <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 600, color: "#B85C5C" }}>
+        <p style={{ margin: "0 0 3px", fontSize: 14, fontWeight: 600, color: "#B85C5C" }}>
           Item flagged for review
         </p>
-        <p style={{ margin: 0, fontSize: 12, color: "#8B4040", lineHeight: 1.55 }}>
+        <p style={{ margin: 0, fontSize: 13, color: "#8B4040", lineHeight: 1.55 }}>
           This item has been flagged and is under review.
         </p>
       </div>
@@ -972,10 +963,10 @@ function SuspendedItem() {
     >
       <ShieldX size={16} color="#B85C5C" style={{ marginTop: 2, flexShrink: 0 }} />
       <div>
-        <p style={{ margin: "0 0 3px", fontSize: 13, fontWeight: 600, color: "#B85C5C" }}>
+        <p style={{ margin: "0 0 3px", fontSize: 14, fontWeight: 600, color: "#B85C5C" }}>
           Item suspended
         </p>
-        <p style={{ margin: 0, fontSize: 12, color: "#8B4040", lineHeight: 1.55 }}>
+        <p style={{ margin: 0, fontSize: 13, color: "#8B4040", lineHeight: 1.55 }}>
           This item has been suspended. Contact the brand for more information.
         </p>
       </div>

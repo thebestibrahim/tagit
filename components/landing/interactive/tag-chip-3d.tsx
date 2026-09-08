@@ -78,7 +78,7 @@ export default function TagChip3D() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        cursor: "none",
+        cursor: "default",
       }}
     >
       {/* Pulsing scan rings */}
@@ -169,16 +169,13 @@ export default function TagChip3D() {
       {/* Caption */}
       <p
         style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: 10,
-          color: "var(--color-champagne)",
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          margin: "20px 0 0",
-          opacity: 0.8,
+          fontSize: 14,
+          color: "#8B6F3F",
+          letterSpacing: "-0.003em",
+          margin: "22px 0 0",
         }}
       >
-        TAG · X7F3C9
+        Embedded in every piece
       </p>
 
       <style>{`

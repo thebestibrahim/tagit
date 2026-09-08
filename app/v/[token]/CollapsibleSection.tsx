@@ -35,10 +35,10 @@ export default function CollapsibleSection({
           <span
             style={{
               fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: 600,
               color: "#4A4A4F",
-              letterSpacing: "0.12em",
+              letterSpacing: "0.08em",
               textTransform: "uppercase",
             }}
           >
@@ -47,13 +47,12 @@ export default function CollapsibleSection({
           {badge && (
             <span
               style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 9,
-                padding: "2px 7px",
+                fontSize: 11,
+                fontWeight: 600,
+                padding: "2px 8px",
                 backgroundColor: "#F5F2EC",
                 borderRadius: 99,
                 color: "#9E9EA3",
-                letterSpacing: "0.04em",
               }}
             >
               {badge}

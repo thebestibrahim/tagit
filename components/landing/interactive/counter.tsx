@@ -8,6 +8,8 @@ interface CounterProps {
   suffix?: string;
   decimals?: number;
   duration?: number;
+  /** Set false for values that are not quantities. A year counting up from zero reads as a glitch. */
+  animate?: boolean;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -18,6 +20,7 @@ export default function Counter({
   suffix = "",
   decimals = 0,
   duration = 2.2,
+  animate: shouldAnimate = true,
   className,
   style,
 }: CounterProps) {
@@ -26,7 +29,7 @@ export default function Counter({
   const hasAnimated = useRef(false);
 
   useEffect(() => {
-    if (!isInView || !nodeRef.current || hasAnimated.current) return;
+    if (!shouldAnimate || !isInView || !nodeRef.current || hasAnimated.current) return;
     hasAnimated.current = true;
 
     const node = nodeRef.current;
@@ -39,11 +42,13 @@ export default function Counter({
     });
 
     return () => controls.stop();
-  }, [isInView, to, prefix, suffix, decimals, duration]);
+  }, [shouldAnimate, isInView, to, prefix, suffix, decimals, duration]);
 
   return (
     <span ref={nodeRef} className={className} style={style}>
-      {prefix}0{suffix}
+      {prefix}
+      {shouldAnimate ? 0 : to.toFixed(decimals)}
+      {suffix}
     </span>
   );
 }

@@ -1,61 +1,33 @@
 "use client";
 import { useState } from "react";
 import { motion } from "motion/react";
+import { c, type, rise } from "./styles";
 
-const INDUSTRIES = [
-  {
-    name: "Fashion",
-    desc: "Luxury garments, accessories, leather goods",
-    src: "/img/fashion-industry.jpg",
-    fallback: "linear-gradient(160deg, #EDE8DF, #DDD4C4)",
-    active: true,
-  },
-  {
-    name: "Arts",
-    desc: "Original works, limited editions, sculpture",
-    src: "/img/art.jpg",
-    fallback: "linear-gradient(160deg, #EDE8E0, #E0D8C8)",
-    active: true,
-  },
-  {
-    name: "Collectibles",
-    desc: "Watches, sneakers, memorabilia, jewellery",
-    src: "/img/collectibles.jpg",
-    fallback: "linear-gradient(160deg, #EAE5DC, #DDD5C5)",
-    active: true,
-  },
-  {
-    name: "Restaurants",
-    desc: "Tasting menus, signature dishes, experiences",
-    src: null,
-    fallback: "linear-gradient(160deg, #F0EDE8, #E8E0D0)",
-    active: false,
-  },
-  {
-    name: "Hotels",
-    desc: "Suites, curated stays, bespoke experiences",
-    src: null,
-    fallback: "linear-gradient(160deg, #EDE8E0, #E0D8C8)",
-    active: false,
-  },
+const TIMELINE = [
+  { year: "2026", label: "Pilot begins with textiles and fashion" },
+  { year: "2028", label: "Extended to electronics and batteries" },
+  { year: "2030", label: "Full mandate across applicable categories" },
 ];
 
-function IndustryPhoto({ src, alt, fallback }: { src: string; alt: string; fallback: string }) {
-  const [failed, setFailed] = useState(false);
+const INDUSTRIES = [
+  { name: "Fashion", desc: "Luxury garments, accessories and leather goods", src: "/img/fashion-industry.jpg", live: true },
+  { name: "Arts", desc: "Original works, limited editions and sculpture", src: "/img/art.jpg", live: true },
+  { name: "Collectibles", desc: "Watches, sneakers, memorabilia and jewellery", src: "/img/collectibles.jpg", live: true },
+  { name: "Restaurants", desc: "Tasting menus and signature dishes", src: null, live: false },
+  { name: "Hotels", desc: "Suites, curated stays and bespoke experiences", src: null, live: false },
+];
 
+function IndustryPhoto({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
   return (
-    <div style={{ position: "absolute", inset: 0, background: fallback }}>
-      {!failed && src && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={src}
-          alt={alt}
-          onError={() => setFailed(true)}
-          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-        />
-      )}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(255,255,255,0.5) 100%)" }} />
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setFailed(true)}
+      style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+    />
   );
 }
 
@@ -64,30 +36,69 @@ export default function Industries() {
     <section
       id="industries"
       className="lp-section-padding"
-      style={{ padding: "120px 32px", backgroundColor: "#F5F2EC", borderTop: "1px solid #E8E2D5" }}
+      style={{ padding: "120px 32px", backgroundColor: c.ivory, borderTop: `1px solid ${c.line}` }}
     >
       <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-        <motion.div
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          style={{ marginBottom: 56 }}
-        >
-          <p style={{ margin: "0 0 12px", fontFamily: "var(--font-mono)", fontSize: 10, color: "#B8945D", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-            Built For
-          </p>
-          <h2 style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(32px, 3.8vw, 52px)",
-            fontWeight: 400, color: "#0A0A0B",
-            letterSpacing: "-0.03em", lineHeight: 1.08, margin: "0 0 12px",
-          }}>
-            Industries where{" "}
-            <em style={{ fontStyle: "italic", color: "#8B6F3F" }}>origin</em> is everything.
+        {/* ── Why now ── */}
+        <motion.div {...rise()} style={{ maxWidth: 720, marginBottom: 56 }}>
+          <h2 style={{ ...type.h2, color: c.ink, marginBottom: 22 }}>
+            The rules are about to change. This is built for what comes after.
           </h2>
-          <p style={{ margin: 0, fontSize: 15, color: "#6E6E73", letterSpacing: "-0.005em" }}>
-            Three categories live today. Two more arriving as the network grows.
+          <p style={{ ...type.lead, color: c.body }}>
+            Between 2026 and 2030 the European Union will require every luxury product
+            sold in its market to carry a verifiable digital identity.{" "}
+            <strong style={{ color: c.inkSoft, fontWeight: 550 }}>
+              Brands without that infrastructure lose access to the largest luxury market
+              in the world.
+            </strong>
+          </p>
+        </motion.div>
+
+        {/* Timeline strip */}
+        <div
+          className="timeline-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 1,
+            marginBottom: 96,
+            borderTop: `1px solid ${c.line}`,
+          }}
+        >
+          {TIMELINE.map((item, i) => (
+            <motion.div
+              key={item.year}
+              {...rise(0.1 + i * 0.08)}
+              style={{
+                padding: "24px 32px 24px 0",
+                paddingLeft: i > 0 ? 32 : 0,
+                borderLeft: i > 0 ? `1px solid ${c.line}` : "none",
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: 34,
+                  color: c.goldText,
+                  letterSpacing: "-0.03em",
+                  margin: "0 0 8px",
+                  lineHeight: 1,
+                }}
+              >
+                {item.year}
+              </p>
+              <p style={{ ...type.small, color: c.body }}>{item.label}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* ── Where it runs today ── */}
+        <motion.div {...rise()} style={{ marginBottom: 40, maxWidth: 620 }}>
+          <h3 style={{ ...type.h3, color: c.ink, marginBottom: 14 }}>
+            Where Tagit runs today.
+          </h3>
+          <p style={{ ...type.body, color: c.body }}>
+            Three categories are live now. Two more open as the network grows.
           </p>
         </motion.div>
 
@@ -95,55 +106,38 @@ export default function Industries() {
           {INDUSTRIES.map((ind, i) => (
             <motion.div
               key={ind.name}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: i * 0.07 }}
+              {...rise(i * 0.06)}
               style={{
-                backgroundColor: ind.active ? "#fff" : "transparent",
-                border: "1px solid #E8E2D5",
+                backgroundColor: ind.live ? "#fff" : "transparent",
+                border: `1px solid ${c.line}`,
                 borderRadius: 14,
                 overflow: "hidden",
-                position: "relative",
-                opacity: ind.active ? 1 : 0.5,
                 display: "flex",
                 flexDirection: "column",
               }}
             >
-              {/* Photo or placeholder */}
-              <div style={{ height: 148, position: "relative", backgroundColor: "#F0EDE8", overflow: "hidden" }}>
-                {ind.active && ind.src ? (
-                  <IndustryPhoto src={ind.src} alt={ind.name} fallback={ind.fallback} />
-                ) : (
-                  <div style={{ position: "absolute", inset: 0, background: ind.fallback, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 8, color: "#C7C7CC", letterSpacing: "0.1em" }}>COMING SOON</span>
-                  </div>
-                )}
+              <div style={{ height: 148, position: "relative", backgroundColor: "#EFEBE2", overflow: "hidden" }}>
+                {ind.live && ind.src && <IndustryPhoto src={ind.src} alt={ind.name} />}
               </div>
 
-              <div style={{ padding: "16px 18px 20px" }}>
-                {ind.active ? (
-                  <div style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#B8945D", marginBottom: 10 }} />
-                ) : (
-                  <div style={{ marginBottom: 10 }}>
-                    <span style={{
-                      fontFamily: "var(--font-mono)", fontSize: 8, color: "#9E9EA3",
-                      letterSpacing: "0.1em", border: "1px solid #E8E2D5", padding: "2px 6px", borderRadius: 3,
-                    }}>
-                      COMING SOON
-                    </span>
-                  </div>
-                )}
-                <h3 style={{
-                  fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 400,
-                  fontStyle: "italic", color: ind.active ? "#1F1F22" : "#9E9EA3",
-                  letterSpacing: "-0.015em", margin: "0 0 6px", lineHeight: 1.2,
-                }}>
+              <div style={{ padding: "18px 18px 22px" }}>
+                <h4
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: 21,
+                    fontWeight: 400,
+                    color: ind.live ? c.inkSoft : c.quiet,
+                    letterSpacing: "-0.02em",
+                    margin: "0 0 6px",
+                    lineHeight: 1.2,
+                  }}
+                >
                   {ind.name}
-                </h3>
-                <p style={{ fontSize: 12, color: ind.active ? "#6E6E73" : "#9E9EA3", lineHeight: 1.55, margin: 0 }}>
-                  {ind.desc}
-                </p>
+                </h4>
+                <p style={{ ...type.small, color: c.quiet, marginBottom: ind.live ? 0 : 10 }}>{ind.desc}</p>
+                {!ind.live && (
+                  <span style={{ fontSize: 14, color: c.quiet, fontWeight: 500 }}>Coming soon</span>
+                )}
               </div>
             </motion.div>
           ))}
