@@ -475,6 +475,15 @@
   border-radius: 4px;
 }
 
+/* The certificate ships in two densities. The full card carries the record;
+   the compact one is what a phone can actually read. */
+.cert-full { display: block; }
+.cert-compact { display: none; }
+@media (max-width: 720px) {
+  .cert-full { display: none; }
+  .cert-compact { display: block; }
+}
+
 /* Lights switch. Sized to the nav's optical rhythm, not to the icon. */
 .theme-toggle {
   appearance: none;
@@ -615,6 +624,11 @@
     bottom: 4% !important;
   }
   .hero-title { padding-top: 116px !important; }
+  .hero-mark {
+    width: 92vw !important;
+    margin-left: -46vw !important;
+    bottom: 5% !important;
+  }
 
   .lp-inner { padding-left: 20px !important; padding-right: 20px !important; }
 

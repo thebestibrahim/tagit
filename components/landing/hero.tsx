@@ -10,7 +10,7 @@ import {
   useReducedMotion,
 } from "motion/react";
 import { LineReveal } from "./interactive/cinema";
-import HeroEmblem from "./interactive/hero-emblem";
+import HeroCertificate from "./interactive/hero-certificate";
 import { EASE, c, ground, type } from "./styles";
 
 /**
@@ -66,25 +66,26 @@ export default function Hero() {
         isolation: "isolate",
       }}
     >
-      {/* ── Layer 1: the mark ──
-           A photograph of somebody else's wristwatch said "luxury" and nothing
-           else, and put another maison's logo on our own front page. The mark
-           says the whole proposition instead, and it is ours. ── */}
+      {/* ── Layer 1: the proof ──
+           The headline promises proof that stays with the piece, so the hero
+           shows the proof itself: the certificate a buyer is holding seconds
+           after they tap. An abstract mark asked people to decode it; this
+           states the case. ── */}
       <motion.div
         className="hero-mark"
         style={{
           position: "absolute",
-          bottom: "-1%",
+          bottom: "4%",
           left: "50%",
-          width: "clamp(280px, min(52vh, 40vw), 540px)",
-          aspectRatio: "1",
-          marginLeft: "calc(clamp(280px, min(52vh, 40vw), 540px) / -2)",
+          width: "clamp(300px, min(52vw, 56vh), 690px)",
+          marginLeft: "calc(clamp(300px, min(52vw, 56vh), 690px) / -2)",
+          zIndex: 4,
           y: reduce ? 0 : plateY,
           scale: reduce ? 1 : plateScale,
           willChange: "transform",
         }}
       >
-        <HeroEmblem />
+        <HeroCertificate />
       </motion.div>
 
       {/* ── Layer 2: the grade. The object keeps the light, the type keeps the dark. ── */}
@@ -151,7 +152,7 @@ export default function Hero() {
           zIndex: 7,
           width: "100%",
           maxWidth: 900,
-          padding: "clamp(120px, 17vh, 190px) 32px 0",
+          padding: "clamp(96px, 13vh, 156px) 32px 0",
           textAlign: "center",
           y: reduce ? 0 : copyY,
           x: reduce ? 0 : copyX,
