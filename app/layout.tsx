@@ -3,6 +3,7 @@ import { Instrument_Serif, Inter_Tight, JetBrains_Mono } from "next/font/google"
 import "./globals.css";
 import "@/lib/env";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 import { StagingBanner } from "@/components/ui/staging-banner";
 
 const instrumentSerif = Instrument_Serif({
@@ -39,11 +40,17 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${instrumentSerif.variable} ${interTight.variable} ${jetbrainsMono.variable} h-full`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col antialiased" suppressHydrationWarning>
-        <StagingBanner />
-        {children}
-        <Toaster position="top-right" richColors />
+        {/* Only the landing page reads the themed tokens; the app and auth
+            surfaces are light by design, so this cannot disturb them. Dark is
+            the default because that is the brand, not a system guess. */}
+        <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+          <StagingBanner />
+          {children}
+          <Toaster position="top-right" richColors />
+        </ThemeProvider>
       </body>
     </html>
   );

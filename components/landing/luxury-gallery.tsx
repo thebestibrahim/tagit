@@ -1,7 +1,7 @@
 "use client";
 import { motion, useReducedMotion, useTransform } from "motion/react";
 import { Plate, useSectionProgress } from "./interactive/cinema";
-import { c, type, rise } from "./styles";
+import { GRADE_DEEP, c, ground, type, rise } from "./styles";
 
 type Item = { label: string; sub: string; src: string; focus: string; depth: number; grade?: string };
 
@@ -11,7 +11,7 @@ const ITEMS: Item[] = [
   { label: "Jewellery", sub: "Fine and haute joaillerie", src: "/img/jewellery.jpg", focus: "52% 38%", depth: 0.34,
     /* Shot high-key against white, so it needs a deeper grade than the rest to
        sit in the same room. */
-    grade: "saturate(0.5) contrast(1.12) brightness(0.56)" },
+    grade: GRADE_DEEP },
   { label: "Ready to wear", sub: "Couture and limited editions", src: "/img/fashion-gallery.jpg", focus: "center", depth: 0.2 },
 ];
 
@@ -63,7 +63,7 @@ export default function LuxuryGallery() {
             grade={item.grade}
             className="gallery-plate"
             style={{ flex: "0 0 clamp(230px, 25vw, 380px)", height: "clamp(320px, 40vw, 540px)", borderRadius: 4 }}
-            scrim="linear-gradient(to top, rgba(8,8,10,0.92) 0%, rgba(8,8,10,0.15) 44%, transparent 72%)"
+            scrim={`linear-gradient(to top, ${ground(0.92)} 0%, ${ground(0.15)} 44%, transparent 72%)`}
           >
             <div style={{ position: "absolute", bottom: 24, left: 24, right: 20, zIndex: 2 }}>
               <p

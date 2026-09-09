@@ -77,7 +77,7 @@ export function Parallax({
  * to any one section, and stepped rather than eased so it flickers like stock
  * instead of breathing like a gradient.
  */
-export function Grain({ opacity = 0.055 }: { opacity?: number }) {
+export function Grain({ opacity }: { opacity?: number }) {
   return (
     <div
       className="cine-grain"
@@ -87,7 +87,7 @@ export function Grain({ opacity = 0.055 }: { opacity?: number }) {
         inset: "-120px",
         zIndex: 60,
         pointerEvents: "none",
-        opacity,
+        opacity: opacity ?? "var(--lp-grain)",
         mixBlendMode: "overlay",
         backgroundImage:
           "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E\")",
@@ -96,17 +96,20 @@ export function Grain({ opacity = 0.055 }: { opacity?: number }) {
   );
 }
 
-/** Edge falloff. A real lens darkens its corners; a flat page does not. */
-export function Vignette({ strength = 0.55 }: { strength?: number }) {
+/** Edge falloff. A real lens darkens its corners; a flat page does not.
+ *  In the lit room it becomes a warm falloff rather than a black one. */
+export function Vignette() {
   return (
     <div
       aria-hidden
+      className="cine-vignette"
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 59,
         pointerEvents: "none",
-        background: `radial-gradient(120% 90% at 50% 45%, transparent 42%, rgba(0,0,0,${strength}) 100%)`,
+        background:
+          "radial-gradient(120% 90% at 50% 45%, transparent 42%, var(--lp-vignette) 100%)",
       }}
     />
   );
@@ -227,7 +230,7 @@ export function Plate({
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(180deg, rgba(28,20,8,0.30), rgba(8,8,10,0.42))",
+          background: "var(--lp-photo-warm)",
           mixBlendMode: "multiply",
         }}
       />

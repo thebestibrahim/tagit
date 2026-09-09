@@ -164,7 +164,7 @@ function Card({ drawn }: { drawn: boolean }) {
           <motion.path
             key={i}
             d={`M0 ${-9 - i * 9} a ${9 + i * 9} ${9 + i * 9} 0 0 1 0 ${18 + i * 18}`}
-            stroke={c.key}
+            stroke="#C8A464"
             strokeWidth="1.8"
             strokeLinecap="round"
             fill="none"
@@ -196,7 +196,7 @@ export default function TagArtifact() {
   const glareY = useTransform(sy, (v) => `${50 + v * 30}%`);
   const glare = useTransform(
     [glareX, glareY],
-    ([gx, gy]) => `radial-gradient(46% 46% at ${gx} ${gy}, rgba(255,246,224,0.30) 0%, transparent 62%)`,
+    ([gx, gy]) => `radial-gradient(46% 46% at ${gx} ${gy}, var(--lp-specular) 0%, transparent 62%)`,
   );
 
   function onMove(e: React.MouseEvent) {
@@ -245,7 +245,7 @@ export default function TagArtifact() {
                 rotateX: reduce ? 0 : rotateX,
                 rotateY: reduce ? 0 : rotateY,
                 transformStyle: "preserve-3d",
-                filter: "drop-shadow(0 36px 60px rgba(0,0,0,0.66))",
+                filter: "var(--lp-object-shadow)",
               }}
             >
               {artifact.id === "chip" ? <Chip drawn /> : <Card drawn />}

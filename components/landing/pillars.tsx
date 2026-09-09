@@ -69,7 +69,10 @@ function Mark({ children }: { children: ReactNode }) {
       aria-hidden
       initial="rest"
       animate={onScreen ? "drawn" : "rest"}
-      style={{ display: "block", marginBottom: 26, overflow: "visible" }}
+      /* The marks inherit their gold from `color` so the shapes can use
+         currentColor: a CSS variable in a presentation attribute does not
+         resolve in every browser. */
+      style={{ display: "block", marginBottom: 26, overflow: "visible", color: c.key }}
     >
       {children}
     </motion.svg>
@@ -77,7 +80,7 @@ function Mark({ children }: { children: ReactNode }) {
 }
 
 const stroke = {
-  stroke: c.key,
+  stroke: "currentColor",
   strokeWidth: 1.5,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
@@ -102,14 +105,14 @@ const MARKS = [
     <motion.path d="M11 32 h42" {...stroke} strokeOpacity={0.45} {...draw(0)} />
     <motion.circle cx="11" cy="32" r="5.5" {...stroke} {...draw(0.14)} />
     <motion.circle cx="32" cy="32" r="5.5" {...stroke} {...draw(0.26)} />
-    <motion.circle cx="53" cy="32" r="5.5" {...stroke} fill={c.key} {...draw(0.38)} />
+    <motion.circle cx="53" cy="32" r="5.5" {...stroke} fill="currentColor" {...draw(0.38)} />
   </>,
   /* Intelligence: where the work is in the world. */
   <>
     <motion.circle cx="32" cy="32" r="24" {...stroke} {...draw(0)} />
     <motion.ellipse cx="32" cy="32" rx="10" ry="24" {...stroke} strokeOpacity={0.5} {...draw(0.16)} />
     <motion.path d="M9.5 24 h45 M9.5 40 h45" {...stroke} strokeOpacity={0.5} {...draw(0.28)} />
-    <motion.circle cx="42" cy="21" r="3.4" {...stroke} fill={c.key} {...draw(0.42)} />
+    <motion.circle cx="42" cy="21" r="3.4" {...stroke} fill="currentColor" {...draw(0.42)} />
   </>,
 ];
 

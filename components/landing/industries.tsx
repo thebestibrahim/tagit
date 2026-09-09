@@ -1,7 +1,7 @@
 "use client";
 import { motion, useReducedMotion, useTransform } from "motion/react";
 import { Plate, useSectionProgress } from "./interactive/cinema";
-import { c, type, rise } from "./styles";
+import { c, ground, type, rise } from "./styles";
 
 const TIMELINE = [
   { year: "2026", label: "Pilot begins with textiles and fashion" },
@@ -52,7 +52,7 @@ export default function Industries() {
 
         {/* The deadline, drawn by the scroll. */}
         <div style={{ position: "relative", marginBottom: 128 }}>
-          <div aria-hidden style={{ height: 1, backgroundColor: "rgba(243,240,233,0.07)", marginBottom: 0 }}>
+          <div aria-hidden style={{ height: 1, backgroundColor: c.hairline, marginBottom: 0 }}>
             <motion.div
               style={{
                 height: 1,
@@ -97,7 +97,7 @@ export default function Industries() {
           overscan={1.3}
           className="industries-plate"
           style={{ height: "clamp(420px, 46vw, 560px)", borderRadius: 4 }}
-          scrim="linear-gradient(to top, rgba(8,8,10,0.95) 0%, rgba(8,8,10,0.55) 38%, rgba(8,8,10,0.12) 72%)"
+          scrim={`linear-gradient(to top, ${ground(0.95)} 0%, ${ground(0.55)} 38%, ${ground(0.12)} 72%)`}
         >
           <div
             className="industries-overlay"

@@ -323,6 +323,86 @@
 /* ── Modal input placeholder colour ── */
 .tagit-modal-input::placeholder { color: #3A3A3F; }
 
+/* ── Landing page: the two rooms ───────────────────────────────────
+   The marketing page ships a dark room and a lit one. Only these tokens
+   change between them; every landing component reads them, so the theme
+   switch is a variable swap rather than a second set of components.
+
+   The app and auth surfaces do NOT read these — they keep the fixed light
+   palette defined further up, so toggling here cannot disturb them. */
+
+:root {
+  --lp-abyss: #08080A;
+  --lp-plate: #101013;
+  --lp-raised: #17171B;
+
+  --lp-bone: #F3F0E9;
+  --lp-patina: #A8A49C;
+  --lp-ash: #7C7972;
+
+  --lp-key: #C8A464;
+  --lp-ember: #EBD3A0;
+  --lp-seal: #5FBF8F;
+
+  --lp-hairline: rgba(243, 240, 233, 0.10);
+  --lp-hairline-warm: rgba(200, 164, 100, 0.22);
+
+  /* Scrims and dissolves mix this with alpha, so it has to be channels. */
+  --lp-ground-rgb: 8 8 10;
+  --lp-glow: rgba(200, 164, 100, 0.16);
+
+  /* Glass: the proof panel and the ledger. */
+  --lp-glass: rgba(16, 16, 19, 0.72);
+  --lp-glass-edge: rgba(243, 240, 233, 0.09);
+  --lp-glass-shadow: 0 40px 90px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(243, 240, 233, 0.07);
+
+  /* One colour grade across every photograph. */
+  --lp-photo-warm: linear-gradient(180deg, rgba(28,20,8,0.30), rgba(8,8,10,0.42));
+  --lp-grade: saturate(0.72) contrast(1.06) brightness(0.78);
+  --lp-grade-deep: saturate(0.5) contrast(1.12) brightness(0.56);
+
+  --lp-specular: rgba(255, 244, 214, 0.26);
+  --lp-object-shadow: drop-shadow(0 36px 60px rgba(0, 0, 0, 0.66));
+  --lp-grain: 0.055;
+  --lp-vignette: rgba(0, 0, 0, 0.55);
+}
+
+/* The lit room. Same light, same gold, the walls turned up: golds go darker
+   so they still carry AA on paper, and the grade stops crushing the stills. */
+[data-theme="light"] {
+  --lp-abyss: #FBF9F5;
+  --lp-plate: #F3EFE8;
+  --lp-raised: #EAE5DB;
+
+  --lp-bone: #14130F;
+  --lp-patina: #55524B;
+  --lp-ash: #6B6862;
+
+  --lp-key: #7E6435;
+  --lp-ember: #6E5527;
+  --lp-seal: #2D6A4F;
+
+  --lp-hairline: rgba(20, 19, 15, 0.13);
+  --lp-hairline-warm: rgba(139, 111, 63, 0.30);
+
+  --lp-ground-rgb: 251 249 245;
+  --lp-glow: rgba(184, 148, 93, 0.20);
+
+  --lp-glass: rgba(255, 255, 255, 0.78);
+  --lp-glass-edge: rgba(20, 19, 15, 0.10);
+  --lp-glass-shadow: 0 24px 60px rgba(40, 34, 22, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  --lp-photo-warm: linear-gradient(180deg, rgba(150,120,66,0.10), rgba(74,64,46,0.13));
+  --lp-grade: saturate(0.88) contrast(1.02) brightness(0.99);
+  --lp-grade-deep: saturate(0.8) contrast(1.03) brightness(0.9);
+
+  /* `screen` over paper washes everything out, so the lit room gets a whisper. */
+  --lp-specular: rgba(255, 252, 240, 0.10);
+  --lp-object-shadow: drop-shadow(0 22px 40px rgba(58, 46, 24, 0.24));
+  --lp-grain: 0.03;
+  --lp-vignette: rgba(92, 76, 48, 0.10);
+}
+
 /* ── Landing page: the dark room ───────────────────────────────────
    Everything below belongs to the marketing page only. The app and auth
    surfaces keep the light palette defined above. */
@@ -358,33 +438,33 @@
 .cine-cta-ghost {
   padding: 15px 26px;
   font-weight: 450;
-  color: #C8C4BC;
-  border: 1px solid rgba(243,240,233,0.16);
-  background-color: rgba(243,240,233,0.02);
+  color: var(--lp-patina);
+  border: 1px solid var(--lp-hairline);
+  background-color: rgb(var(--lp-ground-rgb) / 0.02);
 }
 .cine-cta-ghost:hover {
-  color: #F3F0E9;
-  border-color: rgba(200,164,100,0.42);
-  background-color: rgba(200,164,100,0.07);
+  color: var(--lp-bone);
+  border-color: var(--lp-hairline-warm);
+  background-color: var(--lp-glow);
 }
 
 .cine-navlink {
   font-size: 15px;
   font-weight: 450;
   letter-spacing: -0.005em;
-  color: #A8A49C;
+  color: var(--lp-patina);
   text-decoration: none;
   transition: color 0.22s ease;
 }
-.cine-navlink:hover { color: #F3F0E9; }
+.cine-navlink:hover { color: var(--lp-bone); }
 
 .cine-footlink {
   font-size: 15px;
-  color: #A8A49C;
+  color: var(--lp-patina);
   text-decoration: none;
   transition: color 0.22s ease;
 }
-.cine-footlink:hover { color: #F3F0E9; }
+.cine-footlink:hover { color: var(--lp-bone); }
 
 .cine-cta-key:focus-visible,
 .cine-cta-ghost:focus-visible,
@@ -394,6 +474,29 @@
   outline-offset: 3px;
   border-radius: 4px;
 }
+
+/* Lights switch. Sized to the nav's optical rhythm, not to the icon. */
+.theme-toggle {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--lp-patina);
+  cursor: pointer;
+  transition: color 0.22s ease, background-color 0.22s ease, border-color 0.22s ease;
+}
+.theme-toggle:hover {
+  color: var(--lp-bone);
+  border-color: var(--lp-hairline-warm);
+  background-color: var(--lp-glow);
+}
+.theme-toggle:focus-visible { outline: 2px solid var(--lp-key); outline-offset: 2px; }
 
 /* Chip / card switch. A quiet control: the objects are the loud part. */
 .artifact-tab {
@@ -405,20 +508,21 @@
   font-family: inherit;
   font-size: 14.5px;
   letter-spacing: -0.005em;
-  color: #A8A49C;
+  color: var(--lp-patina);
   cursor: pointer;
   transition: color 0.22s ease, background-color 0.22s ease, border-color 0.22s ease;
 }
-.artifact-tab:hover { color: #F3F0E9; }
+.artifact-tab:hover { color: var(--lp-bone); }
 .artifact-tab-on {
-  color: #F3F0E9;
-  border-color: rgba(200,164,100,0.38);
-  background-color: rgba(200,164,100,0.09);
+  color: var(--lp-bone);
+  border-color: var(--lp-hairline-warm);
+  background-color: var(--lp-glow);
 }
 .artifact-tab:focus-visible { outline: 2px solid #EBD3A0; outline-offset: 2px; }
 
 /* Film grain. Stepped, not eased: stock flickers, it does not breathe. */
 .cine-grain { animation: cineGrain 0.7s steps(1) infinite; }
+.cine-grain, .cine-vignette { transition: opacity 0.3s ease; }
 @keyframes cineGrain {
   0%   { transform: translate(0, 0); }
   20%  { transform: translate(-38px, 24px); }

@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
 import { Wordmark } from "@/components/ui/Wordmark";
-import { c } from "./styles";
+import ThemeToggle from "./interactive/theme-toggle";
+import { c, ground } from "./styles";
 
 const LINKS = [
   { label: "How it works", href: "#how-it-works" },
@@ -27,7 +28,7 @@ export default function LandingNav() {
         style={{
           position: "absolute",
           inset: 0,
-          backgroundColor: "rgba(8,8,10,0.92)",
+          backgroundColor: ground(0.92),
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
           opacity: bgOpacity,
@@ -70,7 +71,8 @@ export default function LandingNav() {
           ))}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <ThemeToggle />
           <Link href="/auth/login" className="cine-navlink nav-signin">
             Sign in
           </Link>

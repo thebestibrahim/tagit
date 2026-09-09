@@ -10,9 +10,8 @@ import {
   useReducedMotion,
 } from "motion/react";
 import { LineReveal } from "./interactive/cinema";
-import { EASE, GRADE, c, type } from "./styles";
-
-const WATCH_IMG = "/img/watch.jpg";
+import HeroEmblem from "./interactive/hero-emblem";
+import { EASE, c, ground, type } from "./styles";
 
 /**
  * The opening title card.
@@ -40,12 +39,7 @@ export default function Hero() {
 
   /* A hand on the camera. Nothing moves unless the visitor moves. */
   const px = useMotionValue(0);
-  const py = useMotionValue(0);
-  const spring = { stiffness: 55, damping: 22, mass: 0.7 };
-  const sx = useSpring(px, spring);
-  const sy = useSpring(py, spring);
-  const plateX = useTransform(sx, (v) => v * -20);
-  const plateTilt = useTransform(sy, (v) => v * -12);
+  const sx = useSpring(px, { stiffness: 55, damping: 22, mass: 0.7 });
   const copyX = useTransform(sx, (v) => v * 8);
 
   function onMove(e: React.MouseEvent) {
@@ -53,17 +47,13 @@ export default function Hero() {
     const r = sectionRef.current?.getBoundingClientRect();
     if (!r) return;
     px.set((e.clientX - (r.left + r.width / 2)) / (r.width / 2));
-    py.set((e.clientY - (r.top + r.height / 2)) / (r.height / 2));
   }
 
   return (
     <section
       ref={sectionRef}
       onMouseMove={onMove}
-      onMouseLeave={() => {
-        px.set(0);
-        py.set(0);
-      }}
+      onMouseLeave={() => px.set(0)}
       className="hero"
       style={{
         position: "relative",
@@ -76,37 +66,25 @@ export default function Hero() {
         isolation: "isolate",
       }}
     >
-      {/* ── Layer 1: the piece, rising into the bottom of the frame ── */}
+      {/* ── Layer 1: the mark ──
+           A photograph of somebody else's wristwatch said "luxury" and nothing
+           else, and put another maison's logo on our own front page. The mark
+           says the whole proposition instead, and it is ours. ── */}
       <motion.div
-        aria-hidden
-        className="hero-plate"
+        className="hero-mark"
         style={{
           position: "absolute",
-          bottom: "-9%",
+          bottom: "-1%",
           left: "50%",
-          width: "min(700px, 56%)",
-          height: "74%",
-          /* Derived from the width, not guessed: `min()` on a negative pair
-             picks the larger offset and slides the piece off centre. */
-          marginLeft: "calc(min(700px, 56%) / -2)",
-          /* Feather every edge so the plate has no rectangle: the piece rises
-             out of the dark instead of sitting in a frame. */
-          maskImage: "radial-gradient(74% 76% at 50% 62%, #000 38%, transparent 84%)",
-          WebkitMaskImage: "radial-gradient(74% 76% at 50% 62%, #000 38%, transparent 84%)",
+          width: "clamp(280px, min(52vh, 40vw), 540px)",
+          aspectRatio: "1",
+          marginLeft: "calc(clamp(280px, min(52vh, 40vw), 540px) / -2)",
           y: reduce ? 0 : plateY,
-          x: reduce ? 0 : plateX,
           scale: reduce ? 1 : plateScale,
           willChange: "transform",
         }}
       >
-        <motion.div style={{ width: "100%", height: "100%", y: reduce ? 0 : plateTilt }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={WATCH_IMG}
-            alt=""
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 44%", filter: GRADE }}
-          />
-        </motion.div>
+        <HeroEmblem />
       </motion.div>
 
       {/* ── Layer 2: the grade. The object keeps the light, the type keeps the dark. ── */}
@@ -117,7 +95,7 @@ export default function Hero() {
           position: "absolute",
           inset: 0,
           background:
-            "radial-gradient(70% 52% at 50% 98%, rgba(8,8,10,0) 0%, rgba(8,8,10,0.28) 36%, rgba(8,8,10,0.82) 64%, rgba(8,8,10,0.96) 100%)",
+            `radial-gradient(70% 52% at 50% 98%, ${ground(0)} 0%, ${ground(0.28)} 36%, ${ground(0.82)} 64%, ${ground(0.96)} 100%)`,
         }}
       />
       <div
@@ -125,7 +103,7 @@ export default function Hero() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(180deg, rgba(8,8,10,0.9) 0%, rgba(8,8,10,0.55) 22%, transparent 46%, transparent 78%, rgba(8,8,10,0.7) 100%)",
+          background: `linear-gradient(180deg, ${ground(0.86)} 0%, ${ground(0.4)} 20%, transparent 42%, transparent 84%, ${ground(0.55)} 100%)`,
         }}
       />
       {/* The lamp, placed where the photograph's own light falls. */}
@@ -134,7 +112,7 @@ export default function Hero() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "radial-gradient(46% 38% at 44% 82%, rgba(200,164,100,0.26) 0%, rgba(200,164,100,0.08) 36%, transparent 68%)",
+          background: `radial-gradient(42% 34% at 50% 80%, ${c.keyGlow} 0%, transparent 70%)`,
           mixBlendMode: "screen",
         }}
       />
@@ -211,13 +189,12 @@ export default function Hero() {
         style={{
           position: "absolute",
           bottom: 30,
-          left: "50%",
-          marginLeft: -0.5,
+          left: 56,
           zIndex: 7,
           opacity: reduce ? 0 : cueFade,
         }}
       >
-        <div style={{ position: "relative", width: 1, height: 52, backgroundColor: "rgba(243,240,233,0.14)", overflow: "hidden" }}>
+        <div style={{ position: "relative", width: 1, height: 52, backgroundColor: c.hairline, overflow: "hidden" }}>
           <div className="cine-cue-spark" />
         </div>
       </motion.div>

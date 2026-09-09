@@ -31,11 +31,11 @@ export default function VerifiedCard() {
         maxWidth: "100%",
         padding: "26px 26px 24px",
         borderRadius: 18,
-        backgroundColor: "rgba(16,16,19,0.72)",
+        backgroundColor: c.glass,
         backdropFilter: "blur(22px) saturate(1.1)",
         WebkitBackdropFilter: "blur(22px) saturate(1.1)",
-        border: "1px solid rgba(243,240,233,0.09)",
-        boxShadow: "0 40px 90px rgba(0,0,0,0.6), inset 0 1px 0 rgba(243,240,233,0.07)",
+        border: `1px solid ${c.glassEdge}`,
+        boxShadow: c.glassShadow,
       }}
     >
       {/* The lit edge */}
@@ -44,7 +44,7 @@ export default function VerifiedCard() {
         style={{
           height: 1,
           margin: "-26px -26px 22px",
-          background: `linear-gradient(90deg, transparent, ${c.hairlineWarm} 30%, rgba(235,211,160,0.45) 55%, transparent)`,
+          background: `linear-gradient(90deg, transparent, ${c.hairlineWarm} 30%, ${c.key} 55%, transparent)`,
         }}
       />
 
@@ -109,17 +109,17 @@ export default function VerifiedCard() {
           display: "flex",
           alignItems: "center",
           gap: 12,
-          backgroundColor: "rgba(95,191,143,0.10)",
-          border: "1px solid rgba(95,191,143,0.28)",
+          backgroundColor: "color-mix(in srgb, var(--lp-seal) 12%, transparent)",
+          border: "1px solid color-mix(in srgb, var(--lp-seal) 34%, transparent)",
           borderRadius: 10,
           padding: "12px 14px",
         }}
       >
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }} aria-hidden="true">
-          <circle cx="8" cy="8" r="7" stroke={c.seal} strokeWidth="1.4" />
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: c.seal }} aria-hidden="true">
+          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4" />
           <motion.path
             d="M 4.5 8 L 7 10.5 L 11.5 6"
-            stroke={c.seal}
+            stroke="currentColor"
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -132,7 +132,7 @@ export default function VerifiedCard() {
           <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: c.seal, letterSpacing: "-0.005em" }}>
             Verified authentic
           </p>
-          <p style={{ margin: 0, fontSize: 13, color: "rgba(168,164,156,0.9)" }}>
+          <p style={{ margin: 0, fontSize: 13, color: c.ash }}>
             Checked against the brand record
           </p>
         </div>

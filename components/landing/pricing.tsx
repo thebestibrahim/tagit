@@ -61,8 +61,8 @@ export default function Pricing() {
             <ul className="pricing-list" style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "17px 30px" }}>
               {INCLUDED.map((item) => (
                 <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                  <svg width="15" height="15" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 4 }} aria-hidden="true">
-                    <path d="M 2.5 7.4 L 5.4 10.2 L 11.5 3.6" stroke={c.seal} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg width="15" height="15" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 4, color: c.seal }} aria-hidden="true">
+                    <path d="M 2.5 7.4 L 5.4 10.2 L 11.5 3.6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span style={{ ...type.small, color: c.patina }}>{item}</span>
                 </li>

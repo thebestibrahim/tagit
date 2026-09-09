@@ -22,14 +22,14 @@ export default function OwnershipLedger() {
       /* Same pane of dark glass as the proof panel in the hero: one material
          for anything the product itself would show you. */
       style={{
-        backgroundColor: "rgba(16,16,19,0.72)",
+        backgroundColor: c.glass,
         backdropFilter: "blur(22px) saturate(1.1)",
         WebkitBackdropFilter: "blur(22px) saturate(1.1)",
         borderRadius: 18,
-        border: "1px solid rgba(243,240,233,0.09)",
+        border: `1px solid ${c.glassEdge}`,
         padding: "22px 24px",
         width: 268,
-        boxShadow: "0 40px 90px rgba(0,0,0,0.6), inset 0 1px 0 rgba(243,240,233,0.07)",
+        boxShadow: c.glassShadow,
       }}
     >
       <div
@@ -37,7 +37,7 @@ export default function OwnershipLedger() {
         style={{
           height: 1,
           margin: "-22px -24px 18px",
-          background: `linear-gradient(90deg, transparent, ${c.hairlineWarm} 30%, rgba(235,211,160,0.45) 55%, transparent)`,
+          background: `linear-gradient(90deg, transparent, ${c.hairlineWarm} 30%, ${c.key} 55%, transparent)`,
         }}
       />
 
@@ -59,7 +59,7 @@ export default function OwnershipLedger() {
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                backgroundColor: entry.current ? c.key : "rgba(243,240,233,0.22)",
+                backgroundColor: entry.current ? c.key : c.hairline,
                 marginTop: 6,
                 flexShrink: 0,
               }}
@@ -77,7 +77,7 @@ export default function OwnershipLedger() {
               >
                 {entry.name}
               </p>
-              <p style={{ margin: 0, fontSize: 13, color: "rgba(168,164,156,0.85)", lineHeight: 1.4 }}>
+              <p style={{ margin: 0, fontSize: 13, color: c.ash, lineHeight: 1.4 }}>
                 {entry.sub}, {entry.date}
               </p>
             </div>

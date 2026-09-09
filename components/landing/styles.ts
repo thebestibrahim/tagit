@@ -44,27 +44,34 @@ export const c = {
 
   verified: "#2D6A4F",
 
-  /* ── The dark room ────────────────────────────────────────────────
-     abyss is the ground. plate is a surface catching a little light.
-     Never place one flat fill against another: light does the separating. */
-  abyss: "#08080A",
-  plate: "#101013",
-  raised: "#17171B",
+  /* ── The room ──────────────────────────────────────────────────────
+     These are the themed tokens: each resolves through a CSS variable so the
+     light/dark switch is a variable swap, not a second component tree. The
+     light tokens above stay fixed hex because the auth pages read them and
+     are light-only. Definitions live in globals.css. */
+  abyss: "var(--lp-abyss)",
+  plate: "var(--lp-plate)",
+  raised: "var(--lp-raised)",
 
-  /* Light falling on the dark room */
-  bone: "#F3F0E9", // primary
-  patina: "#A8A49C", // secondary, 8.2:1 on abyss
-  ash: "#7C7972", // tertiary, 4.6:1 on abyss — labels only, never body copy
+  bone: "var(--lp-bone)",
+  patina: "var(--lp-patina)",
+  ash: "var(--lp-ash)",
 
-  /* The key light itself */
-  key: "#C8A464",
-  ember: "#EBD3A0",
-  keyGlow: "rgba(200,164,100,0.16)",
-  hairline: "rgba(243,240,233,0.10)",
-  hairlineWarm: "rgba(200,164,100,0.22)",
+  key: "var(--lp-key)",
+  ember: "var(--lp-ember)",
+  keyGlow: "var(--lp-glow)",
+  hairline: "var(--lp-hairline)",
+  hairlineWarm: "var(--lp-hairline-warm)",
 
-  /* Confirmation, keyed for a dark ground */
-  seal: "#5FBF8F",
+  seal: "var(--lp-seal)",
+
+  /* Glass, for anything the product itself would show you. */
+  glass: "var(--lp-glass)",
+  glassEdge: "var(--lp-glass-edge)",
+  glassShadow: "var(--lp-glass-shadow)",
+
+  /** The page ground as raw channels, for scrims that need their own alpha. */
+  groundRgb: "var(--lp-ground-rgb)",
 } as const;
 
 const serif = { fontFamily: "var(--font-display)", fontWeight: 400 } as const;
@@ -94,5 +101,10 @@ export const rise = (delay = 0) => ({
   transition: { duration: 0.75, ease: EASE, delay },
 });
 
-/** One colour grade across every photograph on the page, whatever it was shot on. */
-export const GRADE = "saturate(0.72) contrast(1.06) brightness(0.78)";
+/** One colour grade across every photograph, themed with the room. */
+export const GRADE = "var(--lp-grade)";
+/** For a still shot high-key against white, which needs more pulling back. */
+export const GRADE_DEEP = "var(--lp-grade-deep)";
+
+/** The page ground at an arbitrary alpha, for scrims and dissolves. */
+export const ground = (alpha: number) => `rgb(var(--lp-ground-rgb) / ${alpha})`;
