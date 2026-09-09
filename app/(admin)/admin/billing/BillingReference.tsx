@@ -44,8 +44,8 @@ export function BillingReference() {
             title="2 · Trial ends, no payment yet"
             steps={[
               ["Trial end date", `First invoice is issued (due ${SUBSCRIPTION_DUE_DAYS} days later) with a Paystack link and PDF.`],
-              ["Status", "Subscription moves to Awaiting payment (past due). The dashboard stays usable but new chip orders are paused until the first invoice is paid."],
-              ["Chip scanning", "Always works. Customer verification is never affected at any stage."],
+              ["Status", "Subscription moves to Awaiting payment (past due). The dashboard stays usable but new tag orders are paused until the first invoice is paid."],
+              ["Scanning", "Always works. Customer verification is never affected at any stage."],
             ]}
           />
           <Stage

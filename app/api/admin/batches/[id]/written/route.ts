@@ -2,7 +2,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
-// Internal fulfilment step: the team has finished writing each chip's link onto
+// Internal fulfilment step: the team has finished writing each tag's link onto
 // the physical tag/card. Marks the batch `generated` → `written` (Programmed).
 // This is the gate that must clear before a batch can be marked shipped.
 export async function POST(
@@ -37,7 +37,7 @@ export async function POST(
   }
   if (batch.status !== "generated") {
     return NextResponse.json(
-      { error: "Generate the chips before marking links written." },
+      { error: "Generate the tags before marking links written." },
       { status: 409 }
     );
   }

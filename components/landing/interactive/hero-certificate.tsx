@@ -393,7 +393,7 @@ export default function HeroCertificate() {
               Verified authentic
             </text>
             <text x="72" y={H - 31} fill="#9A9385" style={{ fontSize: 14 }}>
-              Confirmed by tap. The chip signed a challenge no copy can answer.
+              Confirmed by tap. The tag signed a challenge no copy can answer.
             </text>
           </motion.g>
         </motion.svg>

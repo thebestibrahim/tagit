@@ -72,7 +72,7 @@ export async function POST(
     return NextResponse.json({ error: "Product not found." }, { status: 403 });
   }
 
-  // ── 2b. Resolve the chip being replaced (must be on this product & brand) ──
+  // ── 2b. Resolve the tag being replaced (must be on this product & brand) ──
   // The body identifies which chip is failing; the medium of that chip is the
   // "current chip medium" the replacement must match.
   const { data: oldChipData } = await admin

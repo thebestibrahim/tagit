@@ -168,7 +168,7 @@ export default function Hero() {
           transition={{ delay: 1.15, duration: 0.9, ease: EASE }}
         >
           <p style={{ ...type.lead, color: c.patina, margin: "0 auto 38px", maxWidth: "46ch" }}>
-            A chip set inside the piece, or a signed card that travels with it. One tap
+            A tag set inside the piece, or a signed card that travels with it. One tap
             proves it is genuine and shows every owner it has had.
           </p>
 

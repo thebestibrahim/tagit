@@ -352,7 +352,7 @@ function PlanStatus({
             {suspended ? "Your account is suspended" : `You have an overdue invoice of ${formatNaira(amount)}`}
           </p>
           <p className="mt-0.5" style={{ color: "#991B1B", fontSize: "var(--text-caption)" }}>
-            {suspended ? "Pay your outstanding balance to restore dashboard access. Chip scanning is never affected." : "Pay now to avoid account suspension."}
+            {suspended ? "Pay your outstanding balance to restore dashboard access. Scanning is never affected." : "Pay now to avoid account suspension."}
           </p>
         </div>
         {openInvoice ? (

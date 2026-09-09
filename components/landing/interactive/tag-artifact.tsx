@@ -13,15 +13,15 @@ import { EASE, c, type } from "../styles";
 /**
  * The two things a brand actually holds in its hand.
  *
- * Drawn rather than photographed, because the chip is 4mm across and a photo of
+ * Drawn rather than photographed, because the tag is 4mm across and a photo of
  * one tells you nothing. Both objects tilt to the cursor and nothing rotates on
  * a timer: the visitor turns the object over, the page does not do it for them.
  */
 
 const ARTIFACTS = [
   {
-    id: "chip",
-    label: "The chip",
+    id: "tag",
+    label: "The tag",
     headline: "Set inside the piece, at the workshop.",
     body:
       "A passive NFC inlay a few millimetres across, closed into the case back, the lining or the setting before the piece ever leaves you. No battery, nothing to charge, and no way to lift it onto a counterfeit without destroying it.",
@@ -45,9 +45,9 @@ const ARTIFACTS = [
   },
 ] as const;
 
-/* ── The chip ─────────────────────────────────────────────────────── */
+/* ── The tag ──────────────────────────────────────────────────────── */
 
-function Chip({ drawn }: { drawn: boolean }) {
+function TagInlay({ drawn }: { drawn: boolean }) {
   /* Five coil traces with a break at the top and two radial jumpers, which is
      roughly how a real inlay antenna is laid out. */
   const radii = [96, 84, 72, 60, 48];
@@ -55,25 +55,25 @@ function Chip({ drawn }: { drawn: boolean }) {
   return (
     <svg width="260" height="260" viewBox="0 0 260 260" fill="none" aria-hidden style={{ display: "block" }}>
       <defs>
-        <linearGradient id="chipFace" x1="16%" y1="4%" x2="86%" y2="98%">
+        <linearGradient id="tagFace" x1="16%" y1="4%" x2="86%" y2="98%">
           <stop offset="0%" stopColor="#F0DCAF" />
           <stop offset="26%" stopColor="#C8A464" />
           <stop offset="52%" stopColor="#8A6C39" />
           <stop offset="74%" stopColor="#D9BC83" />
           <stop offset="100%" stopColor="#7A5F31" />
         </linearGradient>
-        <radialGradient id="chipDie" cx="34%" cy="30%">
+        <radialGradient id="tagDie" cx="34%" cy="30%">
           <stop offset="0%" stopColor="#3A2E15" />
           <stop offset="100%" stopColor="#100C04" />
         </radialGradient>
-        <linearGradient id="chipSheen" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="tagSheen" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#fff" stopOpacity="0.42" />
           <stop offset="42%" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
       </defs>
 
-      <circle cx="130" cy="130" r="112" fill="url(#chipFace)" />
-      <circle cx="130" cy="130" r="112" fill="url(#chipSheen)" />
+      <circle cx="130" cy="130" r="112" fill="url(#tagFace)" />
+      <circle cx="130" cy="130" r="112" fill="url(#tagSheen)" />
       <circle cx="130" cy="130" r="112" stroke="rgba(255,255,255,0.28)" strokeWidth="1" />
 
       {radii.map((r, i) => (
@@ -95,7 +95,7 @@ function Chip({ drawn }: { drawn: boolean }) {
       ))}
       <path d="M130 34 L130 46 M130 46 L142 46" stroke="rgba(37,25,6,0.45)" strokeWidth="1.6" strokeLinecap="round" />
 
-      <circle cx="130" cy="130" r="34" fill="url(#chipDie)" stroke="rgba(240,220,175,0.34)" strokeWidth="1" />
+      <circle cx="130" cy="130" r="34" fill="url(#tagDie)" stroke="rgba(240,220,175,0.34)" strokeWidth="1" />
       <text
         x="130"
         y="130"
@@ -248,7 +248,7 @@ export default function TagArtifact() {
                 filter: "var(--lp-object-shadow)",
               }}
             >
-              {artifact.id === "chip" ? <Chip drawn /> : <Card drawn />}
+              {artifact.id === "tag" ? <TagInlay drawn /> : <Card drawn />}
               {/* The specular, following the hand rather than a loop. */}
               <motion.div
                 aria-hidden
@@ -256,7 +256,7 @@ export default function TagArtifact() {
                   position: "absolute",
                   inset: 0,
                   pointerEvents: "none",
-                  borderRadius: artifact.id === "chip" ? "50%" : 12,
+                  borderRadius: artifact.id === "tag" ? "50%" : 12,
                   background: reduce ? "none" : glare,
                   mixBlendMode: "screen",
                 }}
@@ -268,7 +268,7 @@ export default function TagArtifact() {
 
       {/* What it is */}
       <div>
-        <div role="tablist" aria-label="Chip or card" style={{ display: "flex", gap: 4, marginBottom: 28 }}>
+        <div role="tablist" aria-label="Tag or card" style={{ display: "flex", gap: 4, marginBottom: 28 }}>
           {ARTIFACTS.map((a, i) => (
             <button
               key={a.id}

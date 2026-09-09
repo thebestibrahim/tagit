@@ -35,7 +35,7 @@ export default async function CompanyLayout({ children }: { children: React.Reac
   const flags: FlagMap = await getFlagsForBrand(user.id);
 
   // Subscription drives the sidebar plan chip + the suspension redirect.
-  // Suspended for non-payment? Every dashboard page bounces to billing. Chip
+  // Suspended for non-payment? Every dashboard page bounces to billing. Tag
   // scanning (/v/[token]) is a separate route group and is never affected.
   const { data: sub } = await createAdminClient()
     .from("subscriptions")
@@ -44,7 +44,7 @@ export default async function CompanyLayout({ children }: { children: React.Reac
     .maybeSingle();
   const suspended = sub?.status === "suspended";
   // `past_due` = trial ended, first invoice unpaid. Dashboard stays usable but a
-  // persistent banner nudges payment and new chip orders are blocked server-side.
+  // persistent banner nudges payment and new tag orders are blocked server-side.
   const pastDue = sub?.status === "past_due";
   const subRow = sub as { status: string; trial_ends_at: string | null; plans: { name: string } | null } | null;
   const billing = subRow

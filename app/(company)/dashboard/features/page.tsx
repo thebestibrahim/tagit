@@ -96,10 +96,10 @@ export default async function BillingPage() {
             {batchDiscount && <Row label="Batch discount" value={`${batchDiscount.percentage}% off — ${batchDiscount.duration - batchDiscount.used} orders left`} />}
           </dl>
 
-          {/* Chip usage — lifetime limits */}
+          {/* Tag and card usage — lifetime limits */}
           {(tagUse || cardUse) && (
             <div className="mt-6 pt-6" style={{ borderTop: "1px solid var(--color-cream)" }}>
-              <p className="text-micro font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--color-mist)" }}>Chip allowance (lifetime)</p>
+              <p className="text-micro font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--color-mist)" }}>Tag and card allowance (lifetime)</p>
               <div className="space-y-5">
                 {tagUse && <ChipUsageRow label="Tags" usage={tagUse} />}
                 {cardUse && <ChipUsageRow label="Cards" usage={cardUse} />}
@@ -251,7 +251,7 @@ function cap(s: string): string {
 }
 
 function invoiceLabel(inv: Invoice): string {
-  if (inv.type === "batch") return "Chip order";
+  if (inv.type === "batch") return "Tag order";
   // Day + month, not just month — a subscription can have more than one invoice
   // in the same calendar month (mid-cycle plan changes, a restarted trial), and
   // month-only labels rendered as visually identical rows ("June subscription"
@@ -303,8 +303,8 @@ function StatusBanner({ sub, nextAmount, discountedNext, subDiscount, batchDisco
       ? "Your account is suspended."
       : `Your plan is awaiting payment — ${formatNaira(amount)}.`;
     const detail = suspended
-      ? "Pay your outstanding balance to restore dashboard access. Chip scanning is never affected."
-      : `Pay this invoice${openInvoice?.due_date ? ` by ${fmtDate(openInvoice.due_date)}` : ""} to activate your plan and start ordering chips.`;
+      ? "Pay your outstanding balance to restore dashboard access. Scanning is never affected."
+      : `Pay this invoice${openInvoice?.due_date ? ` by ${fmtDate(openInvoice.due_date)}` : ""} to activate your plan and start ordering tags.`;
     return (
       <Banner tone="danger">
         <div className="flex items-start gap-3">

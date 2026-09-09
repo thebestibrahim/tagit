@@ -12,7 +12,7 @@ import type { BillingInterval, VolumeTier } from "@/types/database";
 const INTERVALS = new Set<BillingInterval>(["monthly", "quarterly", "annually"]);
 
 // POST /api/admin/billing/[companyId]/configure — set plan, interval, custom
-// price, trial, and custom chip pricing for a brand.
+// price, trial, and custom tag pricing for a brand.
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ companyId: string }> }
@@ -92,7 +92,7 @@ export async function POST(
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 
-  // Custom chip pricing (only when provided).
+  // Custom tag pricing (only when provided).
   if (tag_tiers || card_tiers) {
     const pricingPayload: Record<string, unknown> = { company_id: companyId, updated_at: now.toISOString() };
     if (tag_tiers) pricingPayload.tag_tiers = tag_tiers;

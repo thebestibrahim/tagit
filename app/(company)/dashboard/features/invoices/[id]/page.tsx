@@ -60,7 +60,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: { para
 
         <dl className="grid grid-cols-2 gap-y-3 gap-x-6 mb-8">
           <Row label="To" value={company?.name ?? "—"} />
-          <Row label="Type" value={invoice.type === "batch" ? "Chip order" : "Subscription"} />
+          <Row label="Type" value={invoice.type === "batch" ? "Tag order" : "Subscription"} />
           {invoice.period_start && <Row label="Period" value={`${fmtDate(invoice.period_start)} — ${fmtDate(invoice.period_end)}`} />}
           <Row label="Issued" value={fmtDate(invoice.created_at)} />
           <Row label="Due" value={fmtDate(invoice.due_date)} />

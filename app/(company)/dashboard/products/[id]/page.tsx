@@ -128,8 +128,8 @@ export default async function ProductDetailPage({
       .from("tags")
       .select("id, short_id, token, status, medium, created_at, activated_at")
       .eq("product_id", id),
-    // Chips this brand owns that aren't linked to any product yet — the pool a
-    // broken chip can be replaced from (mirrors the new-product picker).
+    // Tags this brand owns that aren't linked to any product yet — the pool a
+    // broken tag can be replaced from (mirrors the new-product picker).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
       .from("tags")
@@ -418,7 +418,7 @@ export default async function ProductDetailPage({
                     </span>
                     {/* Each tag/card carries its own unique consumer link. */}
                     <CopyLinkButton url={`${(process.env.NEXT_PUBLIC_APP_URL ?? "").trim()}/v/${t.token}`} label="Copy link" />
-                    {/* Swap a broken/missing chip for a fresh one — gated by the
+                    {/* Swap a broken/missing tag for a fresh one — gated by the
                         "Replace Tags and Cards" feature flag. */}
                     {flags.tag_migration && (
                       <ReplaceChipButton

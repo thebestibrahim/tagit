@@ -121,7 +121,7 @@ export default async function AdminBatchDetailPage({
                 Chips to program
               </h2>
               <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)", marginTop: 2 }}>
-                {chips.length.toLocaleString()} {chips.length === 1 ? "chip" : "chips"} · write each link onto its physical tag or card
+                {chips.length.toLocaleString()} {chips.length === 1 ? "tag" : "tags"} · write each link onto its physical tag or card
               </p>
             </div>
             <BatchChipsExport chips={exportChips} batchLabel={batchLabel} />

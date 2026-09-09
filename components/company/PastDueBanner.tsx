@@ -14,7 +14,7 @@ export function PastDueBanner({ amountLabel }: { amountLabel?: string | null }) 
         <AlertCircle size={18} style={{ color: "#92400E", flexShrink: 0 }} />
         <p className="text-body-sm min-w-0" style={{ color: "#92400E" }}>
           <strong style={{ fontWeight: 600 }}>Your trial has ended.</strong>{" "}
-          Settle your first invoice{amountLabel ? ` (${amountLabel})` : ""} to restore full access. New chip orders are paused until payment.
+          Settle your first invoice{amountLabel ? ` (${amountLabel})` : ""} to restore full access. New tag orders are paused until payment.
         </p>
       </div>
       <Link

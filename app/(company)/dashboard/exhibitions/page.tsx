@@ -70,7 +70,7 @@ export default async function ExhibitionsPage() {
             Exhibitions
           </h1>
           <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-            Scannable QR placards for pieces on show. Reference information only, separate from chip authentication.
+            Scannable QR placards for pieces on show. Reference information only, separate from tag authentication.
           </p>
         </div>
         <Link

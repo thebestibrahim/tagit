@@ -118,7 +118,7 @@ export default async function ScanPage({
   // Fire scan log without blocking page render
   logScan(tag.id, hmacValid ? "valid" : "unverified", headerStore);
 
-  // Ownership is unified across the product's tag group (multiple chips on one
+  // Ownership is unified across the product's tag group (multiple tags on one
   // item). Resolve the sibling tags, then expire any lapsed pending claims so a
   // scan re-offers the claim form instead of showing a stale "pending" banner.
   const siblingIds = await getSiblingTagIds(admin, tag);

@@ -30,7 +30,7 @@ export default function BatchRowActions({
     const json = await res.json().catch(() => ({}));
     setLoading(false);
     if (!res.ok) { toast.error(json.error ?? "Generation failed"); return; }
-    toast.success(`${(json.count ?? batchSize).toLocaleString()} chips generated`);
+    toast.success(`${(json.count ?? batchSize).toLocaleString()} tags generated`);
     router.refresh();
   }
 

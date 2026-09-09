@@ -28,7 +28,7 @@ export default function BatchRequestPage() {
   const [chips, setChips] = useState<{ tags: ChipUsage; cards: ChipUsage } | null>(null);
   const [upgradeMsg, setUpgradeMsg] = useState<string | null>(null);
 
-  // Load the brand's lifetime chip allowance so we can show remaining counts
+  // Load the brand's lifetime tag allowance so we can show remaining counts
   // and stop an order the server would reject anyway.
   useEffect(() => {
     fetch("/api/company/billing")
@@ -62,7 +62,7 @@ export default function BatchRequestPage() {
 
     // Lifetime allowance guard (the server enforces this too).
     if (tagsBlocked || cardsBlocked) {
-      setUpgradeMsg("You have reached your lifetime chip allowance. Contact Tagit to upgrade your plan to order more.");
+      setUpgradeMsg("You have reached your lifetime tag and card allowance. Contact Tagit to upgrade your plan to order more.");
       return;
     }
     if (needsTags && tagUse && !tagUse.unlimited && tagUse.remaining !== null && tagsQty > tagUse.remaining) {

@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   }
 
   // Ownership is unified across the product's tag group — resolve the current
-  // owner from any sibling tag so a transfer can be initiated from any chip.
+  // owner from any sibling tag so a transfer can be initiated from any of them.
   const siblingIds = await getSiblingTagIds(admin, tag);
   const { data: ownerData } = await admin
     .from("ownership_records")

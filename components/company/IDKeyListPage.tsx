@@ -29,7 +29,7 @@ export default async function IDKeyListPage({
   const subtitle =
     medium === "card"
       ? "Authentication cards for items that cannot be embedded"
-      : "Chips embedded in your items";
+      : "Tags embedded in your items";
   const basePath = `/dashboard/id-keys/${noun}`;
 
   const params = await searchParams;

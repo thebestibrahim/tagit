@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 // GET /api/brand/[slug] — public, no auth.
 // Returns the brand's identity plus its live (available) and owned (sold)
-// products. Never exposes tag ids, tokens, chip/HMAC details, ownership
+// products. Never exposes tag ids, tokens, HMAC details, ownership
 // records, scans or transfers. Unknown/unpublished slugs return 404 so the
 // endpoint never reveals which slugs exist.
 export async function GET(

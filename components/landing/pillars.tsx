@@ -9,11 +9,11 @@ const PILLARS = [
   {
     name: "Identity",
     description:
-      "A chip embedded in the piece, or a signed card that travels with it. Either way, it cannot be copied and it outlasts the sale.",
+      "A tag embedded in the piece, or a signed card that travels with it. Either way, it cannot be copied and it outlasts the sale.",
     points: [
       "Every piece carries a mark only you can create",
       "Fakes are caught the moment they are scanned",
-      "Chip or card, chosen per piece, per customer",
+      "Tag or card, chosen per piece, per customer",
       "Built to last the lifetime of the piece",
     ],
   },
@@ -128,7 +128,7 @@ export default function Pillars() {
               Three things every piece carries.
             </h2>
             <p style={{ ...type.lead, color: c.patina, maxWidth: "42ch" }}>
-              One chip or card, doing three jobs at once, for as long as the object exists.
+              One tag or card, doing three jobs at once, for as long as the object exists.
             </p>
           </motion.div>
 

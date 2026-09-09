@@ -49,7 +49,7 @@ export default function BatchChipsExport({
     const href = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = href;
-    a.download = `${batchLabel.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-chips.csv`;
+    a.download = `${batchLabel.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-tags.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

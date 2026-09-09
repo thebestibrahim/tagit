@@ -315,19 +315,19 @@ export async function sendChipReplacedEmail(
   to: string,
   opts: { ownerName?: string; productName: string; brandName: string }
 ) {
-  const subject = `Your ${opts.productName} chip has been replaced`;
+  const subject = `Your ${opts.productName} tag has been replaced`;
 
   const greeting = opts.ownerName ? `Hi ${esc(opts.ownerName)},` : "Hi,";
 
   const html = base(`
-    ${eyebrow("Authentication Chip")}
-    ${heading("Your item’s chip has been replaced")}
+    ${eyebrow("Authentication Tag")}
+    ${heading("Your item’s tag has been replaced")}
     ${para(greeting)}
-    ${para(`<strong style="color:${INK};font-weight:600">${esc(opts.brandName)}</strong> has replaced the authentication chip on your item. Your ownership record is fully intact and unaffected.`)}
+    ${para(`<strong style="color:${INK};font-weight:600">${esc(opts.brandName)}</strong> has replaced the authentication tag on your item. Your ownership record is fully intact and unaffected.`)}
     ${para(`If you did not expect this, contact <a href="mailto:info@tagitlux.com" style="color:${INK}">info@tagitlux.com</a>.`)}
   `);
 
-  const text = `${greeting}\n\n${opts.brandName} has replaced the authentication chip on your item. Your ownership record is unaffected.\n\nIf you did not expect this contact info@tagitlux.com\n\nTagit`;
+  const text = `${greeting}\n\n${opts.brandName} has replaced the authentication tag on your item. Your ownership record is unaffected.\n\nIf you did not expect this contact info@tagitlux.com\n\nTagit`;
 
   await resend.emails.send({ from: FROM, to, replyTo: "info@tagitlux.com", subject, html, text });
 }
@@ -697,7 +697,7 @@ export async function sendPlanActivationEmail(
       ${period ? keyVal("First period", period) : ""}
     </table>
     ${invoiceTable(opts)}
-    ${para(`Once this invoice is paid, your <strong style="color:${INK};font-weight:600">${esc(opts.planName)}</strong> plan is active and you can begin ordering chips. Until then, your account is awaiting payment.`)}
+    ${para(`Once this invoice is paid, your <strong style="color:${INK};font-weight:600">${esc(opts.planName)}</strong> plan is active and you can begin ordering tags. Until then, your account is awaiting payment.`)}
     <p style="margin:20px 0 0;font-family:${SANS};font-size:13px;color:${MUTE}">Due ${fmtDate(opts.dueDate)}. A PDF copy of this invoice is attached.</p>
   `,
     { preheader: `Welcome to Tagit — you've been set up on the ${opts.planName} plan.` }
@@ -709,14 +709,14 @@ export async function sendBatchInvoiceEmail(to: string, opts: InvoiceEmailOpts) 
   const html = base(
     `
     ${eyebrow(`Invoice ${opts.invoiceNumber}`)}
-    ${heading("Invoice for your chip order")}
-    ${para(`${opts.companyName}, here is the invoice for your chip order. Your batch will be produced and dispatched once payment is received.`)}
+    ${heading("Invoice for your tag order")}
+    ${para(`${opts.companyName}, here is the invoice for your tag order. Your batch will be produced and dispatched once payment is received.`)}
     ${invoiceTable(opts)}
-    <p style="margin:20px 0 0;font-family:${SANS};font-size:13px;color:${MUTE}">Please pay by ${fmtDate(opts.dueDate)} so we can ship your chips.</p>
+    <p style="margin:20px 0 0;font-family:${SANS};font-size:13px;color:${MUTE}">Please pay by ${fmtDate(opts.dueDate)} so we can ship your tags.</p>
   `,
-    { preheader: `Invoice for your chip order — ${formatNaira(opts.amount)}` }
+    { preheader: `Invoice for your tag order — ${formatNaira(opts.amount)}` }
   );
-  await resend.emails.send({ from: FROM, to, subject: `Invoice for your chip order — ${opts.invoiceNumber}`, html, attachments: invoiceAttachments(opts) });
+  await resend.emails.send({ from: FROM, to, subject: `Invoice for your tag order — ${opts.invoiceNumber}`, html, attachments: invoiceAttachments(opts) });
 }
 
 // Payment receipt — sent when an invoice is settled. Doubles as the brand's
@@ -740,7 +740,7 @@ export async function sendPaymentConfirmedEmail(
 ) {
   const what =
     opts.type === "batch"
-      ? "Your chip order is now approved and will be processed."
+      ? "Your tag order is now approved and will be processed."
       : opts.periodLabel
       ? `Your subscription is active for ${opts.periodLabel}.`
       : "Your subscription is active.";
@@ -791,13 +791,13 @@ export async function sendDiscountAppliedEmail(
   to: string,
   opts: { companyName: string; percentage: number; duration: number; type: "subscription" | "batch" }
 ) {
-  const unit = opts.type === "subscription" ? "billing cycles" : "chip orders";
+  const unit = opts.type === "subscription" ? "billing cycles" : "tag orders";
   const html = base(
     `
     ${eyebrow("A Discount For You")}
     ${heading("You have a discount on your account")}
     ${para(`Good news, ${opts.companyName}. We have applied a <strong style="color:${INK};font-weight:600">${opts.percentage}% discount</strong> to your account for the next <strong style="color:${INK};font-weight:600">${opts.duration} ${unit}</strong>.`)}
-    ${para(`It starts from your next ${opts.type === "subscription" ? "invoice" : "chip order"} and will be shown clearly on every invoice during the discount period.`)}
+    ${para(`It starts from your next ${opts.type === "subscription" ? "invoice" : "tag order"} and will be shown clearly on every invoice during the discount period.`)}
   `,
     { preheader: `You have a ${opts.percentage}% discount on your Tagit account.` }
   );
@@ -861,7 +861,7 @@ export async function sendAccountSuspendedEmail(
     ${eyebrow("Account Suspended")}
     ${heading("Your dashboard access is suspended")}
     ${para(`${opts.companyName}, because invoice ${opts.invoiceNumber} for <strong style="color:${INK};font-weight:600">${formatNaira(opts.amount)}</strong> remains unpaid, your dashboard access has been suspended.`)}
-    ${para("Pay your outstanding balance to restore access immediately. Your customers can still verify their items at any time — chip scanning is never affected.")}
+    ${para("Pay your outstanding balance to restore access immediately. Your customers can still verify their items at any time — scanning is never affected.")}
     ${opts.payUrl ? button(`Pay ${formatNaira(opts.amount)} now`, opts.payUrl) : ""}
   `,
     { preheader: "Your Tagit dashboard access is suspended." }

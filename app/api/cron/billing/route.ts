@@ -19,7 +19,7 @@ import {
 
 // Daily billing cron (08:00). Guarded by CRON_SECRET.
 // Four tasks: trial endings, due invoices, overdue escalation, suspensions.
-// It NEVER touches chip scanning — /v/[token] always works.
+// It NEVER touches scanning — /v/[token] always works.
 export async function GET(request: Request) {
   const auth = request.headers.get("authorization");
   if (!process.env.CRON_SECRET || auth !== `Bearer ${process.env.CRON_SECRET}`) {

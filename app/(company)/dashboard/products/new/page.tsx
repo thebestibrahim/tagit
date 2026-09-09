@@ -26,7 +26,7 @@ export default async function NewProductPage({
   if (!company || company.status !== "approved") redirect("/auth/unauthorized");
 
   // Duplicate flow: pre-fill the form with a source product's details (never its
-  // chips — those stay with the original and must be picked fresh).
+  // tags — those stay with the original and must be picked fresh).
   let defaults: ProductDefaults | undefined;
   if (from) {
     const { data: src } = await supabase

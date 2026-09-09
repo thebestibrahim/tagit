@@ -9,7 +9,7 @@ import InfoGallery from "./InfoGallery";
 import InfoChat from "./InfoChat";
 
 // Public exhibition info page. A calm, editorial REFERENCE placard — deliberately
-// distinct from the Verified Authentic chip scan page (/v/[token]). It shows
+// distinct from the Verified Authentic tag scan page (/v/[token]). It shows
 // only the product's registration fields, never any ownership data, and carries
 // no verification badges or security iconography of any kind. Every surface is
 // derived from the brand's palette, so the page reads correctly in any shade.

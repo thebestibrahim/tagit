@@ -29,15 +29,15 @@ export async function POST(
 
   const batch = batchData as { id: string; status: string };
 
-  // Only a batch whose chips exist (generated or programmed) can be shipped.
+  // Only a batch whose tags exist (generated or programmed) can be shipped.
   if (batch.status !== "generated" && batch.status !== "written") {
     return NextResponse.json(
-      { error: "Generate the chips before marking the batch shipped." },
+      { error: "Generate the tags before marking the batch shipped." },
       { status: 409 }
     );
   }
 
-  // Move the batch's not-yet-attached chips `created` → `shipped`. Tags that
+  // Move the batch's not-yet-attached tags `created` → `shipped`. Tags that
   // already have a product (`live`) or further along are left untouched.
   const { error: tagError } = await admin
     .from("tags")

@@ -83,7 +83,7 @@ export default async function AnalyticsPage({
 
   const ownedTags = tags.filter((t) => ["owned", "transferred"].includes(t.status)).length;
   const totalTags = tags.length;
-  // "Deployed" = chip is out in the world with content attached.
+  // "Deployed" = tag is out in the world with content attached.
   const deployedTags = tags.filter((t) =>
     ["live", "owned", "transferred"].includes(t.status)
   ).length;

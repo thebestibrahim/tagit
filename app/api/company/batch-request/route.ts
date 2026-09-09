@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
 
-  // ── Lifetime chip-limit enforcement ──────────────────────────────────────
+  // ── Lifetime tag-limit enforcement ───────────────────────────────────────
   // Limits apply on every plan state, including trials, using the override when
   // set. A brand with no subscription yet has no known plan, so nothing to
   // enforce (their order proceeds and is invoiced as before).
@@ -64,19 +64,19 @@ export async function POST(request: Request) {
 
   // ── Provisioning gate ────────────────────────────────────────────────────
   // A plan is only provisioned once its first invoice is paid. Until then (and
-  // whenever there is an unpaid/overdue balance) the brand cannot place new chip
+  // whenever there is an unpaid/overdue balance) the brand cannot place new tag
   // orders. Trials and active subscriptions may order; past_due, suspended and
   // cancelled may not.
   if (sub && sub.status !== "active" && sub.status !== "trialing") {
     const message =
       sub.status === "suspended"
         ? "Your account is suspended for an unpaid balance. Settle your outstanding invoice to place new orders."
-        : "Your plan is awaiting payment. Please pay your outstanding invoice to activate your account before ordering chips.";
+        : "Your plan is awaiting payment. Please pay your outstanding invoice to activate your account before ordering tags.";
     return NextResponse.json({ error: message, payment_required: true }, { status: 402 });
   }
 
   // A brand can have overdue batch invoices with no subscription row at all
-  // (chip orders never require a plan), which the check above can't see — the
+  // (tag orders never require a plan), which the check above can't see — the
   // billing cron still marks those invoices 'overdue' past day 21, so gate on
   // that directly rather than relying on subscription status.
   const { data: overdueInvoice } = await admin

@@ -507,7 +507,7 @@
 }
 .theme-toggle:focus-visible { outline: 2px solid var(--lp-key); outline-offset: 2px; }
 
-/* Chip / card switch. A quiet control: the objects are the loud part. */
+/* Tag / card switch. A quiet control: the objects are the loud part. */
 .artifact-tab {
   appearance: none;
   border: 1px solid transparent;

@@ -29,7 +29,7 @@ const PIECE = {
 const STEPS = [
   {
     title: "Set up at manufacture",
-    body: "A chip goes into the piece, or a signed card travels with it, before either leaves the workshop. Neither can be added later, or moved onto a fake.",
+    body: "A tag goes into the piece, or a signed card travels with it, before either leaves the workshop. Neither can be added later, or moved onto a fake.",
   },
   {
     title: "A customer taps their phone",
@@ -352,7 +352,7 @@ export default function ScanSequence() {
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={PIECE.photo} alt="A luxury timepiece carrying a Tagit chip" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 35%", filter: GRADE }} />
+          <img src={PIECE.photo} alt="A luxury timepiece carrying a Tagit tag" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 35%", filter: GRADE }} />
         </motion.div>
 
         {/* NFC arcs, only while the tap is happening */}

@@ -202,7 +202,7 @@ function SubscriptionForm({ companyId, data, onSaved }: { companyId: string; dat
 
       {/* Lifetime chip limits */}
       <div className="mt-4">
-        <p className="text-micro font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-mist)" }}>Lifetime chip limits</p>
+        <p className="text-micro font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-mist)" }}>Lifetime tag and card limits</p>
         <div className="grid grid-cols-2 gap-4">
           <Labeled label={`Tag limit override (plan: ${limitHint(planTagLimit)})`}>
             <input value={tagOverride} onChange={(e) => setTagOverride(e.target.value)} placeholder="Blank = plan default" className="w-full px-3 py-2 rounded-lg text-body-sm" style={fieldStyle()} />
@@ -358,7 +358,7 @@ function PricingEditor({ companyId, data, onSaved }: { companyId: string; data: 
   }
 
   return (
-    <Block title="Custom chip pricing (₦ per chip)">
+    <Block title="Custom tag pricing (₦ per tag)">
       <div className="grid grid-cols-2 gap-6">
         <div>
           <p className="text-micro font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--color-mist)" }}>Tags</p>
