@@ -1,16 +1,19 @@
 "use client";
-import { motion } from "motion/react";
-import { c, type, rise } from "./styles";
+import { motion, useInView } from "motion/react";
+import { useRef, type ReactNode } from "react";
+import OwnershipLedger from "./interactive/ownership-ledger";
+import { KeyLight, Parallax } from "./interactive/cinema";
+import { EASE, c, type, rise } from "./styles";
 
 const PILLARS = [
   {
     name: "Identity",
     description:
-      "A chip embedded in every piece at the moment it is made. It cannot be copied, and it outlasts the piece it sits in.",
+      "A chip embedded in the piece, or a signed card that travels with it. Either way, it cannot be copied and it outlasts the sale.",
     points: [
       "Every piece carries a mark only you can create",
       "Fakes are caught the moment they are scanned",
-      "Embedded during manufacture, not bolted on after",
+      "Chip or card, chosen per piece, per customer",
       "Built to last the lifetime of the piece",
     ],
   },
@@ -38,64 +41,154 @@ const PILLARS = [
   },
 ];
 
+/**
+ * Three columns divided by light rather than by rules: each seam is bright where
+ * the lamp hits it and falls away down the column. The ledger sits beside the
+ * heading as the one piece of evidence in the section, since ownership is the
+ * claim a visitor is least likely to take on trust.
+ */
+
+/**
+ * One drawn mark per pillar. Each is the mechanism it sits above rather than a
+ * decorative glyph: the inlay in its housing, a chain of custody, a piece
+ * moving across a horizon. Stroked on as the column comes into frame.
+ */
+function Mark({ children }: { children: ReactNode }) {
+  const ref = useRef<SVGSVGElement>(null);
+  /* Driven off one observer rather than `whileInView`, which fired for two of
+     the three columns and left the first mark permanently undrawn. */
+  const onScreen = useInView(ref, { once: true, margin: "-10%" });
+
+  return (
+    <motion.svg
+      ref={ref}
+      width="60"
+      height="60"
+      viewBox="0 0 64 64"
+      fill="none"
+      aria-hidden
+      initial="rest"
+      animate={onScreen ? "drawn" : "rest"}
+      style={{ display: "block", marginBottom: 26, overflow: "visible" }}
+    >
+      {children}
+    </motion.svg>
+  );
+}
+
+const stroke = {
+  stroke: c.key,
+  strokeWidth: 1.5,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  fill: "none",
+};
+
+const draw = (delay: number) => ({
+  variants: { rest: { pathLength: 0, opacity: 0 }, drawn: { pathLength: 1, opacity: 1 } },
+  transition: { duration: 0.8, ease: EASE, delay },
+});
+
+const MARKS = [
+  /* Identity: the inlay, closed inside its housing. */
+  <>
+    <motion.circle cx="32" cy="32" r="25" {...stroke} {...draw(0)} />
+    <motion.circle cx="32" cy="32" r="16" {...stroke} strokeOpacity={0.5} {...draw(0.14)} />
+    <motion.rect x="26" y="26" width="12" height="12" rx="2.5" {...stroke} {...draw(0.28)} />
+    <motion.path d="M32 7 v6" {...stroke} {...draw(0.4)} />
+  </>,
+  /* Ownership: a chain of custody, the hand it is in now filled. */
+  <>
+    <motion.path d="M11 32 h42" {...stroke} strokeOpacity={0.45} {...draw(0)} />
+    <motion.circle cx="11" cy="32" r="5.5" {...stroke} {...draw(0.14)} />
+    <motion.circle cx="32" cy="32" r="5.5" {...stroke} {...draw(0.26)} />
+    <motion.circle cx="53" cy="32" r="5.5" {...stroke} fill={c.key} {...draw(0.38)} />
+  </>,
+  /* Intelligence: where the work is in the world. */
+  <>
+    <motion.circle cx="32" cy="32" r="24" {...stroke} {...draw(0)} />
+    <motion.ellipse cx="32" cy="32" rx="10" ry="24" {...stroke} strokeOpacity={0.5} {...draw(0.16)} />
+    <motion.path d="M9.5 24 h45 M9.5 40 h45" {...stroke} strokeOpacity={0.5} {...draw(0.28)} />
+    <motion.circle cx="42" cy="21" r="3.4" {...stroke} fill={c.key} {...draw(0.42)} />
+  </>,
+];
+
 export default function Pillars() {
   return (
-    <section className="lp-section-padding" style={{ backgroundColor: c.night, padding: "120px 32px", position: "relative", overflow: "hidden" }}>
-      <div style={{ maxWidth: 1120, margin: "0 auto", position: "relative" }}>
-        <motion.div {...rise()} style={{ marginBottom: 72, maxWidth: 660 }}>
-          <h2 style={{ ...type.h2, color: c.onDark, marginBottom: 20 }}>
-            Three things every piece carries.
-          </h2>
-          <p style={{ ...type.lead, color: c.onDarkBody }}>
-            One chip, doing three jobs at once, for as long as the object exists.
-          </p>
-        </motion.div>
+    <section className="lp-section-padding" style={{ background: `linear-gradient(180deg, ${c.abyss} 0%, ${c.plate} 16%, ${c.plate} 84%, ${c.abyss} 100%)`, padding: "132px 0 136px", position: "relative", overflow: "hidden" }}>
+      <KeyLight x="50%" y="0%" size={95} intensity={0.13} travel={30} />
 
-        <div className="pillars-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1 }}>
+      <div className="lp-inner" style={{ position: "relative", maxWidth: 1280, margin: "0 auto", padding: "0 56px" }}>
+        <div className="pillars-head" style={{ display: "grid", gridTemplateColumns: "1.25fr 0.75fr", gap: 64, alignItems: "center", marginBottom: 96 }}>
+          <motion.div {...rise()}>
+            <h2 style={{ ...type.h2, color: c.bone, marginBottom: 22, maxWidth: "13ch" }}>
+              Three things every piece carries.
+            </h2>
+            <p style={{ ...type.lead, color: c.patina, maxWidth: "42ch" }}>
+              One chip or card, doing three jobs at once, for as long as the object exists.
+            </p>
+          </motion.div>
+
+          <Parallax depth={0.34} className="pillars-evidence" style={{ justifySelf: "end" }}>
+            <OwnershipLedger />
+          </Parallax>
+        </div>
+
+        <div className="pillars-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0 }}>
           {PILLARS.map((pillar, i) => (
             <motion.div
               key={pillar.name}
               className="pillars-item"
               {...rise(i * 0.1)}
               style={{
-                padding: "44px 40px 44px 0",
-                paddingLeft: i > 0 ? 40 : 0,
-                borderLeft: i > 0 ? `1px solid ${c.lineDark}` : "none",
-                borderTop: `1px solid ${c.lineDark}`,
+                position: "relative",
+                padding: i === 0 ? "0 44px 0 0" : "0 44px",
+                paddingRight: i === PILLARS.length - 1 ? 0 : 44,
               }}
             >
+              {i > 0 && (
+                <div
+                  aria-hidden
+                  className="pillars-seam"
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 1,
+                    background: `linear-gradient(180deg, ${c.hairlineWarm}, ${c.hairline} 30%, transparent 92%)`,
+                  }}
+                />
+              )}
+
+              <Mark>{MARKS[i]}</Mark>
+
               <h3
                 style={{
                   fontFamily: "var(--font-display)",
-                  fontSize: 30,
+                  fontSize: "clamp(30px, 2.8vw, 40px)",
                   fontWeight: 400,
-                  color: c.onDark,
-                  letterSpacing: "-0.022em",
-                  lineHeight: 1.15,
-                  margin: "0 0 16px",
+                  color: c.bone,
+                  letterSpacing: "-0.03em",
+                  lineHeight: 1.05,
+                  margin: "0 0 18px",
                 }}
               >
                 {pillar.name}
               </h3>
 
-              <p style={{ ...type.body, color: c.onDarkBody, margin: "0 0 28px" }}>
+              <p style={{ ...type.body, color: c.patina, margin: "0 0 30px", maxWidth: "34ch" }}>
                 {pillar.description}
               </p>
 
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 13 }}>
                 {pillar.points.map((point) => (
-                  <li key={point} style={{ display: "flex", gap: 12 }}>
+                  <li key={point} style={{ display: "flex", gap: 13 }}>
                     <span
-                      style={{
-                        width: 5,
-                        height: 5,
-                        borderRadius: "50%",
-                        backgroundColor: c.gold,
-                        flexShrink: 0,
-                        marginTop: 8,
-                      }}
+                      aria-hidden
+                      style={{ width: 14, height: 1, backgroundColor: c.key, flexShrink: 0, marginTop: 11, opacity: 0.75 }}
                     />
-                    <span style={{ ...type.small, color: c.onDarkQuiet }}>{point}</span>
+                    <span style={{ ...type.small, color: c.patina }}>{point}</span>
                   </li>
                 ))}
               </ul>

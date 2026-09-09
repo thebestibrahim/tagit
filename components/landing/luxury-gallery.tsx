@@ -1,92 +1,88 @@
 "use client";
-import { motion } from "motion/react";
-import { useState } from "react";
+import { motion, useReducedMotion, useTransform } from "motion/react";
+import { Plate, useSectionProgress } from "./interactive/cinema";
 import { c, type, rise } from "./styles";
 
-const ITEMS = [
-  { label: "Timepieces", sub: "Swiss and independent horology", src: "/img/watch.jpg" },
-  { label: "Leather goods", sub: "Bags, wallets and small goods", src: "/img/bag.jpg" },
-  { label: "Jewellery", sub: "Fine and haute joaillerie", src: "/img/jewellery.jpg" },
-  { label: "Ready to wear", sub: "Couture and limited editions", src: "/img/fashion-gallery.jpg" },
+type Item = { label: string; sub: string; src: string; focus: string; depth: number; grade?: string };
+
+const ITEMS: Item[] = [
+  { label: "Timepieces", sub: "Swiss and independent horology", src: "/img/watch.jpg", focus: "58% 62%", depth: 0.3 },
+  { label: "Leather goods", sub: "Bags, wallets and small goods", src: "/img/bag.jpg", focus: "center", depth: 0.16 },
+  { label: "Jewellery", sub: "Fine and haute joaillerie", src: "/img/jewellery.jpg", focus: "52% 38%", depth: 0.34,
+    /* Shot high-key against white, so it needs a deeper grade than the rest to
+       sit in the same room. */
+    grade: "saturate(0.5) contrast(1.12) brightness(0.56)" },
+  { label: "Ready to wear", sub: "Couture and limited editions", src: "/img/fashion-gallery.jpg", focus: "center", depth: 0.2 },
 ];
 
-function GalleryImage({ src, alt }: { src: string; alt: string }) {
-  const [failed, setFailed] = useState(false);
-
-  if (failed) {
-    return <div style={{ position: "absolute", inset: 0, background: "linear-gradient(145deg, #1A1510 0%, #2E2416 50%, #1A1510 100%)" }} />;
-  }
-
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt={alt}
-      onError={() => setFailed(true)}
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-    />
-  );
-}
-
-function Tile({ item, large = false, wide = false, delay = 0 }: { item: (typeof ITEMS)[number]; large?: boolean; wide?: boolean; delay?: number }) {
-  return (
-    <motion.div
-      {...rise(delay)}
-      style={{
-        gridRow: large ? "1 / 3" : undefined,
-        gridColumn: wide ? "2 / 4" : undefined,
-        position: "relative",
-        borderRadius: 16,
-        overflow: "hidden",
-        backgroundColor: "#1A1510",
-      }}
-    >
-      <GalleryImage src={item.src} alt={item.label} />
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(8,8,6,0.88) 0%, rgba(8,8,6,0.12) 48%, transparent 100%)" }} />
-      <div style={{ position: "absolute", bottom: large ? 28 : 22, left: large ? 28 : 22, right: 22 }}>
-        <p
-          style={{
-            margin: "0 0 5px",
-            fontFamily: "var(--font-display)",
-            fontSize: large ? 28 : 21,
-            color: c.onDark,
-            letterSpacing: "-0.02em",
-            lineHeight: 1.15,
-          }}
-        >
-          {item.label}
-        </p>
-        <p style={{ ...type.small, color: c.onDarkQuiet }}>{item.sub}</p>
-      </div>
-    </motion.div>
-  );
-}
-
+/**
+ * A tracking shot past a vitrine.
+ *
+ * The strip is wider than the viewport on purpose and slides laterally against
+ * the scroll, so the pieces pass the camera rather than sitting in a grid. Each
+ * plate also drifts vertically at its own rate, which is what stops four
+ * photographs shot in four different studios from reading as four stickers.
+ */
 export default function LuxuryGallery() {
+  const [ref, progress] = useSectionProgress();
+  const reduce = useReducedMotion();
+  const x = useTransform(progress, [0, 1], ["0%", "-7%"]);
+
   return (
-    <section className="gallery-section" style={{ backgroundColor: "#080806", padding: "120px 32px", position: "relative" }}>
-      <div style={{ maxWidth: 1160, margin: "0 auto", position: "relative" }}>
-        <div className="gallery-header" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, marginBottom: 56, alignItems: "end" }}>
-          <motion.h2 {...rise()} style={{ ...type.h2, color: c.onDark }}>
+    <section ref={ref} className="gallery-section" style={{ backgroundColor: c.abyss, padding: "56px 0 128px", position: "relative", overflow: "hidden" }}>
+      <div className="lp-inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 56px 64px" }}>
+        <div className="gallery-header" style={{ display: "grid", gridTemplateColumns: "1.05fr 0.95fr", gap: 56, alignItems: "end" }}>
+          <motion.h2 {...rise()} style={{ ...type.h2, color: c.bone, maxWidth: "14ch" }}>
             The things people never throw away.
           </motion.h2>
 
-          <motion.p {...rise(0.1)} style={{ ...type.lead, color: c.onDarkBody }}>
+          <motion.p {...rise(0.1)} style={{ ...type.lead, color: c.patina, maxWidth: "44ch" }}>
             A watch, a bag, a ring. The pieces your customers keep for thirty years
             deserve a record that lasts at least as long.
           </motion.p>
         </div>
-
-        <div
-          className="gallery-grid"
-          style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr", gridTemplateRows: "310px 310px", gap: 8 }}
-        >
-          <Tile item={ITEMS[0]} large />
-          {ITEMS.slice(1).map((item, i) => (
-            <Tile key={item.label} item={item} wide={i === 2} delay={0.08 + i * 0.07} />
-          ))}
-        </div>
       </div>
+
+      <motion.div
+        className="gallery-strip"
+        style={{
+          display: "flex",
+          gap: 10,
+          paddingLeft: 56,
+          x: reduce ? 0 : x,
+          willChange: "transform",
+        }}
+      >
+        {ITEMS.map((item) => (
+          <Plate
+            key={item.label}
+            src={item.src}
+            alt={item.label}
+            focus={item.focus}
+            depth={item.depth}
+            grade={item.grade}
+            className="gallery-plate"
+            style={{ flex: "0 0 clamp(230px, 25vw, 380px)", height: "clamp(320px, 40vw, 540px)", borderRadius: 4 }}
+            scrim="linear-gradient(to top, rgba(8,8,10,0.92) 0%, rgba(8,8,10,0.15) 44%, transparent 72%)"
+          >
+            <div style={{ position: "absolute", bottom: 24, left: 24, right: 20, zIndex: 2 }}>
+              <p
+                style={{
+                  margin: "0 0 5px",
+                  fontFamily: "var(--font-display)",
+                  fontSize: "clamp(20px, 1.8vw, 26px)",
+                  color: c.bone,
+                  letterSpacing: "-0.024em",
+                  lineHeight: 1.12,
+                }}
+              >
+                {item.label}
+              </p>
+              <p style={{ ...type.small, color: c.patina }}>{item.sub}</p>
+            </div>
+          </Plate>
+        ))}
+      </motion.div>
     </section>
   );
 }

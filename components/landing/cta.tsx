@@ -1,87 +1,46 @@
 "use client";
-import { motion } from "motion/react";
 import Link from "next/link";
+import { motion } from "motion/react";
+import { KeyLight, LineReveal } from "./interactive/cinema";
 import { c, type, rise } from "./styles";
 
+/**
+ * The end card. No panel and no box: the lamp, one statement at display size,
+ * and the two things a visitor can do about it.
+ */
 export default function CtaSection() {
   return (
-    <section style={{ padding: "96px 32px", backgroundColor: c.ivory, borderTop: `1px solid ${c.line}` }}>
-      <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-        <motion.div
-          {...rise()}
-          className="cta-inner"
-          style={{
-            backgroundColor: c.night,
-            borderRadius: 20,
-            padding: "80px 80px",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          {/* Warm light from the top-left corner rather than a centred halo */}
-          <div
-            style={{
-              position: "absolute",
-              top: "-40%",
-              left: "-10%",
-              width: "70%",
-              height: "180%",
-              background: "radial-gradient(ellipse at 40% 50%, rgba(184,148,93,0.18) 0%, transparent 62%)",
-              pointerEvents: "none",
-            }}
-          />
+    <section style={{ padding: "36px 0 132px", backgroundColor: c.abyss, position: "relative", overflow: "hidden" }}>
+      <KeyLight x="26%" y="60%" size={72} intensity={0.15} travel={30} />
 
-          <div className="cta-content" style={{ position: "relative", display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 56, alignItems: "center" }}>
-            <div>
-              <h2 style={{ ...type.h2, color: c.onDark, marginBottom: 20 }}>
-                Be one of the first brands on the network.
-              </h2>
-              <p style={{ ...type.lead, color: c.onDarkBody, maxWidth: 460 }}>
-                We are working with a small group of founding brands right now. Apply for
-                access, or book a walkthrough and we will reply within two working days.
-              </p>
-            </div>
+      <div className="lp-inner" style={{ position: "relative", maxWidth: 1180, margin: "0 auto", padding: "0 56px" }}>
+        <div
+          aria-hidden
+          style={{ height: 1, width: "100%", background: `linear-gradient(90deg, ${c.key}, ${c.hairline} 34%, transparent 82%)`, marginBottom: 80 }}
+        />
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 264, width: "100%" }}>
-              <Link
-                href="/auth/register"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "16px 28px",
-                  backgroundColor: c.gold,
-                  color: "#fff",
-                  borderRadius: 8,
-                  fontWeight: 550,
-                  fontSize: 15,
-                  letterSpacing: "-0.01em",
-                  textDecoration: "none",
-                }}
-              >
-                Apply for access
-              </Link>
-              <a
-                href="mailto:business@tagitlux.com?subject=Tagit walkthrough"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "16px 24px",
-                  color: c.onDarkBody,
-                  border: "1px solid rgba(212,182,138,0.24)",
-                  borderRadius: 8,
-                  textDecoration: "none",
-                  fontWeight: 450,
-                  fontSize: 15,
-                  letterSpacing: "-0.005em",
-                }}
-              >
-                Book a walkthrough
-              </a>
-            </div>
-          </div>
-        </motion.div>
+        <div className="cta-content" style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: 64, alignItems: "end" }}>
+          <h2 style={{ ...type.h2, color: c.bone, margin: 0 }}>
+            <LineReveal inView lines={["Be one of the first", "brands on the network."]} stagger={0.1} />
+          </h2>
+
+          <motion.div {...rise(0.25)} style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 300 }}>
+            <p style={{ ...type.small, color: c.patina, margin: "0 0 6px" }}>
+              We are working with a small group of founding brands right now. Apply for
+              access, or book a walkthrough and we will reply within two working days.
+            </p>
+            <Link href="/auth/register" className="cine-cta-key" style={{ justifyContent: "center" }}>
+              Apply for access
+            </Link>
+            <a
+              href="mailto:business@tagitlux.com?subject=Tagit walkthrough"
+              className="cine-cta-ghost"
+              style={{ justifyContent: "center" }}
+            >
+              Book a walkthrough
+            </a>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

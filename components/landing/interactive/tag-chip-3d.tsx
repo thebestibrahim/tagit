@@ -175,7 +175,7 @@ export default function TagChip3D() {
           margin: "22px 0 0",
         }}
       >
-        Embedded in every piece
+        One way we secure a piece
       </p>
 
       <style>{`

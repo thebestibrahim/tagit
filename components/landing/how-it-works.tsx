@@ -1,98 +1,44 @@
 "use client";
 import { motion } from "motion/react";
-import TagChip3D from "./interactive/tag-chip-3d";
+import ScanSequence from "./interactive/scan-sequence";
+import TagArtifact from "./interactive/tag-artifact";
+import { KeyLight, LightSeam } from "./interactive/cinema";
 import { c, type, rise } from "./styles";
 
-const STEPS = [
-  {
-    title: "You apply, we verify",
-    body: "Tagit does not onboard everyone. Every brand passes verification before getting access to the platform.",
-  },
-  {
-    title: "Tags arrive ready to use",
-    body: "We program, package and ship the chips already paired to your account. Your team embeds them during manufacture.",
-  },
-  {
-    title: "You add the story",
-    body: "In your dashboard, attach photography, origin, materials and your own words to every piece you make.",
-  },
-  {
-    title: "Customers tap, and keep tapping",
-    body: "One tap shows authenticity, the full ownership history, and your brand speaking in its own voice.",
-  },
-];
-
+/**
+ * Placed second, directly under the title card, because everything after it
+ * argues about why this matters and none of that lands until you know what the
+ * thing actually is. The sequence answers "what happens", the artifact below it
+ * answers "what is physically in my product".
+ */
 export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
       className="lp-section-padding"
-      style={{ padding: "120px 32px", backgroundColor: c.paper, borderTop: `1px solid ${c.line}` }}
+      style={{ padding: "132px 0 136px", backgroundColor: c.abyss, position: "relative", overflow: "hidden" }}
     >
-      <div
-        className="hiw-grid"
-        style={{ maxWidth: 1120, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}
-      >
-        <div>
-          <motion.div {...rise()} style={{ marginBottom: 48 }}>
-            <h2 style={{ ...type.h2, color: c.ink, marginBottom: 18 }}>
-              How a piece gets its identity.
-            </h2>
-            <p style={{ ...type.lead, color: c.body, maxWidth: 440 }}>
-              Four steps, and then it runs on its own for the life of the object.
-            </p>
-          </motion.div>
+      <KeyLight x="70%" y="55%" size={72} intensity={0.11} travel={50} />
 
-          <div>
-            {STEPS.map((step, i) => (
-              <motion.div
-                key={step.title}
-                {...rise(i * 0.07)}
-                style={{
-                  display: "flex",
-                  gap: 20,
-                  padding: "26px 0",
-                  borderBottom: i < STEPS.length - 1 ? `1px solid ${c.line}` : "none",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: c.goldText,
-                    width: 22,
-                    flexShrink: 0,
-                    paddingTop: 3,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {i + 1}
-                </span>
-                <div>
-                  <h3 style={{ fontSize: 18, fontWeight: 550, color: c.inkSoft, margin: "0 0 6px", letterSpacing: "-0.012em" }}>
-                    {step.title}
-                  </h3>
-                  <p style={{ ...type.small, color: c.body }}>{step.body}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+      <div className="lp-inner" style={{ position: "relative", maxWidth: 1280, margin: "0 auto", padding: "0 56px" }}>
+        <motion.div {...rise()} style={{ marginBottom: 64, maxWidth: 700 }}>
+          <h2 style={{ ...type.h2, color: c.bone, marginBottom: 20, maxWidth: "14ch" }}>
+            How a piece gets its identity.
+          </h2>
+          <p style={{ ...type.lead, color: c.patina, maxWidth: "50ch" }}>
+            Four steps, and then it runs on its own for the life of the object. Click
+            through them.
+          </p>
+        </motion.div>
 
-        <motion.div
-          className="hiw-chip"
-          {...rise(0.1)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 48,
-            backgroundColor: c.ivory,
-            borderRadius: 20,
-            border: `1px solid ${c.line}`,
-          }}
-        >
-          <TagChip3D />
+        <ScanSequence />
+
+        <motion.div {...rise(0.1)} style={{ marginTop: 104 }}>
+          <LightSeam width="100%" />
+          <h3 style={{ ...type.h3, color: c.bone, margin: "36px 0 48px", maxWidth: "22ch" }}>
+            What actually goes into the piece.
+          </h3>
+          <TagArtifact />
         </motion.div>
       </div>
     </section>

@@ -323,62 +323,215 @@
 /* ── Modal input placeholder colour ── */
 .tagit-modal-input::placeholder { color: #3A3A3F; }
 
+/* ── Landing page: the dark room ───────────────────────────────────
+   Everything below belongs to the marketing page only. The app and auth
+   surfaces keep the light palette defined above. */
+
+.cine-cta-key,
+.cine-cta-ghost {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  font-size: 15px;
+  letter-spacing: -0.008em;
+  text-decoration: none;
+  transition: background-color 0.25s ease, border-color 0.25s ease,
+              color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+/* The one saturated action on the page. Gold behaves as a light here, so it
+   brightens rather than darkens on hover. */
+.cine-cta-key {
+  padding: 15px 28px;
+  font-weight: 550;
+  color: #17130A;
+  background: linear-gradient(150deg, #EBD3A0 0%, #C8A464 52%, #B08D4E 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.28) inset, 0 10px 30px rgba(200,164,100,0.20);
+}
+.cine-cta-key:hover {
+  background: linear-gradient(150deg, #F4E2BC 0%, #D8B778 52%, #C29C5C 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset, 0 14px 40px rgba(200,164,100,0.34);
+}
+.cine-cta-key.cine-cta-sm,
+.cine-cta-ghost.cine-cta-sm { padding: 10px 20px; font-size: 14px; }
+
+.cine-cta-ghost {
+  padding: 15px 26px;
+  font-weight: 450;
+  color: #C8C4BC;
+  border: 1px solid rgba(243,240,233,0.16);
+  background-color: rgba(243,240,233,0.02);
+}
+.cine-cta-ghost:hover {
+  color: #F3F0E9;
+  border-color: rgba(200,164,100,0.42);
+  background-color: rgba(200,164,100,0.07);
+}
+
+.cine-navlink {
+  font-size: 15px;
+  font-weight: 450;
+  letter-spacing: -0.005em;
+  color: #A8A49C;
+  text-decoration: none;
+  transition: color 0.22s ease;
+}
+.cine-navlink:hover { color: #F3F0E9; }
+
+.cine-footlink {
+  font-size: 15px;
+  color: #A8A49C;
+  text-decoration: none;
+  transition: color 0.22s ease;
+}
+.cine-footlink:hover { color: #F3F0E9; }
+
+.cine-cta-key:focus-visible,
+.cine-cta-ghost:focus-visible,
+.cine-navlink:focus-visible,
+.cine-footlink:focus-visible {
+  outline: 2px solid #EBD3A0;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Chip / card switch. A quiet control: the objects are the loud part. */
+.artifact-tab {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-family: inherit;
+  font-size: 14.5px;
+  letter-spacing: -0.005em;
+  color: #A8A49C;
+  cursor: pointer;
+  transition: color 0.22s ease, background-color 0.22s ease, border-color 0.22s ease;
+}
+.artifact-tab:hover { color: #F3F0E9; }
+.artifact-tab-on {
+  color: #F3F0E9;
+  border-color: rgba(200,164,100,0.38);
+  background-color: rgba(200,164,100,0.09);
+}
+.artifact-tab:focus-visible { outline: 2px solid #EBD3A0; outline-offset: 2px; }
+
+/* Film grain. Stepped, not eased: stock flickers, it does not breathe. */
+.cine-grain { animation: cineGrain 0.7s steps(1) infinite; }
+@keyframes cineGrain {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(-38px, 24px); }
+  40%  { transform: translate(26px, -32px); }
+  60%  { transform: translate(-18px, -22px); }
+  80%  { transform: translate(34px, 18px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* The scroll cue: a single light travelling down a hairline. */
+.cine-cue-spark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 16px;
+  background: linear-gradient(180deg, transparent, #EBD3A0, transparent);
+  animation: cineCue 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes cineCue {
+  0%   { transform: translateY(-16px); opacity: 0; }
+  25%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { transform: translateY(46px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cine-grain { animation: none; }
+  .cine-cue-spark { animation: none; opacity: 0; }
+}
+
 /* ── Landing page: responsive ─────────────────────── */
+@media (max-width: 1100px) {
+  .pillars-head { grid-template-columns: 1fr !important; gap: 44px !important; }
+  .pillars-evidence { justify-self: start !important; }
+  .pricing-card { grid-template-columns: 1fr !important; }
+  .pricing-left { border-right: none !important; border-bottom: 1px solid rgba(243,240,233,0.10) !important; }
+}
+
 @media (max-width: 900px) {
-  .problem-row { grid-template-columns: 1fr !important; gap: 12px !important; }
-  .cta-content { grid-template-columns: 1fr !important; gap: 32px !important; }
-  .timeline-grid { grid-template-columns: 1fr !important; }
-  .timeline-grid > div {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    border-left: none !important;
-    border-bottom: 1px solid #E8E2D5;
-  }
+  .hero-layout { padding: 128px 32px 96px !important; }
+  .nav-bar { padding: 0 32px !important; }
+  .lp-section-padding,
+  .gallery-section { padding-left: 0 !important; padding-right: 0 !important; }
+  .lp-inner { padding-left: 32px !important; padding-right: 32px !important; }
+
+  .problem-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .problem-thesis { position: static !important; margin-bottom: 24px; }
+  .cta-content { grid-template-columns: 1fr !important; gap: 36px !important; align-items: start !important; }
+  .timeline-grid { grid-template-columns: 1fr !important; gap: 0 !important; }
+  .timeline-grid > div { padding-top: 20px !important; }
+  .timeline-grid > div > div:first-child { margin-top: 0 !important; margin-bottom: 14px !important; }
+  .gallery-header { grid-template-columns: 1fr !important; gap: 22px !important; }
+  .pillars-grid { grid-template-columns: 1fr !important; }
+  .pillars-item { padding: 34px 0 !important; }
+  .pillars-seam { left: 0 !important; right: 0 !important; top: 0 !important; bottom: auto !important;
+                  width: auto !important; height: 1px !important;
+                  background: linear-gradient(90deg, rgba(200,164,100,0.22), rgba(243,240,233,0.10) 35%, transparent 90%) !important; }
+  .industries-list { grid-template-columns: 1fr !important; gap: 20px !important; }
+  .artifact-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+  .artifact-stage { min-height: 280px !important; }
+  .industries-overlay { padding: 32px 28px 30px !important; }
+  .pricing-list { grid-template-columns: 1fr !important; }
 }
 
 @media (max-width: 768px) {
-  .lp-section-padding { padding-top: 76px !important; padding-bottom: 76px !important; }
+  .lp-section-padding { padding-top: 96px !important; padding-bottom: 96px !important; }
 
   /* Nav */
   .nav-links { display: none !important; }
   .nav-signin { display: none !important; }
+  .nav-bar { padding: 0 20px !important; }
 
-  /* Hero */
-  .hero-layout { grid-template-columns: 1fr !important; gap: 40px !important; padding: 104px 20px 64px !important; }
-  .hero-visual { height: 400px !important; display: flex; align-items: center; justify-content: center; }
-  .hero-ledger { display: none !important; }
-  .hero-visual > div:nth-of-type(3) { position: static !important; }
+  /* Hero: the frame gets shallower and the proof panel sits under the copy. */
+  .hero-layout { grid-template-columns: 1fr !important; gap: 44px !important; padding: 120px 20px 104px !important; }
+  .hero-card { justify-self: start !important; }
+  /* The plate is centred and mask-feathered on desktop; on a narrow screen it
+     just needs to be smaller and to sit under the buttons, not behind them. */
+  .hero-scrim { background: radial-gradient(88% 40% at 50% 88%, rgba(8,8,10,0) 0%, rgba(8,8,10,0.30) 40%, rgba(8,8,10,0.86) 76%, rgba(8,8,10,0.96) 100%) !important; }
+  .hero-plate {
+    width: min(520px, 96%) !important;
+    margin-left: calc(min(520px, 96%) / -2) !important;
+    height: 46% !important;
+    bottom: 4% !important;
+  }
+  .hero-title { padding-top: 116px !important; }
 
-  /* Stats */
-  .stats-inner { padding: 72px 20px !important; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr) !important; row-gap: 44px !important; }
-  .stats-item { border-left: none !important; padding-left: 0 !important; }
-  .stats-item:nth-child(even) { border-left: 1px solid #E8E2D5 !important; padding-left: 24px !important; }
+  .lp-inner { padding-left: 20px !important; padding-right: 20px !important; }
+
+  /* Stats: the depth stagger collapses, or the rows tangle. */
+  .stats-inner { padding: 96px 20px 112px !important; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 44px 28px !important; }
+  .stats-grid > div { margin-top: 0 !important; }
 
   /* Gallery */
-  .gallery-section { padding: 76px 20px !important; }
-  .gallery-header { grid-template-columns: 1fr !important; gap: 20px !important; margin-bottom: 36px !important; }
-  .gallery-grid { grid-template-columns: 1fr 1fr !important; grid-template-rows: 260px 200px 200px !important; }
-  .gallery-grid > div:first-child { grid-row: auto !important; grid-column: 1 / -1 !important; }
-
-  /* Pillars */
-  .pillars-grid { grid-template-columns: 1fr !important; }
-  .pillars-item { border-left: none !important; padding-left: 0 !important; padding-right: 0 !important; }
+  .gallery-section { padding: 24px 0 104px !important; }
+  .gallery-strip { overflow-x: auto; justify-content: flex-start !important;
+                   padding-left: 20px !important; padding-right: 20px;
+                   scroll-snap-type: x mandatory;
+                   -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .gallery-strip::-webkit-scrollbar { display: none; }
+  .gallery-plate { scroll-snap-align: center; }
 
   /* How it works */
-  .hiw-grid { grid-template-columns: 1fr !important; gap: 48px !important; }
-  .hiw-chip { display: none !important; }
+  .scan-demo-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+  .scan-demo-stage { padding: 24px 12px !important; min-height: 480px !important; }
+  /* The piece + phone are fixed-size, so scale the whole scene to fit narrow screens. */
+  .scan-scene { transform: scale(0.82); }
 
-  /* Industries */
-  .industries-grid { grid-template-columns: repeat(2, 1fr) !important; }
-
-  /* Pricing */
-  .pricing-card { grid-template-columns: 1fr !important; }
-  .pricing-left { border-right: none !important; border-bottom: 1px solid #E8E2D5 !important; }
-
-  /* CTA + footer */
-  .cta-inner { padding: 48px 24px !important; }
-  .footer-grid { grid-template-columns: 1fr 1fr !important; gap: 32px 24px !important; }
+  /* Pricing + footer */
+  .pricing-left { padding: 34px 26px !important; }
+  .pricing-right { padding: 34px 26px !important; }
+  .footer-grid { grid-template-columns: 1fr 1fr !important; gap: 34px 24px !important; }
   .footer-brand { grid-column: 1 / -1 !important; }
 }
 
@@ -389,18 +542,14 @@
 }
 
 @media (max-width: 480px) {
-  .lp-section-padding { padding-top: 60px !important; padding-bottom: 60px !important; }
+  .lp-section-padding { padding-top: 76px !important; padding-bottom: 76px !important; }
 
-  .hero-layout { padding: 92px 16px 56px !important; }
-  .hero-visual { height: 380px !important; }
+  .hero-layout { padding: 108px 20px 92px !important; }
 
-  .stats-grid { grid-template-columns: 1fr !important; }
-  .stats-item:nth-child(even) { border-left: none !important; padding-left: 0 !important; }
+  .scan-scene { transform: scale(0.66); }
+  .scan-demo-stage { min-height: 400px !important; }
 
-  .gallery-section { padding: 60px 16px !important; }
-  .gallery-grid { grid-template-columns: 1fr !important; grid-template-rows: 240px 180px 180px 180px !important; }
-  .gallery-grid > div:first-child { grid-column: auto !important; }
+  .stats-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
 
-  .industries-grid { grid-template-columns: 1fr !important; }
   .footer-grid { grid-template-columns: 1fr !important; }
 }

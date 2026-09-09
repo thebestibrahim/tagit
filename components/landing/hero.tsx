@@ -1,189 +1,226 @@
 "use client";
-import { motion } from "motion/react";
-import { useState } from "react";
+import { useRef } from "react";
 import Link from "next/link";
-import VerifiedCard from "./interactive/verified-card";
-import OwnershipLedger from "./interactive/ownership-ledger";
-import { EASE, c, type } from "./styles";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useMotionValue,
+  useSpring,
+  useReducedMotion,
+} from "motion/react";
+import { LineReveal } from "./interactive/cinema";
+import { EASE, GRADE, c, type } from "./styles";
 
 const WATCH_IMG = "/img/watch.jpg";
 
-function HeroPanel() {
-  const [imgFailed, setImgFailed] = useState(false);
-
-  return (
-    <motion.div
-      className="hero-visual"
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 0.5, duration: 0.9, ease: EASE }}
-      style={{
-        position: "relative",
-        height: 640,
-        borderRadius: 24,
-        overflow: "hidden",
-        boxShadow: "0 48px 96px rgba(10,10,11,0.18), 0 16px 40px rgba(10,10,11,0.1)",
-      }}
-    >
-      <div style={{ position: "absolute", inset: 0, backgroundColor: "#1A1510" }}>
-        {!imgFailed && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={WATCH_IMG}
-            alt="A luxury timepiece carrying a Tagit chip"
-            onError={() => setImgFailed(true)}
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 30%" }}
-          />
-        )}
-      </div>
-
-      {/* Darkening pass so the two cards stay readable over the photograph */}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, rgba(10,10,11,0.5) 0%, rgba(10,10,11,0.18) 40%, rgba(10,10,11,0.62) 100%)" }} />
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.95, duration: 0.85, ease: EASE }}
-        style={{ position: "absolute", top: 26, left: 26, zIndex: 3 }}
-      >
-        <VerifiedCard />
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.15, duration: 0.85, ease: EASE }}
-        className="hero-ledger"
-        style={{ position: "absolute", bottom: 26, right: 22, zIndex: 4 }}
-      >
-        <OwnershipLedger />
-      </motion.div>
-    </motion.div>
-  );
-}
-
+/**
+ * The opening title card.
+ *
+ * Centred, and stripped to three things: the line, the sentence under it, and
+ * the piece itself rising into the bottom of the frame. The proof panel that
+ * used to float here now lives in the scan sequence directly below, where it
+ * has something to prove; here it was just another rectangle competing with
+ * the object.
+ *
+ * Depth comes from four layers moving at four rates. Scrolling does not slide
+ * the hero away, it dollies past it and dissolves to black.
+ */
 export default function Hero() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const reduce = useReducedMotion();
+
+  const { scrollY } = useScroll();
+  const plateY = useTransform(scrollY, [0, 900], [0, 130]);
+  const plateScale = useTransform(scrollY, [0, 900], [1, 1.14]);
+  const copyY = useTransform(scrollY, [0, 900], [0, -170]);
+  const dissolve = useTransform(scrollY, [0, 620], [0, 0.94]);
+  const cueFade = useTransform(scrollY, [0, 180], [1, 0]);
+  const barHeight = useTransform(scrollY, [0, 700], [0, 56]);
+
+  /* A hand on the camera. Nothing moves unless the visitor moves. */
+  const px = useMotionValue(0);
+  const py = useMotionValue(0);
+  const spring = { stiffness: 55, damping: 22, mass: 0.7 };
+  const sx = useSpring(px, spring);
+  const sy = useSpring(py, spring);
+  const plateX = useTransform(sx, (v) => v * -20);
+  const plateTilt = useTransform(sy, (v) => v * -12);
+  const copyX = useTransform(sx, (v) => v * 8);
+
+  function onMove(e: React.MouseEvent) {
+    if (reduce) return;
+    const r = sectionRef.current?.getBoundingClientRect();
+    if (!r) return;
+    px.set((e.clientX - (r.left + r.width / 2)) / (r.width / 2));
+    py.set((e.clientY - (r.top + r.height / 2)) / (r.height / 2));
+  }
+
   return (
     <section
+      ref={sectionRef}
+      onMouseMove={onMove}
+      onMouseLeave={() => {
+        px.set(0);
+        py.set(0);
+      }}
+      className="hero"
       style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
         position: "relative",
+        minHeight: "100svh",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
         overflow: "hidden",
-        backgroundColor: c.paper,
+        backgroundColor: c.abyss,
+        isolation: "isolate",
       }}
     >
-      {/* One soft, off-centre warm wash. Not a symmetric glow. */}
-      <div
+      {/* ── Layer 1: the piece, rising into the bottom of the frame ── */}
+      <motion.div
+        aria-hidden
+        className="hero-plate"
         style={{
           position: "absolute",
-          top: "-30%",
-          right: "-15%",
-          width: "70%",
-          height: "150%",
-          background: "radial-gradient(ellipse at 65% 45%, rgba(212,182,138,0.16) 0%, transparent 62%)",
-          pointerEvents: "none",
+          bottom: "-9%",
+          left: "50%",
+          width: "min(700px, 56%)",
+          height: "74%",
+          /* Derived from the width, not guessed: `min()` on a negative pair
+             picks the larger offset and slides the piece off centre. */
+          marginLeft: "calc(min(700px, 56%) / -2)",
+          /* Feather every edge so the plate has no rectangle: the piece rises
+             out of the dark instead of sitting in a frame. */
+          maskImage: "radial-gradient(74% 76% at 50% 62%, #000 38%, transparent 84%)",
+          WebkitMaskImage: "radial-gradient(74% 76% at 50% 62%, #000 38%, transparent 84%)",
+          y: reduce ? 0 : plateY,
+          x: reduce ? 0 : plateX,
+          scale: reduce ? 1 : plateScale,
+          willChange: "transform",
+        }}
+      >
+        <motion.div style={{ width: "100%", height: "100%", y: reduce ? 0 : plateTilt }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={WATCH_IMG}
+            alt=""
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 44%", filter: GRADE }}
+          />
+        </motion.div>
+      </motion.div>
+
+      {/* ── Layer 2: the grade. The object keeps the light, the type keeps the dark. ── */}
+      <div
+        aria-hidden
+        className="hero-scrim"
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(70% 52% at 50% 98%, rgba(8,8,10,0) 0%, rgba(8,8,10,0.28) 36%, rgba(8,8,10,0.82) 64%, rgba(8,8,10,0.96) 100%)",
+        }}
+      />
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(180deg, rgba(8,8,10,0.9) 0%, rgba(8,8,10,0.55) 22%, transparent 46%, transparent 78%, rgba(8,8,10,0.7) 100%)",
+        }}
+      />
+      {/* The lamp, placed where the photograph's own light falls. */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "radial-gradient(46% 38% at 44% 82%, rgba(200,164,100,0.26) 0%, rgba(200,164,100,0.08) 36%, transparent 68%)",
+          mixBlendMode: "screen",
         }}
       />
 
-      <div
-        className="hero-layout"
+      {/* Dissolve to black on the way out. */}
+      <motion.div
+        aria-hidden
+        style={{ position: "absolute", inset: 0, backgroundColor: c.abyss, opacity: reduce ? 0 : dissolve, zIndex: 5 }}
+      />
+
+      {/* The anamorphic frame: opens once on load, closes as you leave. */}
+      <motion.div
+        aria-hidden
+        initial={{ height: reduce ? 0 : "9vh" }}
+        animate={{ height: 0 }}
+        transition={{ duration: 1.5, ease: EASE, delay: 0.15 }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, backgroundColor: c.abyss, zIndex: 6 }}
+      />
+      <motion.div
+        aria-hidden
+        initial={{ height: reduce ? 0 : "9vh" }}
+        animate={{ height: 0 }}
+        transition={{ duration: 1.5, ease: EASE, delay: 0.15 }}
+        style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: c.abyss, zIndex: 6 }}
+      />
+      <motion.div
+        aria-hidden
+        style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: reduce ? 0 : barHeight, backgroundColor: c.abyss, zIndex: 6 }}
+      />
+
+      {/* ── Layer 3: the title ── */}
+      <motion.div
+        className="hero-title"
         style={{
-          maxWidth: 1200,
-          margin: "0 auto",
-          padding: "120px 48px 80px",
+          position: "relative",
+          zIndex: 7,
           width: "100%",
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 64,
-          alignItems: "center",
+          maxWidth: 900,
+          padding: "clamp(120px, 17vh, 190px) 32px 0",
+          textAlign: "center",
+          y: reduce ? 0 : copyY,
+          x: reduce ? 0 : copyX,
         }}
       >
-        <div>
-          <h1 style={{ ...type.display, color: c.ink, margin: "0 0 32px" }}>
-            {[
-              { text: "Proof that ", accent: "stays", delay: 0.1 },
-              { text: "with the piece.", accent: null, delay: 0.2 },
-            ].map((line, i) => (
-              <span key={i} style={{ display: "block", overflow: "hidden" }}>
-                <motion.span
-                  initial={{ y: "108%" }}
-                  animate={{ y: 0 }}
-                  transition={{ delay: line.delay, duration: 0.95, ease: EASE }}
-                  style={{ display: "block" }}
-                >
-                  {line.text}
-                  {line.accent && (
-                    <em style={{ fontStyle: "italic", color: c.goldText }}>{line.accent}</em>
-                  )}
-                </motion.span>
-              </span>
-            ))}
-          </h1>
+        <h1 style={{ ...type.display, color: c.bone, margin: "0 0 30px" }}>
+          <LineReveal lines={["Proof that stays", "with the piece."]} delay={0.55} stagger={0.11} />
+        </h1>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8, ease: EASE }}
-          >
-            <p style={{ ...type.lead, color: c.body, margin: "0 0 36px", maxWidth: 460 }}>
-              Tagit puts a secure chip inside everything you make. One tap proves the piece
-              is genuine, shows every owner it has had, and keeps your brand present long
-              after the sale.
-            </p>
+        <motion.div
+          initial={{ opacity: 0, y: reduce ? 0 : 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.15, duration: 0.9, ease: EASE }}
+        >
+          <p style={{ ...type.lead, color: c.patina, margin: "0 auto 38px", maxWidth: "46ch" }}>
+            A chip set inside the piece, or a signed card that travels with it. One tap
+            proves it is genuine and shows every owner it has had.
+          </p>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-              <Link
-                href="/auth/register"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "14px 26px",
-                  backgroundColor: c.ink,
-                  color: c.paper,
-                  borderRadius: 8,
-                  fontWeight: 550,
-                  fontSize: 15,
-                  letterSpacing: "-0.01em",
-                  textDecoration: "none",
-                }}
-              >
-                Apply for access
-              </Link>
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "center" }}>
+            <Link href="/auth/register" className="cine-cta-key">
+              Apply for access
+            </Link>
+            <a href="mailto:business@tagitlux.com?subject=Tagit walkthrough" className="cine-cta-ghost">
+              Book a walkthrough
+            </a>
+          </div>
+        </motion.div>
+      </motion.div>
 
-              <a
-                href="mailto:business@tagitlux.com?subject=Tagit walkthrough"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "14px 24px",
-                  color: c.inkSoft,
-                  border: `1px solid ${c.line}`,
-                  borderRadius: 8,
-                  textDecoration: "none",
-                  fontWeight: 450,
-                  fontSize: 15,
-                  letterSpacing: "-0.005em",
-                  transition: "border-color 0.2s ease, background-color 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#CFC7B4";
-                  e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.6)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = c.line;
-                  e.currentTarget.style.backgroundColor = "transparent";
-                }}
-              >
-                Book a walkthrough
-              </a>
-            </div>
-          </motion.div>
+      {/* Scroll cue: the only thing on this page that moves by itself. */}
+      <motion.div
+        className="hero-cue"
+        aria-hidden
+        style={{
+          position: "absolute",
+          bottom: 30,
+          left: "50%",
+          marginLeft: -0.5,
+          zIndex: 7,
+          opacity: reduce ? 0 : cueFade,
+        }}
+      >
+        <div style={{ position: "relative", width: 1, height: 52, backgroundColor: "rgba(243,240,233,0.14)", overflow: "hidden" }}>
+          <div className="cine-cue-spark" />
         </div>
-
-        <HeroPanel />
-      </div>
+      </motion.div>
     </section>
   );
 }

@@ -1,4 +1,5 @@
 import LenisInit from "@/components/landing/interactive/lenis-init";
+import { Grain, Vignette } from "@/components/landing/interactive/cinema";
 import LandingNav from "@/components/landing/nav";
 import Hero from "@/components/landing/hero";
 import Stats from "@/components/landing/stats";
@@ -15,14 +16,21 @@ export default function LandingPage() {
   return (
     <>
       <LenisInit />
+      {/* One lens over the whole reel: grain and edge falloff, above every
+          section but below nothing the visitor can click. */}
+      <Grain />
+      <Vignette />
       <LandingNav />
-      <main>
+      {/* Order is the argument: say what it is and how it works before asking
+          anyone to care why. The scan sequence used to sit six sections down,
+          after four sections of detail nobody had context for yet. */}
+      <main style={{ backgroundColor: "#08080A" }}>
         <Hero />
-        <Stats />
+        <HowItWorks />
+        <Pillars />
         <LuxuryGallery />
         <Problem />
-        <Pillars />
-        <HowItWorks />
+        <Stats />
         <Industries />
         <Pricing />
         <CtaSection />

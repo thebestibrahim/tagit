@@ -19,16 +19,29 @@ export default function OwnershipLedger() {
       initial={{ opacity: 0, y: 32 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.45 }}
+      /* Same pane of dark glass as the proof panel in the hero: one material
+         for anything the product itself would show you. */
       style={{
-        backgroundColor: "#1C1A14",
-        borderRadius: 16,
-        border: "1px solid rgba(212,182,138,0.18)",
-        padding: "18px 20px",
-        width: 244,
-        boxShadow: "0 20px 48px rgba(10,10,11,0.34), 0 4px 12px rgba(10,10,11,0.2)",
+        backgroundColor: "rgba(16,16,19,0.72)",
+        backdropFilter: "blur(22px) saturate(1.1)",
+        WebkitBackdropFilter: "blur(22px) saturate(1.1)",
+        borderRadius: 18,
+        border: "1px solid rgba(243,240,233,0.09)",
+        padding: "22px 24px",
+        width: 268,
+        boxShadow: "0 40px 90px rgba(0,0,0,0.6), inset 0 1px 0 rgba(243,240,233,0.07)",
       }}
     >
-      <p style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 600, color: c.champagne, letterSpacing: "-0.005em" }}>
+      <div
+        aria-hidden
+        style={{
+          height: 1,
+          margin: "-22px -24px 18px",
+          background: `linear-gradient(90deg, transparent, ${c.hairlineWarm} 30%, rgba(235,211,160,0.45) 55%, transparent)`,
+        }}
+      />
+
+      <p style={{ margin: "0 0 16px", fontSize: 14, fontWeight: 600, color: c.key, letterSpacing: "-0.005em" }}>
         Ownership history
       </p>
 
@@ -46,7 +59,7 @@ export default function OwnershipLedger() {
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                backgroundColor: entry.current ? c.gold : "#4A443A",
+                backgroundColor: entry.current ? c.key : "rgba(243,240,233,0.22)",
                 marginTop: 6,
                 flexShrink: 0,
               }}
@@ -57,14 +70,14 @@ export default function OwnershipLedger() {
                   margin: 0,
                   fontSize: 14.5,
                   fontWeight: 550,
-                  color: entry.current ? c.onDark : "#ABA69C",
+                  color: entry.current ? c.bone : c.patina,
                   letterSpacing: "-0.008em",
                   lineHeight: 1.3,
                 }}
               >
                 {entry.name}
               </p>
-              <p style={{ margin: 0, fontSize: 13, color: "#8B857A", lineHeight: 1.4 }}>
+              <p style={{ margin: 0, fontSize: 13, color: "rgba(168,164,156,0.85)", lineHeight: 1.4 }}>
                 {entry.sub}, {entry.date}
               </p>
             </div>

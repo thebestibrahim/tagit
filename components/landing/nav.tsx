@@ -10,34 +10,49 @@ const LINKS = [
   { label: "Pricing", href: "#pricing" },
 ];
 
+/**
+ * The nav sits inside the opening frame rather than on top of it: nothing but
+ * the mark and three words while the hero is on screen, then it settles onto a
+ * pane of dark glass once you are inside the page.
+ */
 export default function LandingNav() {
   const { scrollY } = useScroll();
-  const borderOpacity = useTransform(scrollY, [0, 80], [0, 1]);
-  const bgOpacity = useTransform(scrollY, [0, 80], [0.5, 0.92]);
+  const bgOpacity = useTransform(scrollY, [0, 140], [0, 0.88]);
+  const seamOpacity = useTransform(scrollY, [40, 160], [0, 1]);
+  const height = useTransform(scrollY, [0, 160], [86, 64]);
 
   return (
-    <motion.nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100 }}>
+    <motion.nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 80 }}>
       <motion.div
         style={{
           position: "absolute",
           inset: 0,
-          backgroundColor: c.paper,
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
+          backgroundColor: "rgba(8,8,10,0.92)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
           opacity: bgOpacity,
         }}
       />
       <motion.div
-        style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 1, backgroundColor: c.line, opacity: borderOpacity }}
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 1,
+          opacity: seamOpacity,
+          background: `linear-gradient(90deg, transparent, ${c.hairlineWarm} 22%, ${c.hairline} 60%, transparent)`,
+        }}
       />
 
-      <div
+      <motion.div
+        className="nav-bar"
         style={{
           position: "relative",
-          maxWidth: 1120,
+          maxWidth: 1280,
           margin: "0 auto",
-          padding: "0 32px",
-          height: 68,
+          padding: "0 56px",
+          height,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -47,41 +62,23 @@ export default function LandingNav() {
           <Wordmark height={26} withIcon />
         </Link>
 
-        <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: 32 }}>
+        <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: 34 }}>
           {LINKS.map(({ label, href }) => (
-            <a
-              key={label}
-              href={href}
-              style={{ fontSize: 15, color: c.body, textDecoration: "none", fontWeight: 450, letterSpacing: "-0.005em", transition: "color 0.2s ease" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = c.ink)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = c.body)}
-            >
+            <a key={label} href={href} className="cine-navlink">
               {label}
             </a>
           ))}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href="/auth/login" className="nav-signin" style={{ fontSize: 15, color: c.body, textDecoration: "none", fontWeight: 450 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          <Link href="/auth/login" className="cine-navlink nav-signin">
             Sign in
           </Link>
-          <Link
-            href="/auth/register"
-            style={{
-              fontSize: 14,
-              fontWeight: 550,
-              color: c.paper,
-              backgroundColor: c.ink,
-              padding: "10px 20px",
-              borderRadius: 8,
-              letterSpacing: "-0.005em",
-              textDecoration: "none",
-            }}
-          >
+          <Link href="/auth/register" className="cine-cta-ghost cine-cta-sm">
             Apply for access
           </Link>
         </div>
-      </div>
+      </motion.div>
     </motion.nav>
   );
 }
