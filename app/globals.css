@@ -490,13 +490,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   padding: 0;
-  border: 1px solid transparent;
+  /* Always bordered: an unbordered icon at this size reads as decoration
+     rather than as something you can press. */
+  border: 1px solid var(--lp-hairline);
   border-radius: 999px;
-  background: transparent;
-  color: var(--lp-patina);
+  background: rgb(var(--lp-ground-rgb) / 0.04);
+  color: var(--lp-bone);
   cursor: pointer;
   transition: color 0.22s ease, background-color 0.22s ease, border-color 0.22s ease;
 }
@@ -623,12 +625,26 @@
     height: 46% !important;
     bottom: 4% !important;
   }
+  /* On a phone the hero stops being a stage with things pinned to it and
+     becomes an ordinary column: title, then the certificate under it. Pinning
+     the card to the bottom of a Safari viewport put it straight through the
+     buttons once the browser chrome took its share of the height. */
+  .hero {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding-bottom: 56px;
+  }
   .hero-title { padding-top: 116px !important; }
   .hero-mark {
+    position: static !important;
     width: 92vw !important;
-    margin-left: -46vw !important;
-    bottom: 5% !important;
+    left: auto !important;
+    bottom: auto !important;
+    margin: 40px 0 0 !important;
   }
+  .hero-cue { display: none !important; }
+  .theme-toggle { width: 42px; height: 42px; }
 
   .lp-inner { padding-left: 20px !important; padding-right: 20px !important; }
 

@@ -66,28 +66,6 @@ export default function Hero() {
         isolation: "isolate",
       }}
     >
-      {/* ── Layer 1: the proof ──
-           The headline promises proof that stays with the piece, so the hero
-           shows the proof itself: the certificate a buyer is holding seconds
-           after they tap. An abstract mark asked people to decode it; this
-           states the case. ── */}
-      <motion.div
-        className="hero-mark"
-        style={{
-          position: "absolute",
-          bottom: "4%",
-          left: "50%",
-          width: "clamp(300px, min(52vw, 56vh), 690px)",
-          marginLeft: "calc(clamp(300px, min(52vw, 56vh), 690px) / -2)",
-          zIndex: 4,
-          y: reduce ? 0 : plateY,
-          scale: reduce ? 1 : plateScale,
-          willChange: "transform",
-        }}
-      >
-        <HeroCertificate />
-      </motion.div>
-
       {/* ── Layer 2: the grade. The object keeps the light, the type keeps the dark. ── */}
       <div
         aria-hidden
@@ -181,6 +159,28 @@ export default function Hero() {
             </a>
           </div>
         </motion.div>
+      </motion.div>
+
+      {/* ── Layer 1: the proof ──
+           The headline promises proof that stays with the piece, so the hero
+           shows the proof itself: the certificate a buyer is holding seconds
+           after they tap. An abstract mark asked people to decode it; this
+           states the case. ── */}
+      <motion.div
+        className="hero-mark"
+        style={{
+          position: "absolute",
+          bottom: "4%",
+          left: "50%",
+          width: "clamp(300px, min(52vw, 56vh), 690px)",
+          marginLeft: "calc(clamp(300px, min(52vw, 56vh), 690px) / -2)",
+          zIndex: 4,
+          y: reduce ? 0 : plateY,
+          scale: reduce ? 1 : plateScale,
+          willChange: "transform",
+        }}
+      >
+        <HeroCertificate />
       </motion.div>
 
       {/* Scroll cue: the only thing on this page that moves by itself. */}
