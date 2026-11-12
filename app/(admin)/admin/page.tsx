@@ -45,13 +45,10 @@ export default async function AdminOverviewPage() {
     <div className="p-8 max-w-5xl mx-auto">
       {/* Page header */}
       <div className="page-header mb-10">
-        <p className="text-micro font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
-          Admin
-        </p>
-        <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+        <h1 className="page-title">
           Overview
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           Platform-wide operational summary
         </p>
       </div>
@@ -64,7 +61,7 @@ export default async function AdminOverviewPage() {
             className={stat.accent ? "card-accent-gold p-6" : "card-raised p-6"}
           >
             <p
-              className="text-micro font-semibold uppercase tracking-wider mb-4"
+              className="text-caption font-semibold mb-4"
               style={{ color: stat.accent ? "var(--color-deep-gold)" : "var(--color-mist)" }}
             >
               {stat.label}

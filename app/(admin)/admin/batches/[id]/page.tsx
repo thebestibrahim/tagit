@@ -86,7 +86,7 @@ export default async function AdminBatchDetailPage({
                 {batch.industry}
               </span>
             </div>
-            <h1 className="font-display" style={{ fontSize: "26px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+            <h1 className="page-title">
               {batch.companies?.name ?? "Unknown company"}
             </h1>
             {batch.batch_name && (
@@ -150,7 +150,7 @@ export default async function AdminBatchDetailPage({
                 <thead>
                   <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
                     {["#", "Type", "ID", "Link to write", ""].map((h) => (
-                      <th key={h} className="text-left px-4 py-2.5 text-micro font-medium uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>
+                      <th key={h} className="text-left px-4 py-2.5 text-caption font-medium" style={{ color: "var(--color-slate)" }}>
                         {h}
                       </th>
                     ))}

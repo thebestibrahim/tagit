@@ -367,10 +367,10 @@ export default async function ProductDetailPage({
       <div className="card-raised rounded-xl p-5 sm:p-6 mb-6">
         <div className="flex items-start justify-between gap-4 mb-5">
           <div>
-            <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-gold)" }}>
+            <p className="text-caption font-semibold mb-1" style={{ color: "var(--color-gold)" }}>
               {company.industry}
             </p>
-            <h1 className="font-display" style={{ fontSize: "28px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+            <h1 className="page-title">
               {product.name}
             </h1>
           </div>
@@ -386,7 +386,7 @@ export default async function ProductDetailPage({
 
         <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-5 sm:grid-cols-3">
           <div>
-            <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>
+            <p className="text-caption font-medium mb-0.5" style={{ color: "var(--color-mist)" }}>
               {cardCount > 0 && tagCount > 0
                 ? "Tags & Cards"
                 : cardCount > 0
@@ -434,27 +434,27 @@ export default async function ProductDetailPage({
             )}
           </div>
           <div>
-            <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>Retail price</p>
+            <p className="text-caption font-medium mb-0.5" style={{ color: "var(--color-mist)" }}>Retail price</p>
             <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
               {product.retail_price != null ? formatCurrency(product.retail_price, product.currency) : "—"}
             </p>
           </div>
           <div>
-            <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>Registered</p>
+            <p className="text-caption font-medium mb-0.5" style={{ color: "var(--color-mist)" }}>Registered</p>
             <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
               <LocalTime iso={product.created_at} pattern="MMM d, yyyy" />
             </p>
           </div>
           {currentOwner && (
             <div>
-              <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>Current owner</p>
+              <p className="text-caption font-medium mb-0.5" style={{ color: "var(--color-mist)" }}>Current owner</p>
               <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>{currentOwner.owner_name}</p>
               <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>{currentOwner.owner_email}</p>
             </div>
           )}
           {primaryTag?.activated_at && (
             <div>
-              <p className="text-micro font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--color-mist)" }}>First scanned</p>
+              <p className="text-caption font-medium mb-0.5" style={{ color: "var(--color-mist)" }}>First scanned</p>
               <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}><LocalTime iso={primaryTag.activated_at} pattern="MMM d, yyyy" /></p>
             </div>
           )}
@@ -492,7 +492,7 @@ export default async function ProductDetailPage({
             if (!hasValues) return null;
             return (
               <div key={groupName} className="mb-5 last:mb-0">
-                <p className="text-micro font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--color-mist)" }}>
+                <p className="text-caption font-semibold mb-3" style={{ color: "var(--color-mist)" }}>
                   {groupName}
                 </p>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

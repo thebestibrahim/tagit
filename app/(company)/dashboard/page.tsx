@@ -110,13 +110,10 @@ export default async function CompanyOverviewPage() {
     <div className="p-8 max-w-5xl mx-auto">
       {/* Page header */}
       <div className="page-header mb-10">
-        <p className="text-micro font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
-          Dashboard
-        </p>
-        <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+        <h1 className="page-title">
           Overview
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           Your brand&apos;s tag and ownership activity
         </p>
       </div>
@@ -132,7 +129,7 @@ export default async function CompanyOverviewPage() {
         >
           <div className="flex items-start justify-between mb-5">
             <div>
-              <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-deep-gold)" }}>
+              <p className="text-caption font-semibold mb-1" style={{ color: "var(--color-deep-gold)" }}>
                 Getting started
               </p>
               <h2 className="font-semibold" style={{ fontSize: "var(--text-body)", color: "var(--color-charcoal)" }}>
@@ -166,7 +163,7 @@ export default async function CompanyOverviewPage() {
           <div className="space-y-2">
             {steps.map((step) => (
               <Link
-                key={step.href}
+                key={step.label}
                 href={step.done ? "#" : step.href}
                 className="flex items-center gap-3 px-4 py-3 rounded-xl group transition-all"
                 style={{
@@ -267,8 +264,8 @@ export default async function CompanyOverviewPage() {
       {/* Quick actions */}
       <div>
         <h2
-          className="font-semibold mb-4"
-          style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)", textTransform: "uppercase", letterSpacing: "0.06em" }}
+          className="font-display mb-4"
+          style={{ fontSize: 22, color: "var(--color-onyx)", letterSpacing: "-0.015em" }}
         >
           Quick actions
         </h2>
@@ -280,7 +277,7 @@ export default async function CompanyOverviewPage() {
             { title: "Upload certificate signature", desc: "Add your signature to branded PDF certificates",                                                          href: "/dashboard/customization",   icon: PenLine },
           ].map((action) => (
             <Link
-              key={action.href}
+              key={action.title}
               href={action.href}
               className="card-raised p-5 flex items-start justify-between gap-3 transition-all duration-200 group"
               style={{ textDecoration: "none" }}

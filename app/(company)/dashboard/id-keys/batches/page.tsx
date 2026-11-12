@@ -62,13 +62,10 @@ export default async function BatchesPage({
     <div className="p-8 max-w-3xl mx-auto">
       <div className="flex items-start justify-between mb-8">
         <div className="page-header">
-          <p className="text-micro font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
-            ID Keys
-          </p>
-          <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+          <h1 className="page-title">
             Batches
           </h1>
-          <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+          <p className="page-desc">
             Order history and dispatch status
           </p>
         </div>

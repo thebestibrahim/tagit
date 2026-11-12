@@ -56,11 +56,11 @@ export default async function CompanyLayout({ children }: { children: React.Reac
   return (
     <FlagProvider flags={flags}>
       <SuspensionGuard suspended={suspended} />
-      <div className="flex h-dvh overflow-hidden" style={{ backgroundColor: "#1C1A14" }}>
+      <div className="flex h-dvh overflow-hidden" style={{ backgroundColor: "var(--app-sidebar)" }}>
         <div className="hidden lg:flex shrink-0 print:hidden">
           <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} alerts={alerts} />
         </div>
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden lg:rounded-tl-xl lg:rounded-bl-xl" style={{ backgroundColor: "var(--color-smoke)" }}>
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden lg:rounded-tl-xl lg:rounded-bl-xl" style={{ backgroundColor: "var(--app-ground)" }}>
           <MobileNav label={company.name}>
             <CompanySidebar companyName={company.name} logoUrl={company.logo_url} billing={billing} alerts={alerts} />
           </MobileNav>

@@ -65,14 +65,11 @@ export default async function EditProductPage({
       </Link>
 
       <div className="page-header mb-8">
-        <p className="text-micro font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
-          Edit
-        </p>
-        <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+        <h1 className="page-title">
           {product.name}
         </h1>
         {linkedTags.length > 0 && (
-          <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)", fontFamily: "var(--font-mono)" }}>
+          <p className="page-desc" style={{ fontFamily: "var(--font-mono)" }}>
             {linkedTags.length === 1 ? `Tag ${linkedTags[0].short_id}` : `Tags: ${linkedTags.map((t) => t.short_id).join(", ")}`}
           </p>
         )}

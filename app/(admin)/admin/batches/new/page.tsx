@@ -28,10 +28,10 @@ export default async function NewBatchPage() {
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>
+        <h1 className="page-title">
           Generate tag batch
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           Creates tag tokens with HMAC-signed URLs and unique short IDs.
         </p>
       </div>

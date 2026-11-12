@@ -70,10 +70,10 @@ export default async function AdminTagsPage({
   return (
     <div className="p-8 max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>
+        <h1 className="page-title">
           Tags &amp; Cards
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           {total.toLocaleString()} {activeMedium === "card" ? "cards" : activeMedium === "tag" ? "tags" : "ID keys"} across all companies
         </p>
       </div>
@@ -134,7 +134,7 @@ export default async function AdminTagsPage({
                 {["Short ID", "Medium", "Company", "Industry", "Status", "Created"].map((h) => (
                   <th
                     key={h}
-                    className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider"
+                    className="text-left px-5 py-3 text-caption font-medium"
                     style={{ color: "var(--color-slate)" }}
                   >
                     {h}

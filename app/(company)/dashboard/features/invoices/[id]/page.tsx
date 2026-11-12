@@ -52,8 +52,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: { para
       <div className="rounded-2xl p-8" style={{ backgroundColor: "var(--color-pearl)", border: "1px solid var(--color-cream)" }}>
         <div className="flex items-start justify-between mb-8">
           <div>
-            <p className="text-micro font-semibold uppercase tracking-widest" style={{ color: "var(--color-gold)" }}>Invoice</p>
-            <h1 className="font-display mt-1" style={{ fontSize: "26px", color: "var(--color-charcoal)" }}>{invoiceNumber(invoice)}</h1>
+            <h1 className="page-title">{invoiceNumber(invoice)}</h1>
           </div>
           <span className="text-micro font-semibold px-3 py-1.5 rounded-full" style={{ backgroundColor: s.bg, color: s.color }}>{s.label}</span>
         </div>
@@ -85,7 +84,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: { para
           )}
 
           <div className="flex items-center justify-between pt-4">
-            <span className="text-micro font-semibold uppercase tracking-widest" style={{ color: "var(--color-charcoal)" }}>Total</span>
+            <span className="text-caption font-semibold" style={{ color: "var(--color-charcoal)" }}>Total</span>
             <span className="font-display tabular-nums" style={{ fontSize: "24px", color: "var(--color-charcoal)" }}>{formatNaira(invoice.amount)}</span>
           </div>
         </div>
@@ -109,7 +108,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: { para
         {invoice.status === "paid" && (
           <div className="mt-8">
             <div className="flex flex-col items-center gap-2 py-6 rounded-xl" style={{ backgroundColor: "#DCFCE7", border: "1px solid #BBF7D0" }}>
-              <span className="text-micro font-bold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full" style={{ backgroundColor: "#166534", color: "#fff" }}>
+              <span className="text-caption font-bold tracking-[0.2em] px-4 py-1.5 rounded-full" style={{ backgroundColor: "#166534", color: "#fff" }}>
                 ● Paid
               </span>
               {invoice.paid_at && (

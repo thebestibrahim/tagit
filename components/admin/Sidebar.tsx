@@ -11,7 +11,6 @@ import {
   ScanLine,
   Settings,
   LogOut,
-  ChevronRight,
   ToggleLeft,
   Inbox,
   Users,
@@ -19,18 +18,39 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { NavGroup, NavItem, SidebarFrame, SignOutButton, SIDEBAR_EDGE } from "@/components/layout/sidebar-parts";
 
-const navItems = [
-  { label: "Overview",      href: "/admin",                  icon: LayoutDashboard },
-  { label: "Companies",     href: "/admin/companies",        icon: Building2 },
-  { label: "Inquiries",     href: "/admin/inquiries",        icon: Inbox },
-  { label: "Tags",          href: "/admin/tags",             icon: Tag },
-  { label: "Batches",       href: "/admin/batches",          icon: Package },
-  { label: "Billing",       href: "/admin/billing",          icon: CreditCard },
-  { label: "Ownership",     href: "/admin/ownership",        icon: Users },
-  { label: "Scan Logs",     href: "/admin/scans",            icon: ScanLine },
-  { label: "Feature Flags", href: "/admin/feature-flags",   icon: ToggleLeft },
-  { label: "Settings",      href: "/admin/settings",         icon: Settings },
+// Grouped by what staff are doing: dealing with brands, running the physical
+// supply of tags, or watching the platform.
+const navGroups = [
+  {
+    label: undefined,
+    items: [{ label: "Overview", href: "/admin", icon: LayoutDashboard }],
+  },
+  {
+    label: "Brands",
+    items: [
+      { label: "Companies", href: "/admin/companies", icon: Building2 },
+      { label: "Inquiries", href: "/admin/inquiries", icon: Inbox },
+      { label: "Billing",   href: "/admin/billing",   icon: CreditCard },
+    ],
+  },
+  {
+    label: "Supply",
+    items: [
+      { label: "Batches", href: "/admin/batches", icon: Package },
+      { label: "Tags",    href: "/admin/tags",    icon: Tag },
+    ],
+  },
+  {
+    label: "Platform",
+    items: [
+      { label: "Ownership",     href: "/admin/ownership",     icon: Users },
+      { label: "Scan logs",     href: "/admin/scans",         icon: ScanLine },
+      { label: "Feature flags", href: "/admin/feature-flags", icon: ToggleLeft },
+      { label: "Settings",      href: "/admin/settings",      icon: Settings },
+    ],
+  },
 ];
 
 export function AdminSidebar({ alerts }: { alerts?: { companies?: boolean; billing?: boolean; batches?: boolean } | null }) {
@@ -52,69 +72,36 @@ export function AdminSidebar({ alerts }: { alerts?: { companies?: boolean; billi
   }
 
   return (
-    <aside
-      className="flex flex-col h-full w-60 shrink-0"
-      style={{
-        backgroundColor: "#1C1A14",
-        borderRight: "1px solid #2E2A1E",
-      }}
-    >
-      {/* Brand mark */}
-      <div
+    <SidebarFrame>
+      <Link
+        href="/admin"
         className="flex items-center gap-3 px-5 h-[72px] shrink-0"
-        style={{ borderBottom: "1px solid #2E2A1E", backgroundColor: "#171510" }}
+        style={{ borderBottom: `1px solid ${SIDEBAR_EDGE}`, textDecoration: "none" }}
       >
-        <Wordmark height={28} />
-        <span
-          className="text-micro font-semibold uppercase tracking-widest px-2 py-0.5 rounded"
-          style={{
-            backgroundColor: "#1C1A14",
-            color: "#B8945D",
-            border: "1px solid #2E2A1E",
-          }}
-        >
-          Admin
+        <Wordmark height={20} />
+        <span className="text-body-sm" style={{ color: "#9a9486" }}>
+          Staff
         </span>
-      </div>
+      </Link>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto p-3 space-y-0.5 pt-4">
-        {navItems.map(({ label, href, icon: Icon }) => {
-          const active =
-            href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`nav-item nav-item-dark ${active ? "active" : ""}`}
-            >
-              <Icon
-                size={16}
-                strokeWidth={1.5}
-                style={{ color: active ? "#B8945D" : "#52525B" }}
+      <nav className="flex-1 overflow-y-auto px-3 pt-3 pb-4" aria-label="Admin">
+        {navGroups.map((group) => (
+          <NavGroup key={group.label ?? "top"} label={group.label}>
+            {group.items.map((item) => (
+              <NavItem
+                key={item.href}
+                {...item}
+                active={item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href)}
+                alert={navAlert[item.href]}
               />
-              <span className="flex-1">{label}</span>
-              {navAlert[href] && (
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: "#FBBF24" }} />
-              )}
-              {active && (
-                <ChevronRight size={12} style={{ color: "#52525B" }} />
-              )}
-            </Link>
-          );
-        })}
+            ))}
+          </NavGroup>
+        ))}
       </nav>
 
-      {/* Footer */}
-      <div className="p-3 shrink-0" style={{ borderTop: "1px solid #2E2A1E" }}>
-        <button
-          onClick={handleSignOut}
-          className="nav-item nav-item-dark w-full text-left"
-        >
-          <LogOut size={16} strokeWidth={1.5} style={{ color: "#6B2D2D" }} />
-          <span style={{ color: "#B85C5C" }}>Sign out</span>
-        </button>
+      <div className="px-3 pt-3 pb-4 shrink-0" style={{ borderTop: `1px solid ${SIDEBAR_EDGE}` }}>
+        <SignOutButton onClick={handleSignOut} icon={LogOut} />
       </div>
-    </aside>
+    </SidebarFrame>
   );
 }

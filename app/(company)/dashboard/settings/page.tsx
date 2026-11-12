@@ -32,13 +32,10 @@ export default async function SettingsPage() {
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <div className="page-header mb-8">
-        <p className="text-micro font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
-          Account
-        </p>
-        <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+        <h1 className="page-title">
           Settings
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           Manage your account credentials and company profile
         </p>
       </div>

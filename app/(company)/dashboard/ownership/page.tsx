@@ -3,12 +3,13 @@ import type { ClaimStatus } from "@/types/database";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
 import OwnerLedgerTable, { type OwnerRow } from "@/components/OwnerLedgerTable";
 import LocalTime from "@/components/ui/LocalTime";
 import { sanitizeSearch } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type Claim = {
   id: string;
@@ -137,13 +138,10 @@ export default async function OwnershipPage({
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <div className="page-header mb-8">
-        <p className="text-micro font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
-          Provenance
-        </p>
-        <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+        <h1 className="page-title">
           Ownership
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           {view === "claims"
             ? "Review and manage ownership claims for your products"
             : "Every owner your products have had, current and past"}
@@ -200,18 +198,23 @@ export default async function OwnershipPage({
         {view === "owners" ? (
           <OwnerLedgerTable rows={ownerRows} />
         ) : claims.length === 0 ? (
-          <div className="py-16 text-center" style={{ color: "var(--color-mist)" }}>
-            <Users size={32} className="mx-auto mb-3 opacity-30" />
-            <p style={{ fontSize: "var(--text-body-sm)" }}>
-              {q ? `No claims matching "${q}"` : `No ${statusFilter === "all" ? "" : statusFilter} claims`}
-            </p>
-          </div>
+          q ? (
+            <EmptyState title={`No claims match “${q}”`}>Search by the claimant&apos;s name or email.</EmptyState>
+          ) : statusFilter === "pending" ? (
+            <EmptyState title="Nothing waiting for review">
+              When a buyer taps one of your tags and claims the piece, their claim appears here for you to approve or reject.
+            </EmptyState>
+          ) : (
+            <EmptyState title={`No ${statusFilter === "all" ? "" : `${statusFilter} `}claims yet`}>
+              Claims arrive when buyers tap a tag and register themselves as the owner.
+            </EmptyState>
+          )
         ) : (
           <div className="overflow-x-auto"><table className="w-full">
             <thead>
               <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
                 {["Claimant", "Product", "Tag", "Status", "Date", ""].map((h) => (
-                  <th key={h} className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>
+                  <th key={h} className="text-left px-5 py-3 text-caption font-medium" style={{ color: "var(--color-slate)" }}>
                     {h}
                   </th>
                 ))}

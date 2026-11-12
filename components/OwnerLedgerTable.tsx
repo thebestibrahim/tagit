@@ -1,5 +1,5 @@
-import { Users } from "lucide-react";
 import LocalTime from "@/components/ui/LocalTime";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export type OwnerRow = {
   id: string;
@@ -33,10 +33,9 @@ export default function OwnerLedgerTable({
 }) {
   if (rows.length === 0) {
     return (
-      <div className="py-16 text-center" style={{ color: "var(--color-mist)" }}>
-        <Users size={32} className="mx-auto mb-3 opacity-30" />
-        <p style={{ fontSize: "var(--text-body-sm)" }}>No ownership records</p>
-      </div>
+      <EmptyState title="No owners recorded yet">
+        Every approved claim and completed transfer adds a line here, and nothing is ever removed.
+      </EmptyState>
     );
   }
 
@@ -55,7 +54,7 @@ export default function OwnerLedgerTable({
       <thead>
         <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
           {headers.map((h) => (
-            <th key={h} className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>
+            <th key={h} className="text-left px-5 py-3 text-caption font-medium" style={{ color: "var(--color-slate)" }}>
               {h}
             </th>
           ))}

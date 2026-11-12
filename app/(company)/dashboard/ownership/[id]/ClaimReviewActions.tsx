@@ -53,7 +53,7 @@ export default function ClaimReviewActions({
 
   return (
     <div className="p-5 rounded-xl" style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)" }}>
-      <p className="text-micro font-medium uppercase tracking-wider mb-4" style={{ color: "var(--color-slate)" }}>
+      <p className="text-caption font-medium mb-4" style={{ color: "var(--color-slate)" }}>
         Review decision
       </p>
 

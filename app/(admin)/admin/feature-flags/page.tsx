@@ -48,17 +48,11 @@ export default async function FeatureFlagsPage({
     <div className="p-8 max-w-5xl mx-auto">
       <div className="flex items-start justify-between mb-8">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <ToggleLeft size={18} style={{ color: "var(--color-gold)" }} />
-            <p className="text-micro font-semibold uppercase tracking-widest" style={{ color: "var(--color-gold)" }}>
-              Admin
-            </p>
-          </div>
-          <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
-            Feature Flags
+          <h1 className="page-title">
+            Feature flags
           </h1>
-          <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
-            Control feature rollout across all brands
+          <p className="page-desc">
+            Turn features on for every brand, or for one brand at a time.
           </p>
         </div>
         <CreateFlagModal />
@@ -80,7 +74,7 @@ export default async function FeatureFlagsPage({
                 {["Feature", "Master", "Effective access", "Overrides", ""].map((h) => (
                   <th
                     key={h}
-                    className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider"
+                    className="text-left px-5 py-3 text-caption font-medium"
                     style={{ color: "var(--color-slate)" }}
                   >
                     {h}

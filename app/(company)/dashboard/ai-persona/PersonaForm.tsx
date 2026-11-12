@@ -222,7 +222,7 @@ export default function PersonaForm({ initialValues }: { initialValues: InitialV
         >
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-slate)" }}>
+              <p className="text-caption font-semibold mb-1" style={{ color: "var(--color-slate)" }}>
                 Persona
               </p>
               <p className="font-semibold" style={{ fontSize: "var(--text-body)", color: "var(--color-charcoal)" }}>
@@ -230,13 +230,13 @@ export default function PersonaForm({ initialValues }: { initialValues: InitialV
               </p>
             </div>
             <div>
-              <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-slate)" }}>
+              <p className="text-caption font-semibold mb-1" style={{ color: "var(--color-slate)" }}>
                 Voice
               </p>
               <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>{voiceName}</p>
             </div>
             <div>
-              <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-slate)" }}>
+              <p className="text-caption font-semibold mb-1" style={{ color: "var(--color-slate)" }}>
                 API Key
               </p>
               <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
@@ -246,7 +246,7 @@ export default function PersonaForm({ initialValues }: { initialValues: InitialV
           </div>
           {form.ai_persona_prompt && (
             <div>
-              <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-slate)" }}>
+              <p className="text-caption font-semibold mb-1" style={{ color: "var(--color-slate)" }}>
                 Instructions
               </p>
               <p

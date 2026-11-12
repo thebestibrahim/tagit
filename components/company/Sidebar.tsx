@@ -15,8 +15,8 @@ import {
   Bot,
   Settings,
   LogOut,
-  ChevronRight,
   ChevronDown,
+  type LucideIcon,
   Layers,
   Award,
   KeyRound,
@@ -28,6 +28,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useFlags } from "@/lib/feature-flags/client";
 import type { FlagKey } from "@/lib/feature-flags/types";
 import { toast } from "sonner";
+import { NavGroup, NavItem, SidebarFrame, SignOutButton, SIDEBAR_EDGE, navIcon } from "@/components/layout/sidebar-parts";
 
 // Nav items whose page is gated by a feature flag. When the flag is off the
 // item still shows (and stays clickable — the page renders its own feature
@@ -40,13 +41,15 @@ const FLAG_FOR_HREF: Record<string, FlagKey> = {
   "/dashboard/exhibitions": "exhibitions",
 };
 
-const topNav = [
+// Grouped by the job each page does, so the list reads as four short lists
+// instead of thirteen equal rows.
+const catalogueNav = [
   { label: "Overview", href: "/dashboard",          icon: LayoutDashboard },
   { label: "Products", href: "/dashboard/products",  icon: Package },
 ];
 
 const idKeysNav = {
-  label: "ID Keys",
+  label: "ID keys",
   icon: KeyRound,
   basePath: "/dashboard/id-keys",
   items: [
@@ -56,15 +59,30 @@ const idKeysNav = {
   ],
 };
 
-const bottomNav = [
-  { label: "Ownership",     href: "/dashboard/ownership",     icon: Users },
-  { label: "Exhibitions",   href: "/dashboard/exhibitions",   icon: Landmark },
-  { label: "Certificates",  href: "/dashboard/certificates",  icon: Award },
-  { label: "Customization", href: "/dashboard/customization", icon: Paintbrush },
-  { label: "AI Persona",    href: "/dashboard/ai-persona",    icon: Bot },
-  { label: "Analytics",     href: "/dashboard/analytics",     icon: BarChart2 },
-  { label: "Billing",       href: "/dashboard/features",      icon: CreditCard },
-  { label: "Settings",      href: "/dashboard/settings",      icon: Settings },
+const navGroups = [
+  {
+    label: "Provenance",
+    items: [
+      { label: "Ownership",    href: "/dashboard/ownership",    icon: Users },
+      { label: "Certificates", href: "/dashboard/certificates", icon: Award },
+      { label: "Exhibitions",  href: "/dashboard/exhibitions",  icon: Landmark },
+    ],
+  },
+  {
+    label: "Brand",
+    items: [
+      { label: "Customization", href: "/dashboard/customization", icon: Paintbrush },
+      { label: "AI persona",    href: "/dashboard/ai-persona",    icon: Bot },
+      { label: "Analytics",     href: "/dashboard/analytics",     icon: BarChart2 },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { label: "Billing",  href: "/dashboard/features", icon: CreditCard },
+      { label: "Settings", href: "/dashboard/settings", icon: Settings },
+    ],
+  },
 ];
 
 interface BillingSummary {
@@ -102,131 +120,100 @@ export function CompanySidebar({ companyName, logoUrl, billing, alerts }: Compan
     router.push("/auth/login");
   }
 
-  function NavLink({ label, href, icon: Icon }: { label: string; href: string; icon: React.FC<{ size: number; strokeWidth?: number; style?: React.CSSProperties }> }) {
+  function Item({ label, href, icon }: { label: string; href: string; icon: LucideIcon }) {
     const active = href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
     const flagKey = FLAG_FOR_HREF[href];
-    const locked = flagKey ? !flags[flagKey] : false;
-    const alert = navAlert[href];
     return (
-      <Link href={href} className={`nav-item nav-item-dark ${active ? "active" : ""}`}>
-        <Icon size={16} strokeWidth={1.5} style={{ color: active ? "#B8945D" : "#52525B" }} />
-        <span className="flex-1">{label}</span>
-        {alert && <AlertDot />}
-        {locked ? (
-          <Lock size={12} style={{ color: "#52525B", opacity: 0.7 }} />
-        ) : active ? (
-          <ChevronRight size={12} style={{ color: "#52525B" }} />
-        ) : null}
-      </Link>
+      <NavItem
+        label={label}
+        href={href}
+        icon={icon}
+        active={active}
+        locked={flagKey ? !flags[flagKey] : false}
+        alert={navAlert[href]}
+      />
     );
   }
 
   return (
-    <aside
-      className="flex flex-col h-full w-60 shrink-0"
-      style={{ backgroundColor: "#1C1A14", borderRight: "1px solid #2E2A1E" }}
-    >
-      {/* Brand header */}
-      <div
+    <SidebarFrame>
+      {/* Whose workspace this is */}
+      <Link
+        href="/dashboard"
         className="flex items-center gap-3 px-5 h-[72px] shrink-0"
-        style={{ borderBottom: "1px solid #2E2A1E", backgroundColor: "#171510" }}
+        style={{ borderBottom: `1px solid ${SIDEBAR_EDGE}`, textDecoration: "none" }}
       >
         {logoUrl ? (
           <Image
             src={logoUrl}
-            alt={companyName}
-            width={32}
-            height={32}
-            className="w-8 h-8 rounded object-contain"
-            style={{ border: "1px solid #27272A" }}
+            alt=""
+            width={36}
+            height={36}
+            className="w-9 h-9 rounded-md object-contain shrink-0"
+            style={{ backgroundColor: "#f7f5f0" }}
           />
         ) : (
-          <div
-            className="w-8 h-8 rounded flex items-center justify-center text-xs font-semibold shrink-0"
-            style={{
-              background: "linear-gradient(135deg, #2A2A2D, #1C1C1F)",
-              color: "#B8945D",
-              border: "1px solid #27272A",
-            }}
+          <span
+            className="w-9 h-9 rounded-md flex items-center justify-center shrink-0 font-display"
+            style={{ backgroundColor: "#24211b", color: "#c8a464", fontSize: 20, fontStyle: "italic" }}
+            aria-hidden
           >
             {companyName[0]?.toUpperCase()}
-          </div>
+          </span>
         )}
-        <div className="min-w-0">
-          <p className="text-body-sm font-semibold truncate" style={{ color: "#E4E4E7" }}>
-            {companyName}
-          </p>
-          <p className="text-micro" style={{ color: "#52525B" }}>
-            Brand partner
-          </p>
-        </div>
-      </div>
+        <span className="min-w-0 text-body-sm font-semibold truncate" style={{ color: "#f0ede6" }}>
+          {companyName}
+        </span>
+      </Link>
 
-      {/* Tagit wordmark */}
-      <div className="px-5 py-3 flex items-center" style={{ borderBottom: "1px solid #251F15" }}>
-        <Wordmark height={26} />
-      </div>
+      <nav className="flex-1 overflow-y-auto px-3 pt-3 pb-4" aria-label="Dashboard">
+        <NavGroup>
+          {catalogueNav.map((item) => (
+            <Item key={item.href} {...item} />
+          ))}
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
-        {topNav.map((item) => (
-          <NavLink key={item.href} {...item} />
-        ))}
-
-        {/* ID Keys dropdown */}
-        <button
-          type="button"
-          onClick={() => setIdKeysOpen((o) => !o)}
-          className={`nav-item nav-item-dark w-full text-left ${idKeysActive ? "active" : ""}`}
-          aria-expanded={idKeysOpen}
-        >
-          <idKeysNav.icon size={16} strokeWidth={1.5} style={{ color: idKeysActive ? "#B8945D" : "#52525B" }} />
-          <span className="flex-1">{idKeysNav.label}</span>
-          {idKeysLocked && <Lock size={12} style={{ color: "#52525B", opacity: 0.7 }} />}
-          {idKeysOpen ? (
-            <ChevronDown size={12} style={{ color: "#52525B" }} />
-          ) : (
-            <ChevronRight size={12} style={{ color: "#52525B" }} />
+          <button
+            type="button"
+            onClick={() => setIdKeysOpen((o) => !o)}
+            className={`nav-item nav-item-dark w-full text-left ${idKeysActive && !idKeysOpen ? "active" : ""}`}
+            aria-expanded={idKeysOpen}
+          >
+            <idKeysNav.icon size={16} strokeWidth={1.5} style={{ color: idKeysActive ? navIcon.active : navIcon.idle }} aria-hidden />
+            <span className="flex-1">{idKeysNav.label}</span>
+            {idKeysLocked && <Lock size={12} style={{ color: navIcon.idle }} aria-label="Not on your plan" />}
+            <ChevronDown
+              size={14}
+              style={{ color: navIcon.idle, transform: idKeysOpen ? "none" : "rotate(-90deg)", transition: "transform 0.15s" }}
+              aria-hidden
+            />
+          </button>
+          {idKeysOpen && (
+            <div className="space-y-0.5 pl-6">
+              {idKeysNav.items.map((item) => (
+                <NavItem key={item.href} {...item} size={14} active={pathname.startsWith(item.href)} />
+              ))}
+            </div>
           )}
-        </button>
-        {idKeysOpen && (
-          <div className="space-y-0.5 pl-3" style={{ borderLeft: "1px solid #2E2A1E", marginLeft: 14 }}>
-            {idKeysNav.items.map(({ label, href, icon: Icon }) => {
-              const active = pathname.startsWith(href);
-              return (
-                <Link key={href} href={href} className={`nav-item nav-item-dark ${active ? "active" : ""}`}>
-                  <Icon size={14} strokeWidth={1.5} style={{ color: active ? "#B8945D" : "#52525B" }} />
-                  <span className="flex-1">{label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        )}
+        </NavGroup>
 
-        {bottomNav.map((item) => (
-          <NavLink key={item.href} {...item} />
+        {navGroups.map((group) => (
+          <NavGroup key={group.label} label={group.label}>
+            {group.items.map((item) => (
+              <Item key={item.href} {...item} />
+            ))}
+          </NavGroup>
         ))}
       </nav>
 
-      {/* Footer */}
-      <div className="p-3 shrink-0 space-y-2" style={{ borderTop: "1px solid #2E2A1E" }}>
+      <div className="px-3 pt-3 pb-4 shrink-0 space-y-1" style={{ borderTop: `1px solid ${SIDEBAR_EDGE}` }}>
         {billing && <PlanChip billing={billing} />}
-        <button
-          onClick={handleSignOut}
-          className="nav-item nav-item-dark w-full text-left"
-          style={{ color: "#6B2D2D" }}
-        >
-          <LogOut size={16} strokeWidth={1.5} style={{ color: "#6B2D2D" }} />
-          <span style={{ color: "#B85C5C" }}>Sign out</span>
-        </button>
+        <SignOutButton onClick={handleSignOut} icon={LogOut} />
+        <div className="px-3 pt-3">
+          <Wordmark height={13} />
+        </div>
       </div>
-    </aside>
+    </SidebarFrame>
   );
-}
-
-// Amber dot signalling a nav item needs the brand's attention.
-function AlertDot() {
-  return <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: "#FBBF24" }} />;
 }
 
 // Compact plan/billing chip in the sidebar footer — links to the Billing page.
@@ -235,22 +222,22 @@ function PlanChip({ billing }: { billing: BillingSummary }) {
 
   let dot = "#16A34A";
   let line = "Active";
-  let lineColor = "#8A8478";
+  let lineColor = "#9a9486";
   if (status === "trialing") {
     dot = "#B8945D";
     // A trial countdown is intentionally relative to the current time.
     // eslint-disable-next-line react-hooks/purity
     const days = trialEndsAt ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)) : 0;
-    line = `Trial · ${days} day${days === 1 ? "" : "s"} left`;
-    lineColor = "#B8945D";
+    line = `Trial, ${days} day${days === 1 ? "" : "s"} left`;
+    lineColor = "#c8a464";
   } else if (status === "past_due") {
     dot = "#DC2626";
     line = "Payment due";
-    lineColor = "#B85C5C";
+    lineColor = "#e08a8a";
   } else if (status === "suspended") {
     dot = "#DC2626";
-    line = "Suspended — pay to restore";
-    lineColor = "#B85C5C";
+    line = "Suspended. Pay to restore";
+    lineColor = "#e08a8a";
   } else if (status === "cancelled") {
     dot = "#6B7280";
     line = "Cancelled";
@@ -259,15 +246,14 @@ function PlanChip({ billing }: { billing: BillingSummary }) {
   return (
     <Link
       href="/dashboard/features"
-      className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors"
-      style={{ backgroundColor: "#171510", border: "1px solid #2E2A1E", textDecoration: "none" }}
+      className="nav-item nav-item-dark"
+      style={{ textDecoration: "none", alignItems: "flex-start" }}
     >
-      <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: dot }} />
+      <span className="inline-block w-2 h-2 rounded-full shrink-0 mt-[7px] ml-1 mr-1" style={{ backgroundColor: dot }} aria-hidden />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-body-sm font-medium" style={{ color: "#E4E4E7" }}>{planName}</span>
-        <span className="block truncate text-micro" style={{ color: lineColor }}>{line}</span>
+        <span className="block truncate text-body-sm font-medium" style={{ color: "#f0ede6" }}>{planName}</span>
+        <span className="block truncate text-caption" style={{ color: lineColor }}>{line}</span>
       </span>
-      <ChevronRight size={12} style={{ color: "#52525B" }} className="shrink-0" />
     </Link>
   );
 }

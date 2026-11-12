@@ -31,13 +31,13 @@ export function MobileNav({
   return (
     <div
       className="lg:hidden print:hidden flex items-center gap-3 h-14 px-4 shrink-0"
-      style={{ backgroundColor: "#1C1A14", borderBottom: "1px solid #2E2A1E" }}
+      style={{ backgroundColor: "var(--app-sidebar)", borderBottom: "1px solid rgba(240, 237, 230, 0.08)" }}
     >
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger
           aria-label="Open menu"
           className="inline-flex items-center justify-center w-9 h-9 rounded-lg shrink-0"
-          style={{ color: "#E4E4E7", border: "1px solid #2E2A1E", backgroundColor: "#171510" }}
+          style={{ color: "#f0ede6", border: "1px solid rgba(240, 237, 230, 0.12)" }}
         >
           <Menu size={18} />
         </SheetTrigger>
@@ -49,7 +49,7 @@ export function MobileNav({
           {children}
         </SheetContent>
       </Sheet>
-      <span className="font-display text-lg" style={{ color: "#B8945D", letterSpacing: "-0.01em" }}>
+      <span className="text-body-sm font-semibold truncate" style={{ color: "#f0ede6" }}>
         {label}
       </span>
     </div>

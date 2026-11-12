@@ -32,20 +32,12 @@ export default function FeatureWall({
         </div>
 
         <p
-          className="text-micro font-semibold uppercase tracking-widest mb-2"
+          className="text-caption font-semibold mb-2"
           style={{ color: "var(--color-gold)" }}
         >
           {name}
         </p>
-        <h1
-          className="font-display"
-          style={{
-            fontSize: "28px",
-            color: "var(--color-charcoal)",
-            letterSpacing: "-0.02em",
-            lineHeight: 1.2,
-          }}
-        >
+        <h1 className="page-title">
           Not on your current plan
         </h1>
         <p

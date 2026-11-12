@@ -299,7 +299,7 @@ export function OverridesCard({ flagKey, overrides, brands }: OverridesCardProps
 
             <div className="space-y-4">
               <div>
-                <label className="text-micro font-medium uppercase tracking-wider block mb-1.5" style={{ color: "var(--color-slate)" }}>
+                <label className="text-caption font-medium block mb-1.5" style={{ color: "var(--color-slate)" }}>
                   Brand
                 </label>
                 <select
@@ -319,7 +319,7 @@ export function OverridesCard({ flagKey, overrides, brands }: OverridesCardProps
               </div>
 
               <div>
-                <label className="text-micro font-medium uppercase tracking-wider block mb-2" style={{ color: "var(--color-slate)" }}>
+                <label className="text-caption font-medium block mb-2" style={{ color: "var(--color-slate)" }}>
                   Access for this brand
                 </label>
                 <div className="flex gap-4">
@@ -341,7 +341,7 @@ export function OverridesCard({ flagKey, overrides, brands }: OverridesCardProps
               </div>
 
               <div>
-                <label className="text-micro font-medium uppercase tracking-wider block mb-1.5" style={{ color: "var(--color-slate)" }}>
+                <label className="text-caption font-medium block mb-1.5" style={{ color: "var(--color-slate)" }}>
                   Reason (optional)
                 </label>
                 <input

@@ -3,11 +3,12 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import Link from "next/link";
-import { Award, CheckCircle, AlertTriangle, Clock, ExternalLink, ArrowRight } from "lucide-react";
+import { CheckCircle, AlertTriangle, Clock, ExternalLink } from "lucide-react";
 import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
 import FeatureWall from "@/components/company/FeatureWall";
 import Pagination from "@/components/ui/Pagination";
 import LocalTime from "@/components/ui/LocalTime";
+import { EmptyState as Empty } from "@/components/ui/empty-state";
 
 const PER_PAGE = 20;
 
@@ -125,13 +126,10 @@ export default async function CertificatesPage({
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <div className="page-header mb-8">
-        <p className="text-micro font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
-          Ownership Ledger
-        </p>
-        <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+        <h1 className="page-title">
           Certificates
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           Every certificate ever issued for your items — live status, always current.
         </p>
       </div>
@@ -237,27 +235,14 @@ function EmptyState() {
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <div className="page-header mb-8">
-        <p className="text-micro font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
-          Ownership Ledger
-        </p>
-        <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+        <h1 className="page-title">
           Certificates
         </h1>
       </div>
-      <div className="card-raised p-10 text-center">
-        <Award size={32} style={{ color: "var(--color-mist)", margin: "0 auto 16px" }} />
-        <p className="font-medium mb-2" style={{ color: "var(--color-charcoal)" }}>No certificates yet</p>
-        <p style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)", marginBottom: 20 }}>
-          Certificates are issued automatically when you approve ownership claims or when transfers complete.
-        </p>
-        <Link
-          href="/dashboard/ownership"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium"
-          style={{ backgroundColor: "var(--color-onyx)", color: "var(--color-pearl)", fontSize: "var(--text-body-sm)", textDecoration: "none" }}
-        >
-          Review ownership claims
-          <ArrowRight size={13} />
-        </Link>
+      <div className="card-raised">
+        <Empty title="No certificates issued yet" action={{ label: "Review ownership claims", href: "/dashboard/ownership" }}>
+          A certificate is issued the moment you approve an ownership claim or a transfer completes. Each one stays current as the piece changes hands.
+        </Empty>
       </div>
     </div>
   );

@@ -76,10 +76,10 @@ export default async function AdminOwnershipPage({
   return (
     <div className="p-8 max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>
+        <h1 className="page-title">
           Ownership
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           {total.toLocaleString()} ownership records across all companies
         </p>
       </div>

@@ -216,19 +216,10 @@ export default async function AnalyticsPage({
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <div className="page-header mb-8">
-        <p
-          className="text-micro font-semibold uppercase tracking-widest mb-2"
-          style={{ color: "var(--color-gold)" }}
-        >
-          Insights
-        </p>
-        <h1
-          className="font-display"
-          style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}
-        >
+        <h1 className="page-title">
           Analytics
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           Scan activity and ownership metrics for the last 30 days
         </p>
       </div>
@@ -275,7 +266,7 @@ export default async function AnalyticsPage({
             >
               {value}
             </p>
-            <p className="mt-1 text-micro font-semibold uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>
+            <p className="mt-1 text-caption font-semibold" style={{ color: "var(--color-slate)" }}>
               {label}
             </p>
             {sub && (

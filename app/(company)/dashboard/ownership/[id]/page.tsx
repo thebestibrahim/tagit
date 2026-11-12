@@ -138,13 +138,13 @@ export default async function ClaimDetailPage({
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-gold)" }}>
+          <p className="text-caption font-semibold mb-1" style={{ color: "var(--color-gold)" }}>
             Claim #{claim.id.slice(0, 8).toUpperCase()}
           </p>
-          <h1 className="font-display" style={{ fontSize: "28px", color: "var(--color-charcoal)", lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+          <h1 className="page-title">
             {product?.name ?? "Unknown product"}
           </h1>
-          <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+          <p className="page-desc">
             Submitted {<LocalTime iso={claim.created_at} pattern="MMMM d, yyyy 'at' HH:mm" />}
           </p>
         </div>
@@ -163,7 +163,7 @@ export default async function ClaimDetailPage({
           className="p-5 rounded-xl"
           style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)" }}
         >
-          <p className="text-micro font-medium uppercase tracking-wider mb-3" style={{ color: "var(--color-slate)" }}>
+          <p className="text-caption font-medium mb-3" style={{ color: "var(--color-slate)" }}>
             Claimant
           </p>
           <p className="font-semibold mb-0.5" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body)" }}>
@@ -193,7 +193,7 @@ export default async function ClaimDetailPage({
           className="p-5 rounded-xl"
           style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)" }}
         >
-          <p className="text-micro font-medium uppercase tracking-wider mb-3" style={{ color: "var(--color-slate)" }}>
+          <p className="text-caption font-medium mb-3" style={{ color: "var(--color-slate)" }}>
             Product
           </p>
           <p className="font-semibold mb-0.5" style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body)" }}>
@@ -234,7 +234,7 @@ export default async function ClaimDetailPage({
         >
           <div className="flex items-center gap-2 mb-3">
             <ShieldCheck size={14} style={{ color: "var(--color-verified)" }} />
-            <p className="text-micro font-medium uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>
+            <p className="text-caption font-medium" style={{ color: "var(--color-slate)" }}>
               Ownership record
             </p>
           </div>
@@ -278,7 +278,7 @@ export default async function ClaimDetailPage({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 mb-3">
               <Award size={14} style={{ color: "var(--color-gold)" }} />
-              <p className="text-micro font-medium uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>
+              <p className="text-caption font-medium" style={{ color: "var(--color-slate)" }}>
                 Certificate of authenticity
               </p>
             </div>
@@ -319,7 +319,7 @@ export default async function ClaimDetailPage({
         className="p-5 rounded-xl mb-4"
         style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-pearl)" }}
       >
-        <p className="text-micro font-medium uppercase tracking-wider mb-4" style={{ color: "var(--color-slate)" }}>
+        <p className="text-caption font-medium mb-4" style={{ color: "var(--color-slate)" }}>
           Timeline
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -363,7 +363,7 @@ export default async function ClaimDetailPage({
       {/* Rejection reason */}
       {claim.status === "rejected" && claim.rejection_reason && (
         <div className="p-5 rounded-xl mb-4" style={{ backgroundColor: "var(--color-alert-tint)", border: "1px solid #F0C0C0" }}>
-          <p className="text-micro font-medium uppercase tracking-wider mb-2" style={{ color: "var(--color-alert)" }}>
+          <p className="text-caption font-medium mb-2" style={{ color: "var(--color-alert)" }}>
             Rejection reason
           </p>
           <p style={{ color: "var(--color-alert)", fontSize: "var(--text-body-sm)" }}>

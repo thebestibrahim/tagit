@@ -202,7 +202,7 @@ function SubscriptionForm({ companyId, data, onSaved }: { companyId: string; dat
 
       {/* Lifetime chip limits */}
       <div className="mt-4">
-        <p className="text-micro font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-mist)" }}>Lifetime tag and card limits</p>
+        <p className="text-caption font-semibold mb-2" style={{ color: "var(--color-mist)" }}>Lifetime tag and card limits</p>
         <div className="grid grid-cols-2 gap-4">
           <Labeled label={`Tag limit override (plan: ${limitHint(planTagLimit)})`}>
             <input value={tagOverride} onChange={(e) => setTagOverride(e.target.value)} placeholder="Blank = plan default" className="w-full px-3 py-2 rounded-lg text-body-sm" style={fieldStyle()} />
@@ -361,11 +361,11 @@ function PricingEditor({ companyId, data, onSaved }: { companyId: string; data: 
     <Block title="Custom tag pricing (₦ per tag)">
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <p className="text-micro font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--color-mist)" }}>Tags</p>
+          <p className="text-caption font-semibold mb-3" style={{ color: "var(--color-mist)" }}>Tags</p>
           {tierRows(tagTiers, setTagTiers)}
         </div>
         <div>
-          <p className="text-micro font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--color-mist)" }}>Cards</p>
+          <p className="text-caption font-semibold mb-3" style={{ color: "var(--color-mist)" }}>Cards</p>
           {tierRows(cardTiers, setCardTiers)}
         </div>
       </div>
@@ -486,7 +486,7 @@ function CyclePanel({ data }: { data: BillingData }) {
           </div>
           {open && (
             <div className="text-right shrink-0 pl-2">
-              <p className="text-micro uppercase tracking-wider" style={{ color: t.color, opacity: 0.7 }}>Open balance</p>
+              <p className="text-caption" style={{ color: t.color, opacity: 0.7 }}>Open balance</p>
               <p className="text-h3 font-semibold tabular-nums leading-tight mt-0.5" style={{ color: t.color }}>{formatNaira(open.amount)}</p>
               <p className="text-caption" style={{ color: t.color, opacity: 0.7 }}>due {fmtFull(open.due_date)}</p>
             </div>
@@ -563,7 +563,7 @@ function BillingTimeline({ data }: { data: BillingData }) {
           <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4 rounded-xl px-5 py-4 mb-6" style={{ backgroundColor: "var(--color-smoke)", border: "1px solid var(--color-cream)" }}>
             {keyDates.map((d) => (
               <div key={d.label}>
-                <dt className="text-micro uppercase tracking-wider" style={{ color: "var(--color-mist)" }}>{d.label}</dt>
+                <dt className="text-caption" style={{ color: "var(--color-mist)" }}>{d.label}</dt>
                 <dd className="mt-1 text-body-sm font-medium tabular-nums" style={{ color: "var(--color-charcoal)" }}>{d.value}</dd>
               </div>
             ))}

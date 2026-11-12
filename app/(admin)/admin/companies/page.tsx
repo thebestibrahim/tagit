@@ -88,10 +88,10 @@ export default async function AdminCompaniesPage({
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>
+        <h1 className="page-title">
           Companies
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           Manage brand partner applications and accounts
         </p>
       </div>
@@ -141,7 +141,7 @@ export default async function AdminCompaniesPage({
                 {["Company", "Industry", "Status", "Applied", ""].map((h) => (
                   <th
                     key={h}
-                    className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider"
+                    className="text-left px-5 py-3 text-caption font-medium"
                     style={{ color: "var(--color-slate)" }}
                   >
                     {h}

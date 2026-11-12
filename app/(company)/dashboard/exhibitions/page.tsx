@@ -63,13 +63,10 @@ export default async function ExhibitionsPage() {
     <div className="p-8 max-w-5xl mx-auto">
       <div className="page-header mb-8 flex items-end justify-between gap-6">
         <div>
-          <p className="text-micro font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
-            On View
-          </p>
-          <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+          <h1 className="page-title">
             Exhibitions
           </h1>
-          <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+          <p className="page-desc">
             Scannable QR placards for pieces on show. Reference information only, separate from tag authentication.
           </p>
         </div>
@@ -113,7 +110,7 @@ export default async function ExhibitionsPage() {
                   {["Exhibition", "Dates", "Pieces", "Active codes", ""].map((h) => (
                     <th
                       key={h}
-                      className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider"
+                      className="text-left px-5 py-3 text-caption font-medium"
                       style={{ color: "var(--color-slate)" }}
                     >
                       {h}

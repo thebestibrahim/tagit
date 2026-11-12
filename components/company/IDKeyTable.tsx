@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Tag, CreditCard } from "lucide-react";
 import { statusBadge } from "@/lib/tag-status";
 import type { TagMedium } from "@/types/database";
 import LocalTime from "@/components/ui/LocalTime";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export type IDKeyRow = {
   id: string;
@@ -21,14 +21,12 @@ export type IDKeyRow = {
 export default function IDKeyTable({ rows, medium }: { rows: IDKeyRow[]; medium: TagMedium }) {
   const noun = medium === "card" ? "cards" : "tags";
   const singular = medium === "card" ? "card" : "tag";
-  const Icon = medium === "card" ? CreditCard : Tag;
 
   if (rows.length === 0) {
     return (
-      <div className="py-16 text-center" style={{ color: "var(--color-mist)" }}>
-        <Icon size={32} className="mx-auto mb-3 opacity-30" />
-        <p style={{ fontSize: "var(--text-body-sm)" }}>No {noun} found</p>
-      </div>
+      <EmptyState title={`No ${noun} to show`} action={{ label: "Request a batch", href: "/dashboard/batches/request" }}>
+        {`${noun[0].toUpperCase()}${noun.slice(1)} arrive in batches. Once a batch is dispatched, every ${singular} in it is listed here.`}
+      </EmptyState>
     );
   }
 
@@ -37,7 +35,7 @@ export default function IDKeyTable({ rows, medium }: { rows: IDKeyRow[]; medium:
       <thead>
         <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
           {["Short ID", "Product", "Status", "Created", "Scan"].map((h) => (
-            <th key={h} className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>
+            <th key={h} className="text-left px-5 py-3 text-caption font-medium" style={{ color: "var(--color-slate)" }}>
               {h}
             </th>
           ))}

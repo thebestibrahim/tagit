@@ -112,7 +112,7 @@ export function CustomDomainSection({ enabled, initialDomain }: Props) {
     >
       <div className="flex items-center gap-2 mb-1">
         <Globe size={16} style={{ color: enabled ? "var(--color-gold)" : "var(--color-mist)" }} />
-        <p className="text-micro font-semibold uppercase tracking-widest" style={{ color: enabled ? "var(--color-gold)" : "var(--color-mist)" }}>
+        <p className="text-caption font-semibold" style={{ color: enabled ? "var(--color-gold)" : "var(--color-mist)" }}>
           Custom Domain
         </p>
         {!enabled && (
@@ -198,7 +198,7 @@ export function CustomDomainSection({ enabled, initialDomain }: Props) {
           </p>
 
           <div className="mt-4 rounded-xl overflow-hidden" style={{ border: "1px solid var(--color-cream)" }}>
-            <div className="grid grid-cols-[80px_1fr_1fr_auto] gap-3 px-4 py-2 text-micro font-semibold uppercase tracking-wider" style={{ backgroundColor: "var(--color-smoke)", color: "var(--color-mist)", borderBottom: "1px solid var(--color-cream)" }}>
+            <div className="grid grid-cols-[80px_1fr_1fr_auto] gap-3 px-4 py-2 text-caption font-semibold" style={{ backgroundColor: "var(--color-smoke)", color: "var(--color-mist)", borderBottom: "1px solid var(--color-cream)" }}>
               <span>Type</span>
               <span>Name</span>
               <span>Value</span>

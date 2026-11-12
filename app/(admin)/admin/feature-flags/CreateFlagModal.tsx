@@ -85,7 +85,7 @@ export function CreateFlagModal() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-micro font-medium uppercase tracking-wider block mb-1.5" style={{ color: "var(--color-slate)" }}>
+                <label className="text-caption font-medium block mb-1.5" style={{ color: "var(--color-slate)" }}>
                   Key *
                 </label>
                 <input
@@ -105,7 +105,7 @@ export function CreateFlagModal() {
               </div>
 
               <div>
-                <label className="text-micro font-medium uppercase tracking-wider block mb-1.5" style={{ color: "var(--color-slate)" }}>
+                <label className="text-caption font-medium block mb-1.5" style={{ color: "var(--color-slate)" }}>
                   Name *
                 </label>
                 <input
@@ -121,7 +121,7 @@ export function CreateFlagModal() {
               </div>
 
               <div>
-                <label className="text-micro font-medium uppercase tracking-wider block mb-1.5" style={{ color: "var(--color-slate)" }}>
+                <label className="text-caption font-medium block mb-1.5" style={{ color: "var(--color-slate)" }}>
                   Description
                 </label>
                 <textarea
@@ -138,7 +138,7 @@ export function CreateFlagModal() {
               </div>
 
               <div>
-                <label className="text-micro font-medium uppercase tracking-wider block mb-2" style={{ color: "var(--color-slate)" }}>
+                <label className="text-caption font-medium block mb-2" style={{ color: "var(--color-slate)" }}>
                   Environments
                 </label>
                 <div className="flex gap-4">

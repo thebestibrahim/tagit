@@ -57,7 +57,7 @@ export default async function BatchDetailPage({
         </div>
         <div style={{ flex: 1 }}>
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <h1 className="font-display capitalize" style={{ fontSize: "24px", color: "var(--color-charcoal)", letterSpacing: "-0.02em" }}>
+            <h1 className="page-title capitalize">
               {batch.batch_name || `${batch.industry} batch`}
             </h1>
             <span className="px-2 py-0.5 rounded-full text-micro font-medium" style={{ backgroundColor: typeBadge.bg, color: typeBadge.color }}>

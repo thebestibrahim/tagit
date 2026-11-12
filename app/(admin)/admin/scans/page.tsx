@@ -82,10 +82,10 @@ export default async function AdminScansPage({
   return (
     <div className="p-8 max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>
+        <h1 className="page-title">
           Scan Logs
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           {(count ?? 0).toLocaleString()} total scans recorded
         </p>
       </div>
@@ -134,7 +134,7 @@ export default async function AdminScansPage({
                   {["Time", "Tag / Card", "Company", "Result", "IP Address", "Client"].map((h) => (
                     <th
                       key={h}
-                      className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider"
+                      className="text-left px-5 py-3 text-caption font-medium"
                       style={{ color: "var(--color-slate)" }}
                     >
                       {h}

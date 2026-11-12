@@ -82,14 +82,11 @@ export default async function FlagDetailPage({
               {flag.key}
             </code>
           </div>
-          <h1
-            className="font-display"
-            style={{ fontSize: "28px", color: "var(--color-charcoal)", letterSpacing: "-0.02em", lineHeight: 1.2 }}
-          >
+          <h1 className="page-title">
             {flag.name}
           </h1>
           {flag.description && (
-            <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+            <p className="page-desc">
               {flag.description}
             </p>
           )}

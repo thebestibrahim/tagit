@@ -84,7 +84,7 @@ export function BrandsTable({ brands }: { brands: BrandRow[] }) {
             <thead>
               <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
                 {["Brand", "Plan", "Status", "Next invoice", "Value", "Discount", ""].map((h, i) => (
-                  <th key={i} className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>{h}</th>
+                  <th key={i} className="text-left px-5 py-3 text-caption font-medium" style={{ color: "var(--color-slate)" }}>{h}</th>
                 ))}
               </tr>
             </thead>

@@ -62,10 +62,10 @@ export default async function AdminBatchesPage({
     <div className="p-8 max-w-5xl mx-auto">
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>
+          <h1 className="page-title">
             Tag Batches
           </h1>
-          <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+          <p className="page-desc">
             {pending.length > 0 && (
               <span style={{ color: "var(--color-gold)", fontWeight: 600 }}>
                 {pending.length} pending request{pending.length !== 1 ? "s" : ""} ·{" "}
@@ -204,7 +204,7 @@ export default async function AdminBatchesPage({
                   {["Company", "Batch", "Industry", "Size", "Status", "Created", "Shipped", ""].map((h) => (
                     <th
                       key={h}
-                      className="text-left px-4 py-3 text-micro font-medium uppercase tracking-wider"
+                      className="text-left px-4 py-3 text-caption font-medium"
                       style={{ color: "var(--color-slate)" }}
                     >
                       {h}

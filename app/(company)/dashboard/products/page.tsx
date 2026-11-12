@@ -4,13 +4,14 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { formatCurrency } from "@/lib/billing/pricing";
 import Link from "next/link";
-import { Plus, Package } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Suspense } from "react";
 import SearchInput from "@/components/ui/SearchInput";
 import ClickableRow from "./ClickableRow";
 import ProductRowActions from "./ProductRowActions";
 import BrandPageSection from "./BrandPageSection";
 import LocalTime from "@/components/ui/LocalTime";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const STATUS_FILTERS = ["all", "live", "owned", "transferred", "flagged"];
 
@@ -86,8 +87,8 @@ export default async function ProductsPage({
     <div className="p-8 max-w-5xl mx-auto">
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>Products</h1>
-          <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+          <h1 className="page-title">Products</h1>
+          <p className="page-desc">
             {count ?? 0} registered product{(count ?? 0) !== 1 ? "s" : ""}
           </p>
         </div>
@@ -134,24 +135,22 @@ export default async function ProductsPage({
 
       <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--color-cream)", boxShadow: "var(--shadow-sm)" }}>
         {filtered.length === 0 ? (
-          <div className="py-16 text-center" style={{ color: "var(--color-mist)" }}>
-            <Package size={32} className="mx-auto mb-3 opacity-30" />
-            <p style={{ fontSize: "var(--text-body-sm)" }}>
-              {q ? `No products matching "${q}"` : "No products found"}
-            </p>
-            {!q && (
-              <Link href="/dashboard/products/new" className="mt-3 inline-block" style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)", textDecoration: "underline" }}>
-                Register your first product →
-              </Link>
-            )}
-          </div>
+          q ? (
+            <EmptyState title={`Nothing matches “${q}”`}>
+              Check the spelling, or search by tag ID instead of the product name.
+            </EmptyState>
+          ) : (
+            <EmptyState title="No products here yet" action={{ label: "Register product", href: "/dashboard/products/new" }}>
+              Register a product to link it to a tag or card. Its certificate and ownership record start from that moment.
+            </EmptyState>
+          )
         ) : (
           <>
             <div className="overflow-x-auto"><table className="w-full">
               <thead>
                 <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
                   {["Product", "Tag ID", "Tag status", "Price", "Registered", ""].map((h) => (
-                    <th key={h} className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>
+                    <th key={h} className="text-left px-5 py-3 text-caption font-medium" style={{ color: "var(--color-slate)" }}>
                       {h}
                     </th>
                   ))}

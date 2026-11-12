@@ -80,10 +80,10 @@ export default async function AdminBillingPage() {
   return (
     <div className="p-8 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>
+        <h1 className="page-title">
           Billing
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           Revenue, subscriptions and per-brand billing configuration
         </p>
       </div>
@@ -106,7 +106,7 @@ export default async function AdminBillingPage() {
 function Card({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
   return (
     <div className="rounded-xl p-5" style={{ backgroundColor: "var(--color-pearl)", border: `1px solid ${accent ? "#FECACA" : "var(--color-cream)"}`, boxShadow: "var(--shadow-sm)" }}>
-      <p className="text-micro font-medium uppercase tracking-wider mb-2" style={{ color: "var(--color-slate)" }}>{label}</p>
+      <p className="text-caption font-medium mb-2" style={{ color: "var(--color-slate)" }}>{label}</p>
       <p className="font-semibold tabular-nums" style={{ fontSize: "var(--text-h3)", color: accent ? "#991B1B" : "var(--color-charcoal)", lineHeight: 1.1 }}>{value}</p>
       {sub && <p className="text-caption mt-1.5" style={{ color: "var(--color-mist)" }}>{sub}</p>}
     </div>

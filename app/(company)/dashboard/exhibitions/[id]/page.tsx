@@ -92,10 +92,7 @@ export default async function ExhibitionDetailPage({
       </Link>
 
       <div className="page-header mb-8">
-        <p className="text-micro font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-gold)" }}>
-          Exhibition
-        </p>
-        <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+        <h1 className="page-title">
           {ex.name}
         </h1>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>

@@ -3,7 +3,7 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getFlagsForBrand } from "@/lib/feature-flags/server";
-import { CheckCircle2, Clock, CreditCard, ArrowRight, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Clock, ArrowRight, AlertTriangle } from "lucide-react";
 import type { FlagKey } from "@/lib/feature-flags/types";
 import type { Invoice, Subscription, Discount, Plan } from "@/types/database";
 import { formatNaira, getEffectivePrice } from "@/lib/billing/pricing";
@@ -68,16 +68,9 @@ export default async function BillingPage() {
   return (
     <div className="p-8 max-w-3xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <CreditCard size={18} style={{ color: "var(--color-gold)" }} />
-          <p className="text-micro font-semibold uppercase tracking-widest" style={{ color: "var(--color-gold)" }}>
-            Billing & Plan
-          </p>
-        </div>
-        <h1 className="font-display" style={{ fontSize: "32px", color: "var(--color-charcoal)", letterSpacing: "-0.02em", lineHeight: 1.15 }}>
-          Billing
-        </h1>
+      <div className="page-header">
+        <h1 className="page-title">Billing</h1>
+        <p className="page-desc">Your plan, what you have used, and your invoices.</p>
       </div>
 
       {/* Status banner */}
@@ -86,7 +79,7 @@ export default async function BillingPage() {
       {/* Current plan */}
       {sub && (
         <section className="mt-6 rounded-xl p-6" style={{ backgroundColor: "var(--color-pearl)", border: "1px solid var(--color-cream)" }}>
-          <p className="text-micro font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--color-mist)" }}>Current plan</p>
+          <p className="text-caption font-semibold mb-4" style={{ color: "var(--color-mist)" }}>Current plan</p>
           <dl className="grid grid-cols-2 gap-y-3 gap-x-6">
             <Row label="Plan" value={sub.plans?.name ?? "—"} />
             <Row label="Interval" value={cap(sub.billing_interval)} />
@@ -99,7 +92,7 @@ export default async function BillingPage() {
           {/* Tag and card usage — lifetime limits */}
           {(tagUse || cardUse) && (
             <div className="mt-6 pt-6" style={{ borderTop: "1px solid var(--color-cream)" }}>
-              <p className="text-micro font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--color-mist)" }}>Tag and card allowance (lifetime)</p>
+              <p className="text-caption font-semibold mb-4" style={{ color: "var(--color-mist)" }}>Tag and card allowance (lifetime)</p>
               <div className="space-y-5">
                 {tagUse && <ChipUsageRow label="Tags" usage={tagUse} />}
                 {cardUse && <ChipUsageRow label="Cards" usage={cardUse} />}
@@ -124,7 +117,7 @@ export default async function BillingPage() {
 
       {/* Invoices */}
       <section className="mt-6">
-        <p className="text-micro font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--color-mist)" }}>Invoices</p>
+        <p className="text-caption font-semibold mb-3" style={{ color: "var(--color-mist)" }}>Invoices</p>
         {invoices.length === 0 ? (
           <p className="text-body-sm rounded-xl px-5 py-6 text-center" style={{ color: "var(--color-mist)", backgroundColor: "var(--color-smoke)" }}>
             No invoices yet.
@@ -166,7 +159,7 @@ export default async function BillingPage() {
 
       {/* Features */}
       <section className="mt-8">
-        <p className="text-micro font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--color-mist)" }}>Features</p>
+        <p className="text-caption font-semibold mb-1" style={{ color: "var(--color-mist)" }}>Features</p>
         <p className="mb-3" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
           {activeCount} of {FEATURE_DISPLAY.length} features active on your account
         </p>

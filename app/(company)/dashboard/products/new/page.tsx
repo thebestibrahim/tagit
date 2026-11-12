@@ -84,10 +84,10 @@ export default async function NewProductPage({
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>
+        <h1 className="page-title">
           {duplicating ? "Duplicate product" : "Register product"}
         </h1>
-        <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+        <p className="page-desc">
           {duplicating
             ? "Details have been copied over. Select fresh tags or cards, adjust anything you need, then save."
             : "Link a tag or card to a product and fill in its authenticity details."}

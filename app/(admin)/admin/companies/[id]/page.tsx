@@ -87,10 +87,10 @@ export default async function CompanyDetailPage({
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-h2 font-semibold" style={{ color: "var(--color-charcoal)" }}>
+          <h1 className="page-title">
             {company.name}
           </h1>
-          <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
+          <p className="page-desc">
             {company.email}
           </p>
         </div>
@@ -174,7 +174,7 @@ export default async function CompanyDetailPage({
             <thead>
               <tr style={{ backgroundColor: "var(--color-smoke)", borderBottom: "1px solid var(--color-cream)" }}>
                 {["Product", "Tag ID", "Status", "Price", "Registered"].map((h) => (
-                  <th key={h} className="text-left px-5 py-3 text-micro font-medium uppercase tracking-wider" style={{ color: "var(--color-slate)" }}>{h}</th>
+                  <th key={h} className="text-left px-5 py-3 text-caption font-medium" style={{ color: "var(--color-slate)" }}>{h}</th>
                 ))}
               </tr>
             </thead>

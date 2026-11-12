@@ -48,7 +48,7 @@ export default async function NewExhibitionPage() {
       >
         <ChevronLeft size={15} /> Back to exhibitions
       </Link>
-      <h1 className="text-h2 font-semibold mb-1" style={{ color: "var(--color-charcoal)" }}>New exhibition</h1>
+      <h1 className="page-title">New exhibition</h1>
       <p className="mb-8" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
         Dates are for your own labeling only. They do not turn codes off — lifecycle is fully manual.
       </p>

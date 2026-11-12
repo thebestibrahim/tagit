@@ -11,6 +11,30 @@
   --font-mono: var(--font-mono);
   --font-heading: var(--font-display);
 
+  /* The type scale. These were defined in :root but never registered, so
+     ~800 text-body-sm / text-caption / text-micro / text-h* classes compiled
+     to nothing and fell back to 16px. */
+  --text-display: var(--text-display);
+  --text-display--line-height: var(--leading-display);
+  --text-h1: var(--text-h1);
+  --text-h1--line-height: var(--leading-h1);
+  --text-h2: var(--text-h2);
+  --text-h2--line-height: var(--leading-h2);
+  --text-h3: var(--text-h3);
+  --text-h3--line-height: var(--leading-h3);
+  --text-h4: var(--text-h4);
+  --text-h4--line-height: var(--leading-h4);
+  --text-body-lg: var(--text-body-lg);
+  --text-body-lg--line-height: var(--leading-body-lg);
+  --text-body: var(--text-body);
+  --text-body--line-height: var(--leading-body);
+  --text-body-sm: var(--text-body-sm);
+  --text-body-sm--line-height: var(--leading-body-sm);
+  --text-caption: var(--text-caption);
+  --text-caption--line-height: var(--leading-caption);
+  --text-micro: var(--text-micro);
+  --text-micro--line-height: var(--leading-micro);
+
   /* Tagit colors exposed to Tailwind */
   --color-onyx: var(--color-onyx);
   --color-charcoal: var(--color-charcoal);
@@ -100,8 +124,8 @@
   --text-body-lg: 18px;  --leading-body-lg: 1.55;  --tracking-body-lg: -0.005em;
   --text-body: 16px;     --leading-body: 1.6;      --tracking-body: 0;
   --text-body-sm: 14px;  --leading-body-sm: 1.55;  --tracking-body-sm: 0.005em;
-  --text-caption: 13px;  --leading-caption: 1.5;   --tracking-caption: 0.01em;
-  --text-micro: 11px;    --leading-micro: 1.4;     --tracking-micro: 0.04em;
+  --text-caption: 13px;  --leading-caption: 1.5;   --tracking-caption: 0;
+  --text-micro: 12px;    --leading-micro: 1.4;     --tracking-micro: 0;
 
   /* ── Spacing ── */
   --space-1: 4px;  --space-2: 8px;   --space-3: 12px; --space-4: 16px;
@@ -122,8 +146,8 @@
   --radius-pill: 999px;
 
   /* ── Shadows ── */
-  --shadow-xs: 0 1px 2px rgba(10, 10, 11, 0.04);
-  --shadow-sm: 0 2px 4px rgba(10, 10, 11, 0.06), 0 1px 2px rgba(10, 10, 11, 0.04);
+  --shadow-xs: 0 1px 1px rgba(10, 10, 11, 0.03);
+  --shadow-sm: 0 1px 1px rgba(10, 10, 11, 0.03);
   --shadow-md: 0 4px 12px rgba(10, 10, 11, 0.06), 0 2px 4px rgba(10, 10, 11, 0.04);
   --shadow-lg: 0 12px 24px rgba(10, 10, 11, 0.08), 0 4px 8px rgba(10, 10, 11, 0.04);
   --shadow-xl: 0 24px 48px rgba(10, 10, 11, 0.10), 0 8px 16px rgba(10, 10, 11, 0.04);
@@ -137,6 +161,13 @@
   --duration-normal: 350ms;
   --duration-slow: 700ms;
   --duration-cinematic: 1200ms;
+
+  /* ── App surfaces (dashboard and admin) ── */
+  --app-ground: #f6f4ef;
+  --app-surface: #ffffff;
+  --app-edge: #e6e0d4;
+  --app-body: #5e5c57;
+  --app-sidebar: #15130f;
 
   /* ── Shadcn semantic tokens ── */
   --background: #FAFAF8;
@@ -155,7 +186,7 @@
   --accent-foreground: #0A0A0B;
   --destructive: #B85C5C;
   --border: #E8E2D5;
-  --input: #C7C7CC;
+  --input: #d3ccbf;
   --ring: #B8945D;
   --radius: 0.375rem;
 
@@ -222,60 +253,75 @@
     display: inline-block;
   }
 
-  /* Subtle dot-grid for dashboard content areas */
+  /* The app ground: plain paper. (Was a dot grid; the class name stays so
+     the layouts need no change.) */
   .bg-dot-grid {
-    background-color: var(--color-smoke);
-    background-image: radial-gradient(circle, #D4CEC4 1px, transparent 1px);
-    background-size: 22px 22px;
-    background-position: 11px 11px;
+    background-color: var(--app-ground);
   }
 
-  /* Raised card — light inner top edge, soft gradient fill, layered shadow */
+  /* The app's one surface: white, a hairline edge, no gradient, no shadow.
+     Hierarchy comes from type and spacing, not from cards floating. */
   .card-raised {
-    background: linear-gradient(160deg, var(--color-pearl) 0%, #F0EDE6 100%);
-    border: 1px solid var(--color-cream);
-    box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.85);
-    border-radius: var(--radius-lg);
-  }
-  .card-raised:hover {
-    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    background: var(--app-surface);
+    border: 1px solid var(--app-edge);
+    border-radius: 10px;
   }
 
-  /* Gold-accented card — top border stripe */
+  /* A surface that needs the brand's attention: the same panel, edged in gold. */
   .card-accent-gold {
-    border-top: 2px solid var(--color-gold);
-    background: linear-gradient(160deg, var(--color-pearl) 0%, #F5F0E6 100%);
-    border-left: 1px solid var(--color-champagne);
-    border-right: 1px solid var(--color-champagne);
-    border-bottom: 1px solid var(--color-champagne);
-    box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 0 24px rgba(184, 148, 93, 0.08);
-    border-radius: var(--radius-lg);
+    background: var(--app-surface);
+    border: 1px solid var(--color-champagne);
+    border-radius: 10px;
   }
 
-  /* Gradient gold text for large numerals */
+  /* Numerals are set in ink. (Was a charcoal-to-gold gradient fill.) */
   .text-gradient-gold {
-    background: linear-gradient(135deg, var(--color-charcoal) 30%, var(--color-gold));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--color-onyx);
   }
 
-  /* Page header separator */
+  /* The page header: title, the sentence under it, and room before the work. */
   .page-header {
-    padding-bottom: 24px;
-    margin-bottom: 32px;
-    border-bottom: 1px solid var(--color-cream);
-    position: relative;
+    margin-bottom: 36px;
   }
-  .page-header::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 48px;
-    height: 2px;
-    background: linear-gradient(90deg, var(--color-gold), transparent);
-    border-radius: 1px;
+  .page-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(30px, 2.6vw, 38px);
+    line-height: 1.08;
+    letter-spacing: -0.024em;
+    color: var(--color-onyx);
+  }
+  .page-desc {
+    margin: 8px 0 0;
+    max-width: 64ch;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--app-body);
+  }
+
+  /* An empty list says what will appear here and how to get it. */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 40px 32px;
+  }
+  .empty-state-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 22px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    color: var(--color-onyx);
+  }
+  .empty-state-body {
+    margin: 0;
+    max-width: 52ch;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--app-body);
   }
 
   .verified-enter {
@@ -307,16 +353,32 @@
 
   /* Dark sidebar nav items */
   .nav-item-dark {
-    color: #71717A;
+    position: relative;
+    color: #a8a294;
+    font-weight: 450;
   }
   .nav-item-dark:hover {
-    background-color: #2A2419;
-    color: #E4E4E7;
+    background-color: rgba(240, 237, 230, 0.05);
+    color: #f0ede6;
   }
   .nav-item-dark.active {
-    background-color: #332C1E;
-    color: #FAFAF8;
-    font-weight: 600;
+    background-color: rgba(240, 237, 230, 0.07);
+    color: #f7f5f0;
+    font-weight: 550;
+  }
+  .nav-item-dark.active::before {
+    content: "";
+    position: absolute;
+    left: -12px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--color-gold);
+  }
+  .nav-item-dark:focus-visible {
+    outline: 2px solid var(--color-champagne);
+    outline-offset: -2px;
   }
 }
 

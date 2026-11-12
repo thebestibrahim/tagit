@@ -156,7 +156,7 @@ export default function ReplaceChipButton({
             </h2>
 
             <form onSubmit={handleSubmit}>
-              <p className="text-micro font-medium uppercase tracking-wider mb-2" style={{ color: "var(--color-slate)" }}>
+              <p className="text-caption font-medium mb-2" style={{ color: "var(--color-slate)" }}>
                 Why are you replacing this {lower}?
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>
@@ -187,7 +187,7 @@ export default function ReplaceChipButton({
 
               <label
                 htmlFor="replacement_short_id"
-                className="text-micro font-medium uppercase tracking-wider mb-2 block"
+                className="text-caption font-medium mb-2 block"
                 style={{ color: "var(--color-slate)" }}
               >
                 Replacement {lower}

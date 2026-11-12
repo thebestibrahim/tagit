@@ -629,7 +629,7 @@ export default function CustomizationForm({ company, showExhibitions = false }: 
   // PDFs) get a narrower column.
   const previewPanel = (
     <div>
-      <p className="font-semibold uppercase tracking-widest mb-3" style={{ fontSize: "var(--text-micro)", color: "var(--color-slate)" }}>
+      <p className="font-semibold mb-3" style={{ fontSize: "var(--text-micro)", color: "var(--color-slate)" }}>
         Live preview
       </p>
 
