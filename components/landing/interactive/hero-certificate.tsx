@@ -2,6 +2,7 @@
 import { useRef } from "react";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import { EASE } from "../styles";
+import { rosette } from "./guilloche";
 
 /**
  * The certificate.
@@ -22,23 +23,6 @@ import { EASE } from "../styles";
 const W = 660;
 const H = 412;
 
-/* Engine-turned guilloché, the pattern on a share certificate or a watch dial.
-   A hypotrochoid closes after `r / gcd(R, r)` turns, so with a prime r it draws
-   one continuous rosette. Cheap to generate once at module load, and it is what
-   makes the card read as a document of value rather than a UI panel. */
-function rosette(R: number, r: number, d: number, steps = 620) {
-  const turns = r;
-  const pts: string[] = [];
-  for (let i = 0; i <= steps; i++) {
-    const t = (i / steps) * turns * 2 * Math.PI;
-    const k = (R - r) / r;
-    const x = (R - r) * Math.cos(t) + d * Math.cos(k * t);
-    const y = (R - r) * Math.sin(t) - d * Math.sin(k * t);
-    pts.push(`${x.toFixed(1)} ${y.toFixed(1)}`);
-  }
-  return "M" + pts.join("L");
-}
-
 const GUILLOCHE = [rosette(190, 7, 76), rosette(146, 11, 52)];
 
 const DETAILS = [
@@ -53,6 +37,8 @@ const OWNERS = [
   ["Chidinma Eze", "Current owner"],
 ];
 
+const round = (n: number) => Math.round(n * 100) / 100;
+
 /** The maker's seal, stamped on the card. */
 function Seal({ x, y, r, foil }: { x: number; y: number; r: number; foil: string }) {
   const ticks = Array.from({ length: 36 }, (_, i) => {
@@ -60,10 +46,12 @@ function Seal({ x, y, r, foil }: { x: number; y: number; r: number; foil: string
     const inner = i % 3 === 0 ? r * 0.74 : r * 0.82;
     return {
       i,
-      x1: x + Math.cos(rad) * inner,
-      y1: y + Math.sin(rad) * inner,
-      x2: x + Math.cos(rad) * (r * 0.92),
-      y2: y + Math.sin(rad) * (r * 0.92),
+      // Rounded: Node and the browser disagree on the last digits of cos/sin,
+      // and unrounded values fail hydration.
+      x1: round(x + Math.cos(rad) * inner),
+      y1: round(y + Math.sin(rad) * inner),
+      x2: round(x + Math.cos(rad) * (r * 0.92)),
+      y2: round(y + Math.sin(rad) * (r * 0.92)),
     };
   });
 

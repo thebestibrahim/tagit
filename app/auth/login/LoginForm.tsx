@@ -4,22 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import { c } from "@/components/landing/styles";
-import {
-  AuthLeftPanel,
-  AuthRightPanel,
-  AuthEyebrow,
-  AuthHeading,
-  AuthSubmitButton,
-  FieldLabel,
-  authInputBase,
-  authFocusInput,
-  authBlurInput,
-  authOuter,
-  authResponsiveCss,
-} from "@/components/auth/auth-chrome";
+import { AuthShell, AuthTitle, AuthLead, Field, FormError, SubmitButton, authStyles as s } from "@/components/auth/auth-chrome";
+import { RoomSeal } from "@/components/auth/certificate";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -27,102 +13,73 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setLoading(true);
     const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      // Generic message — don't reveal whether the email exists or is confirmed.
-      toast.error("Invalid email or password.");
+    // Generic message either way: don't reveal whether the email exists, is
+    // confirmed, or belongs to a staff account (staff sign in elsewhere).
+    if (authError || data.user?.app_metadata?.role !== "company") {
+      if (!authError) await supabase.auth.signOut();
+      setError("Incorrect email or password.");
       setLoading(false);
       return;
     }
 
-    // This is the brand partner portal — companies only. Staff sign in elsewhere.
-    const role = data.user?.app_metadata?.role;
-    if (role === "company") {
-      router.push("/dashboard");
-    } else {
-      await supabase.auth.signOut();
-      toast.error("Invalid email or password.");
-      setLoading(false);
-      return;
-    }
-    setLoading(false);
+    router.push("/dashboard");
   }
 
   return (
-    <div style={authOuter}>
-      <AuthLeftPanel
-        eyebrow="Brand partner portal"
-        heading="Proof that stays with the piece."
-        body="Your catalogue, your ownership ledger, and your customers' voice — all in one place."
-        features={[
-          "Cryptographic tag authentication",
-          "A permanent ownership ledger",
-          "An AI voice persona for your brand",
-          "Built for the EU DPP mandate",
-        ]}
-      />
+    <AuthShell
+      room={<RoomSeal />}
+      caption="Proof that stays with the piece."
+      aside={
+        <>
+          <span className={s.topAsideLead}>New to Tagit?</span>
+          <Link href="/auth/register">Apply for access</Link>
+        </>
+      }
+    >
+      <AuthTitle>Sign in to Tagit</AuthTitle>
+      <AuthLead>Your catalogue, certificates and ownership records.</AuthLead>
 
-      <AuthRightPanel backHref="/" backLabel="Back to site">
-        <AuthEyebrow>Sign in</AuthEyebrow>
-        <AuthHeading>Welcome back.</AuthHeading>
+      <form onSubmit={handleLogin} className={s.form}>
+        <Field
+          label="Email address"
+          type="email"
+          name="email"
+          autoComplete="email"
+          placeholder="you@brand.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <Field
+          label="Password"
+          type="password"
+          name="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          labelAside={
+            <Link href="/auth/forgot-password" className={s.quietLink}>
+              Forgot password?
+            </Link>
+          }
+        />
 
-        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <div>
-            <FieldLabel htmlFor="email">Email address</FieldLabel>
-            <input
-              id="email"
-              type="email"
-              placeholder="you@brand.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              onFocus={authFocusInput}
-              onBlur={authBlurInput}
-              style={authInputBase}
-            />
-          </div>
+        <FormError>{error}</FormError>
 
-          <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
-              <Link href="/auth/forgot-password" style={{ fontSize: 14, color: c.quiet, textDecoration: "none", letterSpacing: "-0.003em" }}>
-                Forgot password?
-              </Link>
-            </div>
-            <input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              onFocus={authFocusInput}
-              onBlur={authBlurInput}
-              style={authInputBase}
-            />
-          </div>
-
-          <AuthSubmitButton loading={loading}>
-            {loading && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />}
-            {loading ? "Signing in…" : "Sign in"}
-          </AuthSubmitButton>
-        </form>
-
-        <p style={{ marginTop: 24, fontSize: 15, color: c.quiet, letterSpacing: "-0.003em" }}>
-          New brand partner?{" "}
-          <Link href="/auth/register" style={{ color: c.body, textDecoration: "none", borderBottom: `1px solid ${c.line}` }}>
-            Apply for access →
-          </Link>
-        </p>
-      </AuthRightPanel>
-
-      <style>{authResponsiveCss}</style>
-    </div>
+        <SubmitButton loading={loading} loadingLabel="Signing in">
+          Sign in
+        </SubmitButton>
+      </form>
+    </AuthShell>
   );
 }

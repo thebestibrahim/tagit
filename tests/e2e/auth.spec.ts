@@ -29,7 +29,7 @@ test.describe("Auth pages", () => {
     await page.getByRole("textbox", { name: /company name/i }).fill("Test Co");
     await page.getByRole("textbox", { name: /full name/i }).fill("Test User");
     await page.getByRole("textbox", { name: /email/i }).fill("test@example.com");
-    await page.getByRole("button", { name: /fashion/i }).click();
+    await page.getByRole("radio", { name: /fashion/i }).check();
     const password = page.getByRole("textbox", { name: /^password$/i });
     await password.fill("short");
     await page.getByRole("button", { name: /submit application/i }).click();
