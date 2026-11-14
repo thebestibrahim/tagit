@@ -158,6 +158,38 @@
   letter-spacing: 0.04em;
 }
 
+/* The verdict as a small badge, once the reveal has said it in full. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 6px 12px 6px 9px;
+  border: 1px solid color-mix(in srgb, var(--accent-on-brand) 55%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--on-brand) 8%, transparent);
+  color: var(--on-brand);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.badge svg {
+  color: var(--accent-on-brand);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 /* The foil edge the hero ends on. */
 .heroEdge {
   height: 1px;

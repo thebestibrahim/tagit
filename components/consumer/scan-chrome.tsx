@@ -75,6 +75,7 @@ export function VerificationHero({
   note,
   meta,
   seal = true,
+  compact = false,
 }: {
   house: string;
   logoUrl?: string | null;
@@ -82,7 +83,34 @@ export function VerificationHero({
   note: React.ReactNode;
   meta?: React.ReactNode[];
   seal?: boolean;
+  /** After the reveal has said it: just the house and a small verdict badge. */
+  compact?: boolean;
 }) {
+  if (compact) {
+    return (
+      <header className={s.hero}>
+        <div className={s.column}>
+          <div className={s.heroTop} style={{ paddingBottom: 14 }}>
+            <div className={s.house}>
+              {logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="" className={s.houseLogo} />
+              )}
+              <span className={s.houseName}>{house}</span>
+            </div>
+            <h1 className={s.badge}>
+              <svg width="15" height="15" viewBox="0 0 307 307" aria-hidden>
+                <TagitMarkGlyph cx={153.5} cy={153.5} size={307} paint="currentColor" />
+              </svg>
+              {verdict}
+              <span className={s.srOnly}>. {note}</span>
+            </h1>
+          </div>
+        </div>
+        <div className={s.heroEdge} />
+      </header>
+    );
+  }
   return (
     <header className={s.hero}>
       {seal && <Engraving />}

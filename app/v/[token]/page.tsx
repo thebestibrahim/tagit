@@ -250,6 +250,7 @@ export default async function ScanPage({
         verdict={verdict.title}
         note={verdict.note}
         seal={verdict.seal}
+        compact={verdict.seal}
         meta={[
           <>Tag <span>{tag.short_id}</span></>,
           "Checked just now",

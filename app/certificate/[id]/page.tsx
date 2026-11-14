@@ -131,6 +131,7 @@ export default async function CertificatePage({
         verdict={verdict.title}
         note={verdict.note}
         seal={verdict.seal}
+        compact={verdict.title === "Valid"}
         meta={[<span key="n">{cert.cert_number}</span>, "Checked just now"]}
       />
 

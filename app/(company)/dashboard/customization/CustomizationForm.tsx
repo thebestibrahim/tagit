@@ -234,6 +234,7 @@ function ScanPagePreview({
         house={headerText || companyName}
         logoUrl={logoUrl}
         verdict="Authentic"
+        compact
         note={`Made by ${companyName}. Its tag's signature checks out with Tagit.`}
         meta={[<>Tag <span>X7F3C9</span></>, "Checked just now"]}
       />
