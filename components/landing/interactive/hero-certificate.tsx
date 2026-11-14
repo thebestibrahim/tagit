@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import { EASE } from "../styles";
 import { rosette } from "./guilloche";
+import { TagitMarkGlyph } from "@/components/ui/TagitMarkGlyph";
 
 /**
  * The certificate.
@@ -61,17 +62,8 @@ function Seal({ x, y, r, foil }: { x: number; y: number; r: number; foil: string
       {ticks.map((t) => (
         <line key={t.i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke="#C8A464" strokeOpacity={t.i % 3 === 0 ? 0.85 : 0.4} strokeWidth={1} strokeLinecap="round" />
       ))}
-      <circle cx={x} cy={y} r={r * 0.6} stroke="#C8A464" strokeOpacity={0.35} strokeWidth={0.9} fill="none" />
-      <text
-        x={x}
-        y={y + 1}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fill={`url(#${foil})`}
-        style={{ fontFamily: "var(--font-display)", fontSize: r * 0.92, fontStyle: "italic" }}
-      >
-        T
-      </text>
+      {/* The Tagit mark, where the initial used to be. */}
+      <TagitMarkGlyph cx={x} cy={y} size={round(r * 1.18)} paint="#D6B675" />
     </g>
   );
 }

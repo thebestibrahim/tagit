@@ -545,6 +545,19 @@
   .app-chip.is-on { background: var(--color-onyx); border-color: var(--color-onyx); color: var(--color-pearl); }
   .app-chip:focus-visible { outline: 2px solid var(--color-onyx); outline-offset: 2px; }
 
+  /* Settings: what a section is on the left, its controls on the right. */
+  .st-section {
+    display: grid;
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    gap: 16px 40px;
+    padding: 28px 0;
+    border-top: 1px solid var(--app-edge);
+  }
+  .st-intro { padding-top: 4px; }
+  @media (max-width: 767px) {
+    .st-section { grid-template-columns: minmax(0, 1fr); padding: 24px 0; }
+  }
+
   /* ── Customization ─────────────────────────────────────────────── */
   .cz-tabs {
     display: flex;

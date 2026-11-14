@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import { Lock, Check, Copy, Loader2, AlertTriangle, ArrowRight } from "lucide-react";
+import { Check, Copy, Loader2, AlertTriangle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { CustomDomain } from "@/types/database";
 
@@ -15,9 +15,11 @@ interface VerificationRecord {
 interface Props {
   enabled: boolean;
   initialDomain: CustomDomain | null;
+  /** The brand page's tagitlux.com path, so the panel can show the real link. */
+  slug?: string | null;
 }
 
-export function CustomDomainSection({ enabled, initialDomain }: Props) {
+export function CustomDomainSection({ enabled, initialDomain, slug }: Props) {
   const [domain, setDomain] = useState<CustomDomain | null>(initialDomain);
   const [input, setInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -106,13 +108,9 @@ export function CustomDomainSection({ enabled, initialDomain }: Props) {
   }
 
   return (
-    <section className="card-raised p-6 mt-6">
-      <div className="flex items-center gap-2 mb-1">
-        <h2 className="ov-h2">Custom domain</h2>
-        {!enabled && (
-          <Lock size={14} style={{ color: "var(--app-body)", marginLeft: 2 }} aria-label="Not on your plan" />
-        )}
-      </div>
+    // The heading and explanation live in the Settings page's section intro;
+    // this renders only the panel's contents.
+    <div className="card-raised p-6 [&>div:first-child]:mt-0">
 
       {/* Locked state */}
       {!enabled && (
@@ -143,7 +141,7 @@ export function CustomDomainSection({ enabled, initialDomain }: Props) {
             <span className="font-medium">{domain.domain}</span> now shows your Tagit brand page.
           </p>
           <p className="text-caption mt-1" style={{ color: "var(--color-mist)" }}>
-            Your tagitlux.com/{"{"}slug{"}"} link continues to work too.
+            {slug ? `Your tagitlux.com/${slug} link keeps working too.` : "Your tagitlux.com link keeps working too."}
           </p>
 
           {!confirmDisconnect ? (
@@ -312,6 +310,6 @@ export function CustomDomainSection({ enabled, initialDomain }: Props) {
           </p>
         </div>
       )}
-    </section>
+    </div>
   );
 }

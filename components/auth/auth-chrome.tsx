@@ -42,7 +42,7 @@ export function AuthShell({
             aria-label="Tagit home"
             style={{ alignSelf: "flex-start" }}
           >
-            <Wordmark height={26} withIcon />
+            <Wordmark height={22} />
           </Link>
           <div className={s.roomStage}>{room}</div>
           <p className={s.roomCaption}>{caption}</p>

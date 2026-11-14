@@ -8,15 +8,43 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 
+/** One settings section: what it is on the left, its controls on the right. */
+export function SettingsSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="st-section">
+      <div className="st-intro">
+        <h2 className="ov-h2">{title}</h2>
+        <p className="mt-1.5 text-body-sm" style={{ color: "var(--app-body)", lineHeight: 1.55 }}>{description}</p>
+      </div>
+      <div className="min-w-0">{children}</div>
+    </section>
+  );
+}
+
+const INDUSTRY_LABEL: Record<string, string> = { fashion: "Fashion", arts: "Arts", collectibles: "Collectibles" };
+
 export default function SettingsForm({
   initialName,
   email,
   logoUrl,
+  industry,
+  memberSince,
 }: {
   initialName: string;
   email: string;
   logoUrl: string | null;
+  industry?: string | null;
+  memberSince?: string | null;
 }) {
+  const [savedName, setSavedName] = useState(initialName);
   const [name, setName] = useState(initialName);
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -62,14 +90,16 @@ export default function SettingsForm({
       body: JSON.stringify({ name: name.trim() }),
     });
     setSavingProfile(false);
-    if (res.ok) toast.success("Profile updated.");
-    else toast.error("Failed to update profile.");
+    if (res.ok) {
+      setSavedName(name.trim());
+      toast.success("Profile saved.");
+    } else toast.error("Your profile wasn't saved. Try again in a moment.");
   }
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
-    if (newPassword.length < 8) { toast.error("Password must be at least 8 characters."); return; }
-    if (newPassword !== confirmPassword) { toast.error("Passwords do not match."); return; }
+    if (newPassword.length < 8) { toast.error("Your new password needs at least 8 characters."); return; }
+    if (newPassword !== confirmPassword) { toast.error("The two new passwords don't match."); return; }
     setSavingPassword(true);
 
     const supabase = createClient();
@@ -80,7 +110,7 @@ export default function SettingsForm({
       password: currentPassword,
     });
     if (signInError) {
-      toast.error("Current password is incorrect.");
+      toast.error("That isn't your current password.");
       setSavingPassword(false);
       return;
     }
@@ -97,196 +127,167 @@ export default function SettingsForm({
     }
   }
 
-  const cardStyle = {};
+  const since = memberSince
+    ? new Date(memberSince).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
+    : null;
+  const nameChanged = name.trim() !== savedName;
+  const mismatch = confirmPassword.length > 0 && confirmPassword !== newPassword;
+
+  const logoBox = (size: number) => (
+    <div
+      className="rounded-lg flex items-center justify-center overflow-hidden shrink-0"
+      style={{ width: size, height: size, border: "1px solid var(--app-edge)", backgroundColor: "#fff" }}
+    >
+      {logo ? (
+        <img src={logo} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: size > 60 ? 8 : 4 }} />
+      ) : (
+        <span className="font-display" style={{ fontSize: size * 0.45, fontStyle: "italic", color: "var(--color-deep-gold)" }}>
+          {savedName[0]?.toUpperCase()}
+        </span>
+      )}
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Company profile */}
-      <form onSubmit={handleSaveProfile} className="card-raised p-6" style={cardStyle}>
-        <h2 className="ov-h2 mb-5">
-          Company profile
-        </h2>
-
-        {/* Logo */}
-        <div className="flex items-center gap-5 mb-6">
-          <div
-            className="w-16 h-16 rounded-xl flex items-center justify-center overflow-hidden shrink-0"
-            style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-linen)" }}
-          >
-            {logo ? (
-              <img src={logo} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-            ) : (
-              <span style={{ fontSize: "24px", fontWeight: 700, color: "var(--color-gold)" }}>
-                {initialName[0]?.toUpperCase()}
-              </span>
-            )}
-          </div>
-          <div>
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploadingLogo}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-body-sm font-medium"
-              style={{
-                border: "1px solid var(--color-stone)",
-                backgroundColor: "var(--color-pearl)",
-                color: "var(--color-graphite)",
-                cursor: uploadingLogo ? "not-allowed" : "pointer",
-              }}
-            >
-              {uploadingLogo ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
-              {uploadingLogo ? "Uploading…" : "Upload logo"}
-            </button>
-            <p className="mt-1.5" style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
-              PNG or JPG, max 2 MB
-            </p>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              style={{ display: "none" }}
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f); }}
-            />
-          </div>
+    <>
+      {/* The house as it appears across Tagit */}
+      <div className="card-raised flex flex-wrap items-center gap-5 px-6 py-5 mb-10">
+        {logoBox(72)}
+        <div className="min-w-0 flex-1">
+          <p className="font-display truncate" style={{ fontSize: 28, lineHeight: 1.1, letterSpacing: "-0.02em", color: "var(--color-onyx)" }}>
+            {savedName}
+          </p>
+          <p className="text-body-sm mt-1 truncate" style={{ color: "var(--app-body)" }}>
+            {[industry ? INDUSTRY_LABEL[industry] ?? industry : null, since ? `Brand partner since ${since}` : "Brand partner"].filter(Boolean).join(". ")}
+          </p>
         </div>
+      </div>
 
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-              Company name
-            </Label>
-            <Input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              style={inputStyle}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-              Email address
-            </Label>
-            <Input
-              type="email"
-              value={email}
-              disabled
-              style={inputStyle}
-            />
-            <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
-              Email cannot be changed here. Contact support if needed.
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={savingProfile}
-          className="mt-5 flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-body-sm"
-          style={{
-            backgroundColor: savingProfile ? "var(--color-stone)" : "var(--color-onyx)",
-            color: "var(--color-pearl)",
-            border: "none",
-            cursor: savingProfile ? "not-allowed" : "pointer",
-          }}
-        >
-          {savingProfile ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
-          {savingProfile ? "Saving…" : "Save profile"}
-        </button>
-      </form>
-
-      {/* Change password */}
-      <form onSubmit={handleChangePassword} className="card-raised p-6" style={cardStyle}>
-        <h2 className="ov-h2 mb-1">
-          Change password
-        </h2>
-        <p className="mb-5" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)" }}>
-          Must be at least 8 characters.
-        </p>
-
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-              Current password
-            </Label>
-            <div style={{ position: "relative" }}>
-              <Input
-                type={showCurrent ? "text" : "password"}
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-                style={{ ...inputStyle, paddingRight: "40px" }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowCurrent((v) => !v)}
-                style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--color-mist)", padding: 0 }}
-              >
-                {showCurrent ? <EyeOff size={15} /> : <Eye size={15} />}
+      <SettingsSection
+        title="Profile"
+        description="Your house's name and logo, as buyers see them on scan pages, certificates and your brand page."
+      >
+        <form onSubmit={handleSaveProfile} className="card-raised p-6">
+          <div className="flex flex-wrap items-center gap-4">
+            {logoBox(56)}
+            <div>
+              <button type="button" onClick={() => fileRef.current?.click()} disabled={uploadingLogo} className="ov-btn ov-btn-quiet">
+                {uploadingLogo ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Upload size={14} aria-hidden />}
+                {uploadingLogo ? "Uploading" : logo ? "Replace logo" : "Upload logo"}
               </button>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-              New password
-            </Label>
-            <div style={{ position: "relative" }}>
-              <Input
-                type={showNew ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={8}
-                style={{ ...inputStyle, paddingRight: "40px" }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowNew((v) => !v)}
-                style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--color-mist)", padding: 0 }}
-              >
-                {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-              Confirm new password
-            </Label>
-            <Input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              style={{
-                ...inputStyle,
-                borderColor: confirmPassword && confirmPassword !== newPassword ? "var(--color-alert)" : "var(--color-stone)",
-              }}
-            />
-            {confirmPassword && confirmPassword !== newPassword && (
-              <p style={{ fontSize: "var(--text-caption)", color: "var(--color-alert)" }}>
-                Passwords do not match
+              <p className="mt-1.5 text-caption" style={{ color: "var(--app-body)" }}>
+                PNG, JPG or WebP, up to 2 MB. The same logo is used in Customization.
               </p>
-            )}
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                style={{ display: "none" }}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f); }}
+              />
+            </div>
           </div>
-        </div>
 
+          <div className="mt-6">
+            <Label htmlFor="st-name" className="cz-label">House name</Label>
+            <Input id="st-name" type="text" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="organization" style={inputStyle} />
+          </div>
+
+          <div className="mt-5 flex items-center gap-3">
+            <button type="submit" disabled={savingProfile || !nameChanged} className="ov-btn disabled:cursor-not-allowed disabled:opacity-50">
+              {savingProfile ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Check size={14} aria-hidden />}
+              {savingProfile ? "Saving" : "Save name"}
+            </button>
+            {!nameChanged && <span className="text-caption" style={{ color: "var(--app-body)" }}>No unsaved changes</span>}
+          </div>
+        </form>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Sign-in"
+        description="The email and password you use to sign in to this dashboard."
+      >
+        <div className="card-raised">
+          <div className="px-6 py-5" style={{ borderBottom: "1px solid var(--app-edge)" }}>
+            <p className="cz-label" style={{ marginBottom: 2 }}>Email</p>
+            <p className="text-body-sm" style={{ color: "var(--color-onyx)" }}>{email}</p>
+            <p className="text-caption mt-1" style={{ color: "var(--app-body)" }}>
+              To change it, email <a href="mailto:business@tagitlux.com" style={{ color: "var(--color-onyx)", textDecoration: "underline", textUnderlineOffset: 3 }}>business@tagitlux.com</a> from this address.
+            </p>
+          </div>
+
+          <form onSubmit={handleChangePassword} className="px-6 py-5">
+            <p className="cz-label" style={{ marginBottom: 12 }}>Change password</p>
+            <div className="space-y-4">
+              <PasswordField id="st-current" label="Current password" value={currentPassword} onChange={setCurrentPassword} shown={showCurrent} onToggle={() => setShowCurrent((v) => !v)} autoComplete="current-password" />
+              <PasswordField id="st-new" label="New password" hint="At least 8 characters." value={newPassword} onChange={setNewPassword} shown={showNew} onToggle={() => setShowNew((v) => !v)} autoComplete="new-password" minLength={8} />
+              <PasswordField id="st-confirm" label="Confirm new password" value={confirmPassword} onChange={setConfirmPassword} shown={showNew} onToggle={() => setShowNew((v) => !v)} autoComplete="new-password" error={mismatch ? "Doesn't match the new password." : undefined} />
+            </div>
+            <button type="submit" disabled={savingPassword} className="ov-btn mt-5 disabled:cursor-not-allowed disabled:opacity-50">
+              {savingPassword && <Loader2 size={14} className="animate-spin" aria-hidden />}
+              {savingPassword ? "Updating password" : "Update password"}
+            </button>
+          </form>
+        </div>
+      </SettingsSection>
+    </>
+  );
+}
+
+function PasswordField({
+  id,
+  label,
+  hint,
+  error,
+  value,
+  onChange,
+  shown,
+  onToggle,
+  autoComplete,
+  minLength,
+}: {
+  id: string;
+  label: string;
+  hint?: string;
+  error?: string;
+  value: string;
+  onChange: (v: string) => void;
+  shown: boolean;
+  onToggle: () => void;
+  autoComplete: string;
+  minLength?: number;
+}) {
+  return (
+    <div>
+      <Label htmlFor={id} className="cz-label">{label}</Label>
+      <div className="relative">
+        <Input
+          id={id}
+          type={shown ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required
+          minLength={minLength}
+          autoComplete={autoComplete}
+          aria-invalid={error ? true : undefined}
+          style={{ fontSize: "var(--text-body-sm)", paddingRight: 44 }}
+        />
         <button
-          type="submit"
-          disabled={savingPassword}
-          className="mt-5 flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-body-sm"
-          style={{
-            backgroundColor: savingPassword ? "var(--color-stone)" : "var(--color-onyx)",
-            color: "var(--color-pearl)",
-            border: "none",
-            cursor: savingPassword ? "not-allowed" : "pointer",
-          }}
+          type="button"
+          onClick={onToggle}
+          aria-label={shown ? "Hide password" : "Show password"}
+          aria-pressed={shown}
+          className="absolute right-1 top-1 bottom-1 w-9 grid place-items-center rounded"
+          style={{ color: "var(--app-body)" }}
         >
-          {savingPassword ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
-          {savingPassword ? "Updating…" : "Update password"}
+          {shown ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
-      </form>
+      </div>
+      {error ? (
+        <p className="mt-1.5 text-caption" style={{ color: "#8a3b3b" }}>{error}</p>
+      ) : hint ? (
+        <p className="mt-1.5 text-caption" style={{ color: "var(--app-body)" }}>{hint}</p>
+      ) : null}
     </div>
   );
 }

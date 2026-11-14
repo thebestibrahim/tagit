@@ -3,13 +3,14 @@
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { rosette } from "@/components/landing/interactive/guilloche";
 import { EASE } from "@/components/landing/styles";
+import { TagitMarkGlyph } from "@/components/ui/TagitMarkGlyph";
 
 /**
  * The certificate a brand is applying to issue.
  *
  * On the landing page the certificate belongs to someone else's house. Here it
  * is drafted from the application as it is filled in: the house's name goes on
- * it, its initial goes in the seal, and the piece reads like something that
+ * it, the Tagit mark goes in the seal, and the piece reads like something that
  * house would make. Submitting stamps the seal. It is the one moment of motion
  * in the flow, and it answers the brand's own action.
  *
@@ -62,8 +63,8 @@ function referenceFor(name: string) {
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
-/** The maker's seal: a dial of ticks around the house's initial. */
-export function Seal({ letter, size = 76 }: { letter: string; size?: number }) {
+/** The seal: a dial of ticks around the Tagit mark. */
+export function Seal({ size = 76 }: { size?: number }) {
   const r = 38;
   const ticks = Array.from({ length: 36 }, (_, i) => {
     const a = ((i * 10 - 90) * Math.PI) / 180;
@@ -78,21 +79,8 @@ export function Seal({ letter, size = 76 }: { letter: string; size?: number }) {
       {ticks.map((t) => (
         <line key={t.i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke="currentColor" strokeOpacity={t.i % 3 === 0 ? 0.85 : 0.4} strokeLinecap="round" />
       ))}
-      <circle cx="40" cy="40" r={r * 0.6} stroke="currentColor" strokeOpacity="0.35" strokeWidth="0.9" />
-      {letter ? (
-        <text
-          x="40"
-          y="41"
-          textAnchor="middle"
-          dominantBaseline="central"
-          fill={FOIL_HI}
-          style={{ fontFamily: "var(--font-display)", fontSize: 34, fontStyle: "italic" }}
-        >
-          {letter}
-        </text>
-      ) : (
-        <circle cx="40" cy="40" r="10" stroke="currentColor" strokeOpacity="0.4" strokeDasharray="2 3" />
-      )}
+      {/* The Tagit mark: every certificate is sealed by Tagit, whichever house made the piece. */}
+      <TagitMarkGlyph cx={40} cy={40} size={44} paint={FOIL_HI} />
     </svg>
   );
 }
@@ -137,7 +125,6 @@ export function ApplicationCertificate({
 }) {
   const reduce = useReducedMotion();
   const name = house.trim();
-  const letter = name ? name.match(/\p{L}|\p{N}/u)?.[0]?.toUpperCase() ?? "" : "";
 
   return (
     <div
@@ -192,7 +179,7 @@ export function ApplicationCertificate({
             transition={{ duration: 0.5, ease: [0.34, 1.3, 0.5, 1] }}
             style={{ flexShrink: 0, opacity: submitted ? 1 : 0.85 }}
           >
-            <Seal letter={letter} size={72} />
+            <Seal size={72} />
           </motion.div>
         </div>
 
@@ -223,24 +210,33 @@ export function ApplicationCertificate({
   );
 }
 
-/** The room on the sign-in pages: the engraving and the seal, with nothing else to sell. */
+/** The room on the sign-in pages: the engraving around the Tagit mark, with nothing else to sell. */
 export function RoomSeal() {
   const reduce = useReducedMotion();
   return (
-    <div style={{ position: "relative", width: "min(100%, 420px)", aspectRatio: "1", color: FOIL }} aria-hidden>
-      <svg viewBox="-240 -240 480 480" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+    <div style={{ position: "relative", width: "min(100%, 462px)", aspectRatio: "1", color: FOIL }} aria-hidden>
+      {/* The outer rosette reaches a radius of 259, so the box runs to 264
+          to keep its tips whole. */}
+      <svg viewBox="-264 -264 528 528" overflow="visible" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
         {ENGRAVING.map((d, i) => (
-          <motion.path
+          // Each layer turns slowly, the two in opposite directions, so the
+          // engraving shifts against itself like a watch movement.
+          <motion.g
             key={i}
-            d={d}
-            stroke="currentColor"
-            strokeOpacity={0.28 - i * 0.08}
-            strokeWidth={0.7}
-            fill="none"
-            initial={reduce ? false : { pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 2.8, ease: "easeOut", delay: 0.2 + i * 0.25 }}
-          />
+            animate={reduce ? undefined : { rotate: i === 0 ? 360 : -360 }}
+            transition={{ duration: i === 0 ? 120 : 90, ease: "linear", repeat: Infinity }}
+          >
+            <motion.path
+              d={d}
+              stroke="currentColor"
+              strokeOpacity={0.28 - i * 0.08}
+              strokeWidth={0.7}
+              fill="none"
+              initial={reduce ? false : { pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 2.8, ease: "easeOut", delay: 0.2 + i * 0.25 }}
+            />
+          </motion.g>
         ))}
       </svg>
       <motion.div
@@ -249,7 +245,34 @@ export function RoomSeal() {
         transition={{ duration: 1, ease: EASE, delay: 0.6 }}
         style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}
       >
-        <Seal letter="T" size={132} />
+        {/* The Tagit mark on a dark disc, so the engraving behind it never
+            crosses its strokes. */}
+        <motion.span
+          animate={
+            reduce
+              ? undefined
+              : {
+                  boxShadow: [
+                    `0 0 0 1px ${FOIL}59, 0 0 0 10px #0f0c05, 0 0 0 11px ${FOIL}26, 0 0 24px 10px ${FOIL}00`,
+                    `0 0 0 1px ${FOIL}8c, 0 0 0 10px #0f0c05, 0 0 0 11px ${FOIL}47, 0 0 48px 14px ${FOIL}1f`,
+                    `0 0 0 1px ${FOIL}59, 0 0 0 10px #0f0c05, 0 0 0 11px ${FOIL}26, 0 0 24px 10px ${FOIL}00`,
+                  ],
+                }
+          }
+          transition={{ duration: 6, ease: "easeInOut", repeat: Infinity, delay: 1.6 }}
+          style={{
+            width: 148,
+            height: 148,
+            borderRadius: "50%",
+            display: "grid",
+            placeItems: "center",
+            backgroundColor: "#0f0c05",
+            boxShadow: `0 0 0 1px ${FOIL}59, 0 0 0 10px #0f0c05, 0 0 0 11px ${FOIL}26`,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/tagit-icon.svg" alt="" width={92} height={92} style={{ display: "block" }} />
+        </motion.span>
       </motion.div>
     </div>
   );
