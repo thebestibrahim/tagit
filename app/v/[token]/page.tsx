@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { ScanReveal } from "@/components/consumer/scan-reveal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createHmac, timingSafeEqual } from "crypto";
 import { notFound } from "next/navigation";
@@ -235,13 +236,14 @@ export default async function ScanPage({
         : unregistered
           ? { title: "Not registered yet", note: "This tag hasn't been attached to a piece yet. Check back once the brand has registered it.", seal: false }
           : hmacValid
-            ? { title: "Authentic", note: `This tag's signature matches the one Tagit issued to ${maker}. The piece is genuine.`, seal: true }
-            : { title: "Registered", note: `This piece is on the Tagit register for ${maker}.`, seal: true };
+            ? { title: "Authentic", note: `Made by ${maker}. Its tag's signature checks out with Tagit.`, seal: true }
+            : { title: "Registered", note: `On the Tagit register as a piece by ${maker}.`, seal: true };
 
   const socials = company?.social_links ?? {};
 
   return (
     <div className={s.page} style={themeVars(theme, resolveBaseFont(company?.brand_font))}>
+      {verdict.seal && <ScanReveal verdict={verdict.title} house={house} />}
       <VerificationHero
         house={house}
         logoUrl={company?.logo_url}

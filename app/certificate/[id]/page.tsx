@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import LocalTime from "@/components/ui/LocalTime";
 import { resolveField } from "@/lib/industry-fields";
 import { resolveScanTheme } from "@/lib/brand-page";
+import { ScanReveal } from "@/components/consumer/scan-reveal";
 import { scanStyles as s, themeVars, VerificationHero, Facts, ScanFooter } from "@/components/consumer/scan-chrome";
 
 const admin = createClient(
@@ -123,6 +124,7 @@ export default async function CertificatePage({
 
   return (
     <div className={s.page} style={themeVars(theme)}>
+      {verdict.title === "Valid" && <ScanReveal verdict="Valid" house={company.name} />}
       <VerificationHero
         house={company.name}
         logoUrl={company.logo_url}

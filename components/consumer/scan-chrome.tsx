@@ -51,7 +51,7 @@ export function ScanSeal({ size = 96 }: { size?: number }) {
   );
 }
 
-const ENGRAVING = [rosette(240, 7, 96), rosette(184, 11, 64)];
+export const ENGRAVING = [rosette(240, 7, 96), rosette(184, 11, 64)];
 
 function Engraving() {
   return (
@@ -105,18 +105,20 @@ export function VerificationHero({
         <div className={s.heroBody}>
           {seal && (
             <div className={s.heroSeal}>
-              <ScanSeal size={92} />
+              <ScanSeal size={58} />
             </div>
           )}
-          <h1 className={s.verdict}>{verdict}</h1>
-          <p className={s.verdictNote}>{note}</p>
-          {meta && meta.length > 0 && (
-            <div className={s.heroMeta}>
-              {meta.map((m, i) => (
-                <div key={i}>{m}</div>
-              ))}
-            </div>
-          )}
+          <div className={s.heroText}>
+            <h1 className={s.verdict}>{verdict}</h1>
+            <p className={s.verdictNote}>{note}</p>
+            {meta && meta.length > 0 && (
+              <div className={s.heroMeta}>
+                {meta.map((m, i) => (
+                  <div key={i}>{m}</div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <div className={s.heroEdge} />

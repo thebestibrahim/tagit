@@ -48,21 +48,20 @@
   color: var(--on-brand);
 }
 
-/* Fine engraving behind the seal, in the accent, very faint. */
+/* Fine engraving tucked behind the seal, in the accent, very faint. */
 .heroEngraving {
   position: absolute;
-  left: 50%;
-  top: 46px;
-  width: 520px;
-  height: 520px;
-  transform: translateX(-50%);
+  right: -150px;
+  top: -40px;
+  width: 400px;
+  height: 400px;
   color: var(--accent-on-brand);
-  opacity: 0.16;
+  opacity: 0.14;
   z-index: -1;
   pointer-events: none;
-  /* Fade out at the edges so it never shows its square on a wide screen. */
-  -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
-  mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+  /* Fade out at the edges so it never shows its square. */
+  -webkit-mask-image: radial-gradient(closest-side, #000 50%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 50%, transparent 100%);
 }
 
 .heroTop {
@@ -70,7 +69,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 14px 20px 6px;
 }
 
 .house {
@@ -81,8 +80,8 @@
 }
 
 .houseLogo {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
   object-fit: contain;
   flex-shrink: 0;
@@ -90,7 +89,7 @@
 
 .houseName {
   font-family: var(--serif);
-  font-size: 21px;
+  font-size: 19px;
   line-height: 1.1;
   letter-spacing: -0.015em;
   white-space: nowrap;
@@ -109,45 +108,49 @@
   text-decoration: none;
 }
 
+/* The verdict, compact: the seal beside it, the note under it. The full
+   ceremony plays once in .reveal, then gets out of the way. */
 .heroBody {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-  padding: 18px 24px 30px;
+  gap: 16px;
+  padding: 14px 20px 22px;
 }
 
 .heroSeal {
+  flex-shrink: 0;
   color: var(--accent-on-brand);
-  margin-bottom: 18px;
+}
+
+.heroText {
+  min-width: 0;
 }
 
 .verdict {
   margin: 0;
   font-family: var(--serif);
-  font-size: 46px;
+  font-size: 34px;
   line-height: 1;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
   font-weight: 400;
   color: inherit; /* globals.css colours every h1 charcoal */
 }
 
 .verdictNote {
-  margin: 12px 0 0;
-  max-width: 34ch;
-  font-size: 14.5px;
-  line-height: 1.55;
+  margin: 6px 0 0;
+  max-width: 40ch;
+  font-size: 13.5px;
+  line-height: 1.5;
   opacity: 0.82;
 }
 
 .heroMeta {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px 14px;
-  margin-top: 16px;
-  font-size: 12.5px;
-  opacity: 0.7;
+  gap: 4px 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.68;
 }
 
 .heroMeta span {
@@ -738,14 +741,167 @@
 /* Wider screens: the page sits as a column on the paper. */
 @media (min-width: 560px) {
   .heroBody {
-    padding-bottom: 38px;
+    padding-bottom: 28px;
   }
   .verdict {
-    font-size: 54px;
+    font-size: 38px;
+  }
+}
+
+/* ── The reveal: the moment a tap lands ───────────────────────────────────
+   Full screen in the brand's colour: the seal's ring draws, its ticks come
+   in around the dial, the mark settles, the verdict rises. Then the whole
+   thing lifts away to the page. About 2.6 seconds; a tap skips it. */
+
+.reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--brand);
+  color: var(--on-brand);
+  cursor: pointer;
+  animation: revealOut 0.75s cubic-bezier(0.7, 0, 0.2, 1) 2.05s forwards;
+}
+
+.revealLeaving {
+  animation: revealOut 0.45s cubic-bezier(0.7, 0, 0.2, 1) forwards;
+}
+
+.revealEngraving {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 640px;
+  height: 640px;
+  margin: -320px 0 0 -320px;
+  color: var(--accent-on-brand);
+  opacity: 0;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(closest-side, #000 45%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 45%, transparent 100%);
+  animation:
+    engraveIn 1.4s ease-out 0.1s forwards,
+    engraveTurn 24s linear infinite;
+}
+
+.revealSeal {
+  position: relative;
+  color: var(--accent-on-brand);
+}
+
+.revealRing {
+  stroke-dasharray: 240;
+  stroke-dashoffset: 240;
+  animation: draw 0.9s cubic-bezier(0.6, 0, 0.2, 1) 0.15s forwards;
+}
+
+.revealTick {
+  opacity: 0;
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+.revealMark {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: markIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.85s forwards;
+}
+
+.revealWord {
+  margin: 26px 0 0;
+  font-family: var(--serif);
+  font-size: 48px;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  font-weight: 400;
+  color: inherit;
+  opacity: 0;
+  animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 1.1s forwards;
+}
+
+.revealHouse {
+  margin: 12px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: riseSoft 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 1.3s forwards;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes markIn {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes riseSoft {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 0.72;
+    transform: translateY(0);
+  }
+}
+
+@keyframes engraveIn {
+  to {
+    opacity: 0.16;
+  }
+}
+
+@keyframes engraveTurn {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes revealOut {
+  to {
+    opacity: 0;
+    transform: translateY(-4%);
+    visibility: hidden;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .reveal {
+    display: none;
+  }
   .spin {
     animation: none;
   }

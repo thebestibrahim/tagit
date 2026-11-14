@@ -234,7 +234,7 @@ function ScanPagePreview({
         house={headerText || companyName}
         logoUrl={logoUrl}
         verdict="Authentic"
-        note={`This tag's signature matches the one Tagit issued to ${companyName}. The piece is genuine.`}
+        note={`Made by ${companyName}. Its tag's signature checks out with Tagit.`}
         meta={[<>Tag <span>X7F3C9</span></>, "Checked just now"]}
       />
       <div className={scan.column}>
