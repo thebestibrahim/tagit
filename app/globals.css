@@ -672,6 +672,110 @@
   }
   .cz-text-btn:hover { color: #8a3b3b; background: #f8eeee; }
 
+  /* ── Customize studio: the live page on a stage, the controls beside it ── */
+  .cz-studio {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(380px, 440px);
+    height: 100%;
+    min-height: 0;
+  }
+  .cz-stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 0;
+    padding: 22px 24px 20px;
+    overflow: hidden;
+    isolation: isolate;
+    color: #efe9dc;
+    background:
+      radial-gradient(90% 70% at 50% 38%, rgba(200, 164, 100, 0.13), transparent 70%),
+      linear-gradient(180deg, #1d1a14 0%, #13110d 100%);
+  }
+  .cz-stage-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .cz-surface {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 99px;
+    border: 1px solid rgba(239, 233, 220, 0.16);
+    background: transparent;
+    color: rgba(239, 233, 220, 0.74);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .cz-surface:hover { color: #efe9dc; border-color: rgba(239, 233, 220, 0.34); }
+  .cz-surface.is-on { background: #efe9dc; border-color: #efe9dc; color: #15130f; }
+  .cz-surface:focus-visible { outline: 2px solid #c8a464; outline-offset: 2px; }
+  .cz-stage-canvas {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: grid;
+    place-items: center;
+    padding: 20px 0 12px;
+  }
+  .cz-stage-note { margin: 0; font-size: 12.5px; color: rgba(239, 233, 220, 0.55); text-align: center; }
+  .cz-phone {
+    position: relative;
+    padding: 10px;
+    border-radius: 46px;
+    background: #0a0907;
+    box-shadow:
+      0 0 0 1px rgba(239, 233, 220, 0.1),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 50px 90px -30px rgba(0, 0, 0, 0.85);
+  }
+  .cz-phone-screen {
+    position: relative;
+    overflow: hidden auto;
+    border-radius: 36px;
+    background: #faf8f3;
+    scrollbar-width: none;
+    overscroll-behavior: contain;
+  }
+  .cz-phone-screen::-webkit-scrollbar { display: none; }
+  .cz-island {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    z-index: 3;
+    width: 31%;
+    height: 24px;
+    transform: translateX(-50%);
+    border-radius: 99px;
+    background: #0a0907;
+    pointer-events: none;
+  }
+  .cz-paper {
+    border-radius: 6px;
+    box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(239, 233, 220, 0.08);
+    overflow: hidden;
+  }
+  .cz-controls {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--app-surface);
+    border-left: 1px solid var(--app-edge);
+  }
+  .cz-controls-head { padding: 22px 28px 0; border-bottom: 1px solid var(--app-edge); }
+  .cz-controls-head .cz-tabs { margin: 16px 0 -1px; border-bottom: none; }
+  .cz-controls-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .cz-controls .cz-savebar { margin: 0; padding: 14px 28px; background: var(--app-surface); }
+  @media (max-width: 1023px) {
+    .cz-studio { grid-template-columns: minmax(0, 1fr); height: auto; }
+    .cz-stage { padding: 18px 16px; }
+    .cz-controls { border-left: none; }
+    .cz-controls-body { overflow: visible; }
+    .cz-controls-head { padding: 20px 18px 0; }
+    .cz-controls .cz-savebar { padding: 12px 18px; }
+  }
+
   .cz-savebar {
     position: sticky;
     bottom: 0;

@@ -1,0 +1,755 @@
+/*
+ * The pages a buyer reaches by tapping a tag or scanning a certificate:
+ * /v/[token], /certificate/[id] and /v/transfer/[token].
+ *
+ * The brand sets the colours through custom properties on .page (see
+ * resolveScanTheme). Everything else is fixed, so every house's page has the
+ * same bones: the verification block in the brand's colour, then the piece and
+ * its record on paper.
+ */
+
+.page {
+  --paper: #faf8f3;
+  --surface: #ffffff;
+  --edge: #e7e1d5;
+  --edge-soft: #efeae0;
+  --ink: #15130f;
+  --body: #57544e;
+  --quiet: #7a766e;
+  --ok: #1f5a40;
+  --ok-bg: #e3f0e8;
+  --wait: #6e5527;
+  --wait-bg: #f3ecdd;
+  --alert: #8a3b3b;
+  --alert-bg: #f6e4e4;
+  --serif: var(--font-display), "Instrument Serif", Georgia, serif;
+  --mono: var(--font-mono), "JetBrains Mono", ui-monospace, monospace;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--base-font, var(--font-body)), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.column {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ── The verification block ───────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+/* Fine engraving behind the seal, in the accent, very faint. */
+.heroEngraving {
+  position: absolute;
+  left: 50%;
+  top: 46px;
+  width: 520px;
+  height: 520px;
+  transform: translateX(-50%);
+  color: var(--accent-on-brand);
+  opacity: 0.16;
+  z-index: -1;
+  pointer-events: none;
+  /* Fade out at the edges so it never shows its square on a wide screen. */
+  -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+}
+
+.heroTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.house {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.houseLogo {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.houseName {
+  font-family: var(--serif);
+  font-size: 21px;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.byTagit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  font-size: 12px;
+  opacity: 0.78;
+  color: inherit;
+  text-decoration: none;
+}
+
+.heroBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 18px 24px 30px;
+}
+
+.heroSeal {
+  color: var(--accent-on-brand);
+  margin-bottom: 18px;
+}
+
+.verdict {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 46px;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  font-weight: 400;
+  color: inherit; /* globals.css colours every h1 charcoal */
+}
+
+.verdictNote {
+  margin: 12px 0 0;
+  max-width: 34ch;
+  font-size: 14.5px;
+  line-height: 1.55;
+  opacity: 0.82;
+}
+
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 14px;
+  margin-top: 16px;
+  font-size: 12.5px;
+  opacity: 0.7;
+}
+
+.heroMeta span {
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+}
+
+/* The foil edge the hero ends on. */
+.heroEdge {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-on-brand) 50%, transparent);
+  opacity: 0.6;
+}
+
+/* ── The piece ────────────────────────────────────────────────────────── */
+
+.section {
+  padding: 28px 20px 0;
+}
+
+.kicker {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--accent-ink);
+}
+
+.pieceName {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 36px;
+  line-height: 1.04;
+  letter-spacing: -0.022em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.price {
+  margin: 10px 0 0;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--body);
+}
+
+.lede {
+  margin: 16px 0 0;
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--body);
+  white-space: pre-wrap;
+}
+
+.facts {
+  margin: 22px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--edge);
+}
+
+.fact {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--edge);
+}
+
+.fact dt {
+  flex-shrink: 0;
+  font-size: 13.5px;
+  color: var(--quiet);
+}
+
+.fact dd {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 500;
+  text-align: right;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.chip {
+  padding: 6px 12px;
+  border: 1px solid var(--edge);
+  border-radius: 99px;
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.chip span {
+  color: var(--quiet);
+}
+
+/* ── Headings and panels ──────────────────────────────────────────────── */
+
+.h2 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.h2 small {
+  font-family: var(--base-font, var(--font-body)), system-ui, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0;
+  color: var(--quiet);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+}
+
+.panelPad {
+  padding: 22px 20px;
+}
+
+/* ── The record (provenance) ──────────────────────────────────────────── */
+
+.record {
+  list-style: none;
+  margin: 0;
+  padding: 6px 20px;
+}
+
+.entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px 0;
+}
+
+.entry + .entry {
+  border-top: 1px solid var(--edge-soft);
+}
+
+/* The thread between entries. */
+.entry::before {
+  content: "";
+  position: absolute;
+  left: 7.5px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--edge);
+}
+
+.entry:first-child::before {
+  top: 22px;
+}
+
+.entry:last-child::before {
+  bottom: calc(100% - 22px);
+}
+
+.entry:only-child::before {
+  display: none;
+}
+
+.dot {
+  position: relative;
+  z-index: 1;
+  width: 9px;
+  height: 9px;
+  margin: 6px 0 0 3.5px;
+  border-radius: 50%;
+  border: 1.5px solid #b8b2a6;
+  background: var(--surface);
+}
+
+.dotCurrent {
+  width: 11px;
+  height: 11px;
+  margin: 5px 0 0 2.5px;
+  border: none;
+  background: var(--accent-ink);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-ink) 18%, transparent);
+}
+
+.entryName {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 500;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.entryPast .entryName {
+  color: var(--body);
+  font-weight: 400;
+}
+
+.entryMeta {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--quiet);
+}
+
+.tagOk {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 500;
+  vertical-align: 2px;
+  color: var(--ok);
+  background: var(--ok-bg);
+}
+
+/* ── Disclosure rows (details, stories) ───────────────────────────────── */
+
+.disclosure + .disclosure {
+  border-top: 1px solid var(--edge);
+}
+
+.disclosure summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.disclosure summary::-webkit-details-marker {
+  display: none;
+}
+
+.disclosure summary:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: -2px;
+  border-radius: 14px;
+}
+
+.disclosure summary small {
+  margin-left: 8px;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--quiet);
+}
+
+.chev {
+  flex-shrink: 0;
+  color: var(--quiet);
+  transition: transform 0.2s ease;
+}
+
+.disclosure[open] .chev {
+  transform: rotate(180deg);
+}
+
+.disclosureBody {
+  padding: 0 20px 18px;
+}
+
+.disclosureBody .facts {
+  margin: 0;
+}
+
+.disclosureBody .fact:last-child {
+  border-bottom: none;
+}
+
+.story {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--body);
+  white-space: pre-wrap;
+}
+
+/* ── Forms ─────────────────────────────────────────────────────────────── */
+
+.formTitle {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.formLead {
+  margin: 8px 0 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--body);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid #cfc8ba;
+  border-radius: 9px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 16px; /* 16px stops iOS zooming into the field */
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input::placeholder {
+  color: #a39e94;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(21, 19, 15, 0.08);
+}
+
+.code {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 24px;
+  letter-spacing: 0.32em;
+  height: 56px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 48px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 9px;
+  background: var(--button);
+  color: var(--on-button);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.button:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button:focus-visible,
+.buttonQuiet:focus-visible,
+.textButton:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+
+.buttonQuiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid #cfc8ba;
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.buttonQuiet:hover {
+  border-color: var(--ink);
+}
+
+.textButton {
+  align-self: center;
+  padding: 4px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--body);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.fine {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--quiet);
+}
+
+.fine a {
+  color: var(--body);
+  text-underline-offset: 2px;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Notices ──────────────────────────────────────────────────────────── */
+
+.notice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.notice svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notice p {
+  margin: 0;
+}
+
+.notice strong {
+  font-weight: 600;
+}
+
+.noticeOk {
+  color: var(--ok);
+  background: var(--ok-bg);
+}
+
+.noticeWait {
+  color: var(--wait);
+  background: var(--wait-bg);
+}
+
+.noticeAlert {
+  color: var(--alert);
+  background: var(--alert-bg);
+}
+
+.noticeQuiet {
+  color: var(--body);
+  background: #f2eee6;
+}
+
+/* The owner strip: who holds the piece, and the way to pass it on. */
+.owner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.ownerLabel {
+  margin: 0;
+  font-size: 13px;
+  color: var(--quiet);
+}
+
+.ownerName {
+  margin: 2px 0 0;
+  font-family: var(--serif);
+  font-size: 24px;
+  line-height: 1.1;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.linkBox {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--edge);
+  border-radius: 9px;
+  background: var(--paper);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  word-break: break-all;
+  color: var(--ink);
+}
+
+/* ── The way out ──────────────────────────────────────────────────────── */
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 20px 0;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 20px 56px;
+  text-align: center;
+}
+
+.footerMark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--body);
+  text-decoration: none;
+}
+
+.footerMark:hover {
+  color: var(--ink);
+}
+
+.footerNote {
+  margin: 0;
+  max-width: 36ch;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--quiet);
+}
+
+/* Wider screens: the page sits as a column on the paper. */
+@media (min-width: 560px) {
+  .heroBody {
+    padding-bottom: 38px;
+  }
+  .verdict {
+    font-size: 54px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+  .chev {
+    transition: none;
+  }
+}

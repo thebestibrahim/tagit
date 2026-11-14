@@ -68,17 +68,10 @@ export default async function CustomizationPage() {
     signature_url:    ext?.signature_url    ?? null,
   };
 
+  // The studio fills the whole work area: the live preview on a stage, the
+  // controls beside it. It carries its own title.
   return (
-    <div className="p-5 sm:p-8 max-w-5xl mx-auto">
-      <div className="page-header mb-8">
-        <h1 className="page-title">
-          Brand customization
-        </h1>
-        <p className="page-desc">
-          Control how your brand looks on every customer scan page.
-        </p>
-      </div>
-
+    <div className="h-full">
       <CustomizationForm company={company} showExhibitions={flags.exhibitions} />
     </div>
   );

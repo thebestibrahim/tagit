@@ -196,6 +196,57 @@ export function resolvePalette(brand: BrandColors): BrandPalette {
   };
 }
 
+/**
+ * Colours for the scan-moment pages (/v, /certificate, /v/transfer), where the
+ * brand's primary colour is the ground of the verification block and the rest
+ * of the page sits on paper. Every pairing is checked for contrast, so a pale
+ * primary or a faint accent still reads.
+ */
+export type ScanTheme = {
+  /** Ground of the verification block (the brand's primary). */
+  brand: string;
+  /** Text on `brand`: the brand's text colour if it reads, else onyx or pearl. */
+  onBrand: string;
+  /** The accent where it sits on `brand` (the seal, the kicker). */
+  accentOnBrand: string;
+  /** The accent where it sits on paper (labels, the record's current dot). */
+  accentInk: string;
+  /** Ground for filled buttons on paper, and the text on it. */
+  button: string;
+  onButton: string;
+};
+
+export function resolveScanTheme(brand: {
+  brand_primary_color?: string | null;
+  brand_accent_color?: string | null;
+  brand_text_color?: string | null;
+}): ScanTheme {
+  const PAPER: [number, number, number] = [250, 248, 243];
+  const primary = parseHex(brand.brand_primary_color) ?? ONYX;
+  const onBrand = legibleInk(parseHex(brand.brand_text_color), primary, 4.5);
+  const accentRaw = parseHex(brand.brand_accent_color) ?? parseHex(DEFAULTS.accent)!;
+
+  const accentOnBrand = contrast(accentRaw, primary) >= 2.4 ? accentRaw : onBrand;
+
+  // On paper the accent must read as text (≈3:1). Darken it toward onyx in
+  // steps rather than dropping it, so the brand's hue survives.
+  let accentInk = accentRaw;
+  for (let t = 0.15; contrast(accentInk, PAPER) < 3 && t <= 1; t += 0.15) accentInk = mix(accentRaw, ONYX, t);
+
+  // A primary that disappears on paper (white, cream) can't be a button.
+  const button = contrast(primary, PAPER) >= 3 ? primary : ONYX;
+  const onButton = contrast(ONYX, button) >= contrast(PEARL, button) ? ONYX : PEARL;
+
+  return {
+    brand: toHex(primary),
+    onBrand: toHex(onBrand),
+    accentOnBrand: toHex(accentOnBrand),
+    accentInk: toHex(accentInk),
+    button: toHex(button),
+    onButton: toHex(onButton),
+  };
+}
+
 // ── Fonts ───────────────────────────────────────────────────────────────────
 // Reuses the three system font CSS variables already loaded in the root layout
 // (no new font families). brand_font, if set, picks the page's base family —

@@ -1,20 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, CheckCircle2, UserCircle } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import s from "@/components/consumer/consumer.module.css";
 
 type Step = "form" | "otp" | "success";
 
 export default function ClaimForm({
   tagId,
   productName,
-  accent,
-  primary,
 }: {
   tagId: string;
   productName: string;
-  accent: string;
-  primary: string;
+  /** Kept for callers; the theme now comes from the page's custom properties. */
+  accent?: string;
+  primary?: string;
 }) {
   const [step, setStep] = useState<Step>("form");
   const [name, setName] = useState("");
@@ -36,7 +36,7 @@ export default function ClaimForm({
 
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || "Failed to send code");
+      setError(data.error || "We couldn't send the code. Check the email and try again.");
       setLoading(false);
       return;
     }
@@ -59,7 +59,7 @@ export default function ClaimForm({
 
     const claimData = await claimRes.json();
     if (!claimRes.ok) {
-      setError(claimData.error || "Invalid code or failed to submit claim");
+      setError(claimData.error || "That code didn't work. Check it and try again.");
       setLoading(false);
       return;
     }
@@ -70,125 +70,66 @@ export default function ClaimForm({
 
   if (step === "success") {
     return (
-      <div
-        style={{
-          padding: "28px 24px",
-          backgroundColor: "#DCEEE3",
-          borderRadius: "16px",
-          border: "1px solid #B5D9C5",
-          textAlign: "center",
-        }}
-      >
-        <CheckCircle2 size={36} color="#2D6A4F" style={{ margin: "0 auto 12px" }} />
-        <p style={{ margin: "0 0 6px", fontSize: "16px", fontWeight: "700", color: "#1E4D3A" }}>
-          Claim submitted
-        </p>
-        <p style={{ margin: 0, fontSize: "13px", color: "#2D6A4F", lineHeight: 1.5 }}>
-          Your ownership claim for <strong>{productName}</strong> is under review. You&apos;ll receive an email once it&apos;s approved.
+      <div className={`${s.notice} ${s.noticeOk}`} role="status" style={{ marginTop: 20 }}>
+        <CheckCircle2 size={18} aria-hidden />
+        <p>
+          <strong>Your claim is in.</strong> {productName} will carry your name once it&apos;s confirmed, within 24 hours. We&apos;ll email {email} when it is.
         </p>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        padding: "24px",
-        backgroundColor: "#fff",
-        borderRadius: "16px",
-        border: "1px solid #E8E2D5",
-      }}
-    >
-      <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "20px" }}>
-        <UserCircle size={20} color={accent} style={{ marginTop: "2px", flexShrink: 0 }} />
-        <div>
-          <p style={{ margin: "0 0 2px", fontSize: "15px", fontWeight: "700", color: "#0A0A0B" }}>
-            Claim ownership
-          </p>
-          <p style={{ margin: 0, fontSize: "13px", color: "#6E6E73" }}>
-            {step === "form"
-              ? "Enter your details to claim this item."
-              : `Enter the 6-digit code sent to ${email}`}
-          </p>
-        </div>
-      </div>
-
-      {error && (
-        <div style={{ marginBottom: "14px", padding: "10px 14px", backgroundColor: "#F9DDDD", borderRadius: "8px" }}>
-          <p style={{ margin: 0, fontSize: "13px", color: "#B85C5C" }}>{error}</p>
-        </div>
-      )}
-
+    <div>
       {step === "form" && (
-        <form onSubmit={handleSendOtp} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <form onSubmit={handleSendOtp} className={s.form}>
+          {error && <ErrorNote>{error}</ErrorNote>}
           <div>
-            <label style={labelStyle}>Your name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder="Full name"
-              style={inputStyle}
-            />
+            <label htmlFor="claim-name" className={s.label}>Your name</label>
+            <input id="claim-name" className={s.input} type="text" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" placeholder="As you'd like it on the record" />
           </div>
           <div>
-            <label style={labelStyle}>Email address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="you@example.com"
-              style={inputStyle}
-            />
+            <label htmlFor="claim-email" className={s.label}>Email</label>
+            <input id="claim-email" className={s.input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" inputMode="email" placeholder="you@example.com" />
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ ...btnStyle(primary), marginTop: "4px" }}
-          >
-            {loading ? <Loader2 size={16} className="animate-spin" style={{ display: "inline" }} /> : null}
-            {loading ? "Sending code…" : "Continue"}
+          <button type="submit" disabled={loading} className={s.button} style={{ marginTop: 4 }}>
+            {loading && <Loader2 size={16} className={s.spin} aria-hidden />}
+            {loading ? "Sending the code" : "Send me a code"}
           </button>
-          <p style={{ fontSize: "12px", color: "#9E9EA3", lineHeight: 1.6, textAlign: "center", margin: "2px 0 0" }}>
-            By continuing, you agree to our{" "}
-            <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: "#6E6E73", textDecoration: "underline" }}>Terms</a>{" "}
-            and{" "}
-            <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#6E6E73", textDecoration: "underline" }}>Privacy Policy</a>, including the collection of approximate location data based on your IP address.
+          <p className={s.fine}>
+            By continuing you agree to the <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a> and{" "}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>, including recording your approximate location from your IP address.
           </p>
         </form>
       )}
 
       {step === "otp" && (
-        <form onSubmit={handleVerifyAndClaim} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <form onSubmit={handleVerifyAndClaim} className={s.form}>
+          <p className={s.formLead} style={{ margin: 0 }}>
+            We sent a 6-digit code to <strong style={{ color: "var(--ink)" }}>{email}</strong>.
+          </p>
+          {error && <ErrorNote>{error}</ErrorNote>}
           <div>
-            <label style={labelStyle}>Verification code</label>
+            <label htmlFor="claim-code" className={s.label}>Code</label>
             <input
+              id="claim-code"
+              className={`${s.input} ${s.code}`}
               type="text"
               inputMode="numeric"
+              autoComplete="one-time-code"
               pattern="[0-9]{6}"
               maxLength={6}
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
               required
               placeholder="000000"
-              style={{ ...inputStyle, textAlign: "center", fontSize: "24px", letterSpacing: "0.2em", fontFamily: "monospace" }}
             />
           </div>
-          <button
-            type="submit"
-            disabled={loading || otp.length !== 6}
-            style={{ ...btnStyle(primary), marginTop: "4px" }}
-          >
-            {loading ? <Loader2 size={16} className="animate-spin" style={{ display: "inline" }} /> : null}
-            {loading ? "Submitting…" : "Claim ownership"}
+          <button type="submit" disabled={loading || otp.length !== 6} className={s.button} style={{ marginTop: 4 }}>
+            {loading && <Loader2 size={16} className={s.spin} aria-hidden />}
+            {loading ? "Adding you to the record" : "Claim this piece"}
           </button>
-          <button
-            type="button"
-            onClick={() => { setStep("form"); setError(""); setOtp(""); }}
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", color: "#6E6E73", textDecoration: "underline" }}
-          >
+          <button type="button" className={s.textButton} onClick={() => { setStep("form"); setError(""); setOtp(""); }}>
             Use a different email
           </button>
         </form>
@@ -197,42 +138,11 @@ export default function ClaimForm({
   );
 }
 
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  marginBottom: "4px",
-  fontSize: "12px",
-  fontWeight: "600",
-  color: "#4A4A4F",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "11px 14px",
-  fontSize: "14px",
-  color: "#0A0A0B",
-  backgroundColor: "#FAFAF8",
-  border: "1px solid #C7C7CC",
-  borderRadius: "8px",
-  outline: "none",
-  boxSizing: "border-box",
-};
-
-function btnStyle(primary: string): React.CSSProperties {
-  return {
-    width: "100%",
-    padding: "13px",
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#FAFAF8",
-    backgroundColor: primary,
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "8px",
-  };
+export function ErrorNote({ children }: { children: React.ReactNode }) {
+  return (
+    <div className={`${s.notice} ${s.noticeAlert}`} role="alert">
+      <AlertCircle size={17} aria-hidden />
+      <p>{children}</p>
+    </div>
+  );
 }

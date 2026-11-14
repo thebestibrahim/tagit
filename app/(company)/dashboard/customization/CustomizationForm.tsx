@@ -1,16 +1,23 @@
 "use client";
 
-import { useState, useRef } from "react";
-import Image from "next/image";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import {
-  Loader2, Save, Smartphone, Upload, Shield,
-  Award, Palette, Landmark, Globe2, FileText, ChevronDown,
+  Loader2, Save, Smartphone, Upload,
+  Award, Palette, Landmark, Globe2, FileText,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SignaturePanel } from "./SignaturePanel";
-import { resolvePalette } from "@/lib/brand-page";
+import { resolvePalette, resolveScanTheme, resolveBaseFont } from "@/lib/brand-page";
+import {
+  scanStyles as scan,
+  themeVars,
+  VerificationHero,
+  OwnershipRecord as RecordList,
+  ScanFooter,
+} from "@/components/consumer/scan-chrome";
+import PieceSection, { type PieceProduct } from "@/components/consumer/PieceSection";
 
 type Company = {
   name: string;
@@ -41,9 +48,9 @@ const FONT_CSS: Record<string, string> = {
 };
 
 const SCAN_TEMPLATES = [
-  { value: "classic",   label: "Classic",   desc: "Full product card with fields grid" },
-  { value: "minimal",   label: "Minimal",   desc: "Photo, name, and key facts only" },
-  { value: "editorial", label: "Editorial", desc: "Large type, story-first layout" },
+  { value: "classic",   label: "Classic",   desc: "The photo first, then the name and the facts that matter." },
+  { value: "minimal",   label: "Minimal",   desc: "A square photo, the name and three key facts." },
+  { value: "editorial", label: "Editorial", desc: "Large type, with your story before the photo." },
 ];
 
 const CERT_TEMPLATES = [
@@ -186,67 +193,68 @@ function CertPreviewHeritage({ primary, accent, logoUrl, companyName }: { primar
 }
 
 // ─── Live scan page preview ─────────────────────────────────────────────────
+// Not a sketch: the real scan page, built from the same components as
+// /v/[token], filled with a sample piece.
+
+const SAMPLE_PIECE: PieceProduct = {
+  name: "The Atelier Tote",
+  industry_fields: {
+    primary_material: "Full-grain leather",
+    made_in: "Lagos",
+    collection: "Atelier",
+    colorway: "Cognac",
+    production_year: "2026",
+    design_notes: "Cut and stitched by hand in our Lagos atelier, from a single hide chosen for its grain.",
+  },
+  retail_price: 450000,
+  currency: "NGN",
+  photos: [],
+};
 
 function ScanPagePreview({
-  companyName, logoUrl, primary, secondary, accent, textColor, font, headerText, template,
+  companyName, logoUrl, primary, accent, textColor, font, headerText, template,
 }: {
-  companyName: string; logoUrl: string | null; primary: string; secondary: string;
+  companyName: string; logoUrl: string | null; primary: string; secondary?: string;
   accent: string; textColor: string; font: string; headerText: string; template: string;
 }) {
-  const fontFamily = FONT_CSS[font] ?? FONT_CSS.body;
+  const theme = resolveScanTheme({ brand_primary_color: primary, brand_accent_color: accent, brand_text_color: textColor });
+  const frame: React.CSSProperties =
+    template === "minimal" ? { aspectRatio: "1 / 1" } : { height: template === "editorial" ? 300 : 360 };
+  const media = (
+    <div style={{ ...frame, borderRadius: 16, overflow: "hidden", backgroundColor: "#F5F2EC", border: "1px solid #EDE8DF" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/img/bag.jpg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+    </div>
+  );
   return (
-    <div style={{
-      width: "100%", aspectRatio: "9/16", borderRadius: 28,
-      overflow: "hidden", border: "8px solid #1A1612",
-      boxShadow: "0 0 0 2px #2E2A1E, 0 24px 64px rgba(0,0,0,0.4)",
-      backgroundColor: secondary, fontFamily, position: "relative",
-      display: "flex", flexDirection: "column",
-    }}>
-      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 80, height: 20, backgroundColor: "#1A1612", borderRadius: "0 0 14px 14px", zIndex: 10 }} />
-      <div style={{ backgroundColor: primary, padding: "28px 14px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          {logoUrl && <Image src={logoUrl} alt="" width={22} height={22} style={{ borderRadius: 3, objectFit: "contain", opacity: 0.9, flexShrink: 0 }} />}
-          <span style={{ fontSize: 13, fontWeight: 700, color: textColor, letterSpacing: "-0.01em" }}>{headerText || companyName}</span>
-        </div>
-        <span style={{ fontSize: 8, fontWeight: 600, color: accent, letterSpacing: "0.06em", textTransform: "uppercase" }}>Tagit</span>
-      </div>
-      <div style={{ margin: "0 10px", padding: "6px 10px", backgroundColor: "rgba(45,106,79,0.18)", borderRadius: "0 0 8px 8px", display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
-        <Shield size={8} color="#4ADE80" strokeWidth={2.5} />
-        <span style={{ fontSize: 8, fontWeight: 600, color: "#4ADE80" }}>Verified Authentic</span>
-        <span style={{ marginLeft: "auto", fontFamily: "monospace", fontSize: 8, color: "#4ADE80", opacity: 0.6 }}>TGT-XXXX</span>
-      </div>
-      {template === "classic" && (
-        <div style={{ margin: "10px 10px 0", padding: 12, backgroundColor: "#fff", borderRadius: 10, border: "1px solid #E8E2D5", flexShrink: 0 }}>
-          <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: 6, backgroundColor: secondary, marginBottom: 8, border: "1px solid #E8E2D5" }} />
-          <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 700, color: "#0A0A0B" }}>Sample Product</p>
-          <p style={{ margin: 0, fontSize: 9, color: "#6E6E73" }}>NGN 150,000</p>
-          <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, backgroundColor: "#E8E2D5", borderRadius: 4, overflow: "hidden" }}>
-            {[["Material", "Full-grain leather"], ["Made in", "Lagos, NG"]].map(([k, v]) => (
-              <div key={k} style={{ padding: "6px 8px", backgroundColor: "#FAFAF8" }}>
-                <p style={{ margin: "0 0 1px", fontSize: 7, color: "#9E9EA3", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{k}</p>
-                <p style={{ margin: 0, fontSize: 9, color: "#1F1F22", fontWeight: 500 }}>{v}</p>
-              </div>
-            ))}
+    <div className={scan.page} style={{ ...themeVars(theme, resolveBaseFont(font)), minHeight: "100%" }}>
+      {/* The phone's status bar, in the page's own colour, as a real phone shows it. */}
+      <div aria-hidden style={{ height: 50, backgroundColor: theme.brand }} />
+      <VerificationHero
+        house={headerText || companyName}
+        logoUrl={logoUrl}
+        verdict="Authentic"
+        note={`This tag's signature matches the one Tagit issued to ${companyName}. The piece is genuine.`}
+        meta={[<>Tag <span>X7F3C9</span></>, "Checked just now"]}
+      />
+      <div className={scan.column}>
+        <PieceSection product={SAMPLE_PIECE} industry="fashion" accent={theme.accentInk} template={template} media={media} />
+        <RecordList
+          entries={[
+            { id: "1", name: "Adaeze Okonkwo", meta: "First owner on 12 Feb 2026", current: false },
+            { id: "2", name: "Chidinma Eze", meta: "Transferred on 3 Sep 2026", current: true },
+          ]}
+        />
+        <section className={scan.section}>
+          <div className={`${scan.panel} ${scan.panelPad} ${scan.owner}`}>
+            <div>
+              <p className={scan.ownerLabel}>Owned by</p>
+              <p className={scan.ownerName}>Chidinma Eze</p>
+            </div>
+            <span className={scan.buttonQuiet}>Pass it on</span>
           </div>
-        </div>
-      )}
-      {template === "minimal" && (
-        <div style={{ margin: 10, flex: 1, display: "flex", flexDirection: "column" }}>
-          <div style={{ width: "100%", aspectRatio: "1/1", borderRadius: 10, backgroundColor: "#E8E2D5", marginBottom: 12 }} />
-          <p style={{ margin: "0 0 4px", fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 18, fontStyle: "italic", color: "#0A0A0B", letterSpacing: "-0.02em" }}>Sample Product</p>
-          <p style={{ margin: 0, fontSize: 9, color: "#9E9EA3", fontFamily: "monospace", letterSpacing: "0.04em" }}>NGN 150,000</p>
-        </div>
-      )}
-      {template === "editorial" && (
-        <div style={{ margin: "16px 14px 0", flex: 1, display: "flex", flexDirection: "column" }}>
-          <p style={{ margin: "0 0 4px", fontFamily: "monospace", fontSize: 8, color: accent, letterSpacing: "0.12em", textTransform: "uppercase" }}>Fashion</p>
-          <p style={{ margin: "0 0 10px", fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 24, fontStyle: "italic", color: "#0A0A0B", letterSpacing: "-0.03em", lineHeight: 1.1 }}>Sample<br />Product</p>
-          <p style={{ margin: 0, fontSize: 10, color: "#6E6E73", lineHeight: 1.65 }}>Crafted from full-grain leather, this piece embodies the spirit of Lagos craftsmanship.</p>
-        </div>
-      )}
-      <div style={{ margin: "auto 10px 10px", padding: "10px 12px", borderRadius: 8, backgroundColor: primary, flexShrink: 0 }}>
-        <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 600, color: textColor }}>Claim ownership</p>
-        <p style={{ margin: 0, fontSize: 8, color: accent, lineHeight: 1.4 }}>Register this item to your name.</p>
+        </section>
+        <ScanFooter />
       </div>
     </div>
   );
@@ -279,12 +287,10 @@ function InfoPagePreview({
 
   return (
     <div style={{
-      width: "100%", aspectRatio: "9/16", borderRadius: 28, overflow: "hidden",
-      border: "8px solid #1A1612", boxShadow: "0 0 0 2px #2E2A1E, 0 24px 64px rgba(0,0,0,0.4)",
+      width: "100%", height: "100%", overflow: "hidden",
       backgroundColor: palette.background, fontFamily, position: "relative",
-      display: "flex", flexDirection: "column", padding: "22px 14px 14px",
+      display: "flex", flexDirection: "column", padding: "30px 14px 14px",
     }}>
-      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 80, height: 18, backgroundColor: "#1A1612", borderRadius: "0 0 14px 14px", zIndex: 10 }} />
 
       {/* top: logo + reference marker */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -294,7 +300,7 @@ function InfoPagePreview({
           : <span style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontStyle: "italic", fontSize: 12, color: palette.textPrimary }}>{companyName}</span>}
         <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 7px", borderRadius: 99, backgroundColor: palette.badgeBg, border: `1px solid ${palette.divider}` }}>
           <span style={{ width: 3, height: 3, backgroundColor: palette.accent, transform: "rotate(45deg)" }} />
-          <span style={{ fontFamily: "monospace", fontSize: 5.5, letterSpacing: "0.12em", textTransform: "uppercase", color: palette.badgeText }}>Reference</span>
+          <span style={{ fontSize: 7, fontWeight: 500, color: palette.badgeText }}>For reference</span>
         </span>
       </div>
 
@@ -305,7 +311,7 @@ function InfoPagePreview({
 
       {/* title + brand */}
       <p style={{ margin: "12px 0 2px", fontFamily: "'Instrument Serif',Georgia,serif", fontStyle: "italic", fontSize: 19, lineHeight: 1.05, color: palette.textPrimary, letterSpacing: "-0.02em" }}>Sample Piece</p>
-      <p style={{ margin: 0, fontFamily: "monospace", fontSize: 6.5, letterSpacing: "0.14em", textTransform: "uppercase", color: palette.textSecondary }}>{companyName}</p>
+      <p style={{ margin: 0, fontSize: 8.5, color: palette.textSecondary }}>{companyName}</p>
 
       {/* lozenge divider */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "12px 0" }}>
@@ -317,7 +323,7 @@ function InfoPagePreview({
       {/* spec rows */}
       {[["Medium", "Oil on canvas"], ["Dimensions", "90 × 120 cm"]].map(([k, v], i) => (
         <div key={k} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "6px 0", borderTop: i === 0 ? "none" : `1px solid ${palette.divider}` }}>
-          <span style={{ fontFamily: "monospace", fontSize: 6, letterSpacing: "0.1em", textTransform: "uppercase", color: palette.textSecondary }}>{k}</span>
+          <span style={{ fontSize: 8, color: palette.textSecondary }}>{k}</span>
           <span style={{ fontSize: 9, color: palette.textPrimary }}>{v}</span>
         </div>
       ))}
@@ -325,7 +331,7 @@ function InfoPagePreview({
       <div style={{ flex: 1 }} />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, opacity: 0.7 }}>
         <span style={{ width: 3, height: 3, backgroundColor: palette.accent, transform: "rotate(45deg)" }} />
-        <span style={{ fontFamily: "monospace", fontSize: 5.5, letterSpacing: "0.18em", textTransform: "uppercase", color: palette.textSecondary }}>Powered by Tagit</span>
+        <span style={{ fontSize: 7, color: palette.textSecondary }}>Made with Tagit</span>
       </div>
     </div>
   );
@@ -346,12 +352,10 @@ function BrandWebPreview({
   const fontFamily = FONT_CSS[font] ?? FONT_CSS.body;
   return (
     <div style={{
-      width: "100%", aspectRatio: "9/16", borderRadius: 28, overflow: "hidden",
-      border: "8px solid #1A1612", boxShadow: "0 0 0 2px #2E2A1E, 0 24px 64px rgba(0,0,0,0.4)",
+      width: "100%", height: "100%", overflow: "hidden",
       backgroundColor: palette.background, fontFamily, position: "relative",
-      display: "flex", flexDirection: "column", padding: "26px 16px 14px",
+      display: "flex", flexDirection: "column", padding: "34px 16px 14px",
     }}>
-      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 80, height: 18, backgroundColor: "#1A1612", borderRadius: "0 0 14px 14px", zIndex: 10 }} />
       {/* Hero */}
       <div style={{ textAlign: "center", marginBottom: 16 }}>
         {logoUrl
@@ -436,7 +440,7 @@ function PlacardPreview({
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 4, opacity: 0.7 }}>
         <span style={{ width: 3, height: 3, backgroundColor: palette.accent, transform: "rotate(45deg)" }} />
-        <span style={{ fontFamily: "monospace", fontSize: 5.5, letterSpacing: "0.16em", textTransform: "uppercase", color: palette.textSecondary }}>Powered by Tagit</span>
+        <span style={{ fontSize: 7, color: palette.textSecondary }}>Made with Tagit</span>
       </div>
     </div>
   );
@@ -581,10 +585,10 @@ export default function CustomizationForm({ company, showExhibitions = false }: 
   }
 
   const colorFields = [
-    { key: "brand_primary_color",   label: "Header / Brand",  hint: "Background of the header bar on scan pages" },
-    { key: "brand_text_color",      label: "Header text",     hint: "Text and logo colour on the header" },
-    { key: "brand_secondary_color", label: "Page background", hint: "Main background colour of scan pages" },
-    { key: "brand_accent_color",    label: "Accent",          hint: "Links, buttons and highlights. Also used on certificates" },
+    { key: "brand_primary_color",   label: "Brand colour",  hint: "The verification block at the top of every scan page, and its buttons." },
+    { key: "brand_text_color",      label: "Text on brand", hint: "Text over your brand colour. Your brand page uses it as its background." },
+    { key: "brand_accent_color",    label: "Accent",        hint: "The seal, highlights, and the details on certificates." },
+    { key: "brand_secondary_color", label: "Secondary",     hint: "Quieter text on your brand page and info pages." },
   ];
 
   // ── Active cert preview component ────────────────────────────────────────
@@ -624,50 +628,51 @@ export default function CustomizationForm({ company, showExhibitions = false }: 
 
   const activeSurface = surfaces.find((s) => s.id === previewSurface) ?? surfaces[0];
 
-  // The switchable preview, shared by the desktop sticky rail and the mobile
-  // block. `phone` surfaces are tall and self-framed; `paper` surfaces (the
-  // PDFs) get a narrower column.
-  const previewPanel = (
-    <div>
-      <p className="text-body-sm font-medium mb-2" style={{ color: "var(--color-onyx)" }}>
-        Preview
-      </p>
+  // The phone fills the stage: as tall as the stage allows, never wider than
+  // the stage itself. Measured, because the screen content is drawn at a real
+  // phone's width (390px) and zoomed to fit.
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [phoneWidth, setPhoneWidth] = useState(340);
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      const byHeight = window.matchMedia("(min-width: 1024px)").matches ? ((r.height - 40) * 390) / 844 + 20 : 360;
+      setPhoneWidth(Math.round(Math.max(250, Math.min(390, byHeight, r.width - 8))));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
-      {/* Surface switcher */}
-      <div className="relative mb-4">
-        <select
-          value={previewSurface}
-          onChange={(e) => setPreviewSurface(e.target.value as Surface)}
-          aria-label="Choose what to preview"
-          className="w-full appearance-none rounded-lg font-medium"
-          style={{
-            padding: "10px 36px 10px 12px",
-            fontSize: "var(--text-body-sm)",
-            color: "var(--color-charcoal)",
-            backgroundColor: "#fff",
-            border: "1px solid var(--input)",
-            cursor: "pointer",
-          }}
-        >
-          {surfaces.map((s) => (
-            <option key={s.id} value={s.id}>{s.label}</option>
-          ))}
-        </select>
-        <ChevronDown size={15} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "var(--color-mist)", pointerEvents: "none" }} />
-      </div>
+  const screenWidth = phoneWidth - 20;
+  const screenHeight = Math.round((screenWidth * 844) / 390);
 
-      {/* The preview itself */}
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "100%", maxWidth: activeSurface.kind === "phone" ? 232 : 252 }}>
-          {renderSurface(previewSurface)}
+  function renderStage() {
+    if (activeSurface.kind === "paper") {
+      const width = Math.min(phoneWidth + 60, 420);
+      return (
+        <div className="cz-paper" style={{ width }}>
+          <div style={{ zoom: width / 252 }}>{renderSurface(previewSurface)}</div>
+        </div>
+      );
+    }
+    // The scan page is drawn at 390px; the smaller sketches at 232px.
+    const base = previewSurface === "scan" ? 390 : 232;
+    const k = screenWidth / base;
+    return (
+      <div className="cz-phone" style={{ width: phoneWidth }}>
+        <span className="cz-island" aria-hidden />
+        <div className="cz-phone-screen" style={{ height: screenHeight }} key={previewSurface}>
+          <div style={{ zoom: k, width: base, height: previewSurface === "scan" ? undefined : screenHeight / k }}>
+            {renderSurface(previewSurface)}
+          </div>
         </div>
       </div>
-
-      <p className="mt-3 text-center text-caption" style={{ color: "var(--app-body)" }}>
-        {activeSurface.kind === "paper" ? "Print-ready. " : ""}Updates as you edit. Save to publish.
-      </p>
-    </div>
-  );
+    );
+  }
 
   // A choice card (font, layout, certificate design): the chosen one is
   // outlined in ink, the same way the sign-up flow marks a choice.
@@ -685,38 +690,74 @@ export default function CustomizationForm({ company, showExhibitions = false }: 
   });
 
   return (
-    <form onSubmit={handleSubmit} className="cz">
+    <form onSubmit={handleSubmit} className="cz cz-studio">
 
-      {/* ── Tabs ─────────────────────────────────────────────────────────── */}
-      <div role="tablist" aria-label="What to customise" className="cz-tabs">
-        {TABS.map((tab) => {
-          const active = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => setActiveTab(tab.id)}
-              className={`cz-tab ${active ? "is-active" : ""}`}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+      {/* ── The stage: the live page, as a buyer will see it ───────────── */}
+      <section className="cz-stage" aria-label="Live preview">
+        <div className="cz-stage-bar" role="tablist" aria-label="What to preview">
+          {surfaces.map((sf) => {
+            const on = sf.id === activeSurface.id;
+            return (
+              <button
+                key={sf.id}
+                type="button"
+                role="tab"
+                aria-selected={on}
+                onClick={() => setPreviewSurface(sf.id)}
+                className={`cz-surface ${on ? "is-on" : ""}`}
+              >
+                {sf.icon}
+                {sf.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="cz-stage-canvas" ref={canvasRef}>
+          {renderStage()}
+        </div>
+        <p className="cz-stage-note">
+          {previewSurface === "scan" ? "Scroll the phone to see the whole page. " : ""}
+          Changes show as you make them, and go live when you save.
+        </p>
+      </section>
 
-      {/* ── Content + persistent right panel ───────────────────────────── */}
-      <div className="lg:grid" style={{ gridTemplateColumns: "minmax(0, 1fr) 248px", gap: 40, alignItems: "start" }}>
+      {/* ── The controls ─────────────────────────────────────────────────── */}
+      <div className="cz-controls">
+        <div className="cz-controls-head">
+          <h1 className="page-title" style={{ fontSize: 30 }}>Brand customization</h1>
+          <p className="page-desc" style={{ marginTop: 4 }}>How your house looks everywhere a buyer meets it.</p>
+          <div role="tablist" aria-label="What to customise" className="cz-tabs">
+            {TABS.map((tab) => {
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    // Show the surface the tab changes.
+                    if (tab.id === "scan") setPreviewSurface("scan");
+                    if (tab.id === "certificates") setPreviewSurface("certificate");
+                  }}
+                  className={`cz-tab ${active ? "is-active" : ""}`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-        <div className="card-raised cz-panel">
+        <div className="cz-controls-body">
 
           {/* ── Brand identity ─────────────────────────────────────────── */}
           {activeTab === "brand" && (
             <>
               <section className="cz-section">
                 <h2 className="cz-h">Logo</h2>
-                <p className="cz-p">Shown in the header of every scan page and on certificates. A PNG or SVG with a transparent background works best.</p>
+                <p className="cz-p">Shown at the top of every scan page and on certificates. A PNG or SVG with a transparent background works best.</p>
                 <div className="flex flex-wrap items-center gap-4 mt-4">
                   {logoPreview ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -746,7 +787,7 @@ export default function CustomizationForm({ company, showExhibitions = false }: 
 
               <section className="cz-section">
                 <h2 className="cz-h">Colours</h2>
-                <p className="cz-p">Used across your scan pages and certificates. The preview shows each change as you make it.</p>
+                <p className="cz-p">Every colour is checked for contrast on the page, so text stays readable whatever you pick.</p>
                 <div className="grid sm:grid-cols-2 gap-x-6 gap-y-5 mt-4">
                   {colorFields.map(({ key, label, hint }) => (
                     <div key={key}>
@@ -782,11 +823,12 @@ export default function CustomizationForm({ company, showExhibitions = false }: 
 
               <section className="cz-section">
                 <h2 className="cz-h">Words on the page</h2>
-                <p className="cz-p">The line and the story shown at the top of your scan pages.</p>
+                <p className="cz-p">How your name reads on scan pages, and the story your AI guide tells buyers who ask.</p>
                 <div className="space-y-4 mt-4">
                   <div>
-                    <Label htmlFor="cz-header" className="cz-label">Header line</Label>
-                    <Input id="cz-header" type="text" value={form.custom_header_text} onChange={(e) => set("custom_header_text", e.target.value)} placeholder="Crafted in Lagos. Worn worldwide." />
+                    <Label htmlFor="cz-header" className="cz-label">Name on scan pages</Label>
+                    <Input id="cz-header" type="text" value={form.custom_header_text} onChange={(e) => set("custom_header_text", e.target.value)} placeholder={company.name} />
+                    <p className="cz-note mt-1.5">Leave it blank to use {company.name}.</p>
                   </div>
                   <div>
                     <Label htmlFor="cz-story" className="cz-label">Brand story</Label>
@@ -896,28 +938,14 @@ export default function CustomizationForm({ company, showExhibitions = false }: 
           )}
         </div>
 
-        {/* ── Right: switchable live preview (desktop) ──────────────────── */}
-        <div className="hidden lg:block">
-          <div style={{ position: "sticky", top: 24 }}>
-            {previewPanel}
-          </div>
+        <div className="cz-savebar">
+          <p className="text-caption" style={{ color: "var(--app-body)" }}>Saving applies the changes on every tab.</p>
+          <button type="submit" disabled={loading} className="ov-btn">
+            {loading ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Save size={14} aria-hidden />}
+            {loading ? "Saving" : "Save changes"}
+          </button>
         </div>
       </div>
-
-      {/* ── Mobile live preview (the rail is desktop-only) ──────────────── */}
-      <div className="lg:hidden mt-6 card-raised p-5">
-        {previewPanel}
-      </div>
-
-      {/* ── Save: pinned to the bottom so it is in reach on a long tab ──── */}
-      <div className="cz-savebar">
-        <p className="text-caption" style={{ color: "var(--app-body)" }}>Saving applies the changes on every tab.</p>
-        <button type="submit" disabled={loading} className="ov-btn">
-          {loading ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Save size={14} aria-hidden />}
-          {loading ? "Saving" : "Save changes"}
-        </button>
-      </div>
-
     </form>
   );
 }

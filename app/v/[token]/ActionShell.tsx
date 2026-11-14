@@ -38,8 +38,7 @@ export default function ActionShell({
 
   if (mode === "owned" && currentOwner) {
     return (
-      <div style={{ margin: "16px 24px 0" }}>
-        <TransferForm
+      <TransferForm
           tagId={tagId}
           currentOwnerEmail={currentOwner.owner_email}
           currentOwnerName={currentOwner.owner_name}
@@ -47,7 +46,6 @@ export default function ActionShell({
           accent={accent}
           primary={primary}
         />
-      </div>
     );
   }
 

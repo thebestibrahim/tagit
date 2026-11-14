@@ -2,10 +2,11 @@ export const dynamic = "force-dynamic";
 
 import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 import AcceptTransferButton from "./AcceptTransferButton";
-import { ShieldX } from "lucide-react";
 import { formatCurrency } from "@/lib/billing/pricing";
-import Image from "next/image";
+import { resolveScanTheme } from "@/lib/brand-page";
+import { scanStyles as s, themeVars, VerificationHero, ScanFooter } from "@/components/consumer/scan-chrome";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,10 +48,11 @@ export default async function TransferAcceptPage({
   // Fetch product (via tags.product_id FK) and current owner
   const [{ data: tagProductData }, { data: ownerData }] = await Promise.all([
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (admin as any).from("tags").select("products(name, companies(name, brand_primary_color, brand_accent_color, logo_url))").eq("id", transfer.tag_id).single(),
+    (admin as any).from("tags").select("token, products(name, companies(name, brand_primary_color, brand_accent_color, logo_url))").eq("id", transfer.tag_id).single(),
     admin.from("ownership_records").select("owner_name").eq("id", transfer.from_owner_id).single(),
   ]);
 
+  const tagToken = (tagProductData as { token?: string } | null)?.token ?? null;
   const rawProd = (tagProductData as { products: unknown } | null)?.products;
   const product = (Array.isArray(rawProd) ? rawProd[0] : rawProd) as {
     name: string;
@@ -58,110 +60,66 @@ export default async function TransferAcceptPage({
   } | null;
 
   const owner = ownerData as { owner_name: string } | null;
-  const primary = product?.companies?.brand_primary_color || "#0A0A0B";
-  const accent = product?.companies?.brand_accent_color || "#B8945D";
+  const brand = product?.companies ?? null;
+  const theme = resolveScanTheme({
+    brand_primary_color: brand?.brand_primary_color,
+    brand_accent_color: brand?.brand_accent_color,
+  });
+  const house = brand?.name || "Tagit";
+  const pieceName = product?.name || "this piece";
+  const from = owner?.owner_name || "The owner";
 
-  if (transfer.status === "completed") {
-    return (
-      <CenteredCard primary={primary}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "40px", marginBottom: "12px" }}>✓</div>
-          <h1 style={{ margin: "0 0 8px", fontSize: "22px", fontWeight: "700", color: "#0A0A0B" }}>
-            Transfer complete
-          </h1>
-          <p style={{ margin: 0, fontSize: "14px", color: "#6E6E73" }}>
-            This ownership transfer has already been completed.
-          </p>
-        </div>
-      </CenteredCard>
-    );
-  }
+  const state =
+    transfer.status === "completed" ? "done" :
+    expired || transfer.status !== "awaiting_acceptance" ? "closed" :
+    "open";
 
-  if (expired || transfer.status !== "awaiting_acceptance") {
-    return (
-      <CenteredCard primary={primary}>
-        <div style={{ textAlign: "center" }}>
-          <ShieldX size={40} color="#B85C5C" style={{ margin: "0 auto 12px" }} />
-          <h1 style={{ margin: "0 0 8px", fontSize: "22px", fontWeight: "700", color: "#0A0A0B" }}>
-            Transfer expired
-          </h1>
-          <p style={{ margin: 0, fontSize: "14px", color: "#6E6E73" }}>
-            This transfer link has expired or is no longer valid.
-          </p>
-        </div>
-      </CenteredCard>
-    );
-  }
+  const verdict =
+    state === "done"
+      ? { title: "Transfer complete", note: `${pieceName} has already passed to ${transfer.to_name}. Nothing more to do here.`, seal: true }
+      : state === "closed"
+        ? { title: "Link expired", note: "This transfer was cancelled or its link ran out. Ask the owner to send you a new one.", seal: false }
+        : { title: "A piece for you", note: `${from} is passing ${pieceName} on to you. Accept it to become its owner on the record.`, seal: true };
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#FAFAF8", fontFamily: "system-ui,-apple-system,sans-serif" }}>
-      <header style={{ backgroundColor: primary, padding: "16px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
-        {product?.companies?.logo_url && (
-          <Image src={product.companies.logo_url} alt="" width={28} height={28} style={{ borderRadius: "4px", objectFit: "contain" }} />
+    <div className={s.page} style={themeVars(theme)}>
+      <VerificationHero house={house} logoUrl={brand?.logo_url} verdict={verdict.title} note={verdict.note} seal={verdict.seal} />
+
+      <main className={s.column}>
+        {state === "open" && (
+          <section className={s.section} aria-label="The transfer">
+            <div className={`${s.panel} ${s.panelPad}`}>
+              <p className={s.kicker}>Ownership transfer</p>
+              <h2 className={s.pieceName}>{pieceName}</h2>
+              <dl className={s.facts}>
+                <div className={s.fact}><dt>From</dt><dd>{from}</dd></div>
+                <div className={s.fact}><dt>To</dt><dd>{transfer.to_name}</dd></div>
+                {transfer.sale_price ? (
+                  <div className={s.fact}><dt>Sale price</dt><dd>{formatCurrency(transfer.sale_price, transfer.currency)}</dd></div>
+                ) : null}
+                <div className={s.fact} style={{ borderBottom: "none" }}><dt>Made by</dt><dd>{house}</dd></div>
+              </dl>
+              <p className={s.formLead} style={{ marginTop: 18 }}>
+                Accept only once you have the piece. Your name is added to its permanent record, and we email you a certificate.
+              </p>
+              <div style={{ marginTop: 18 }}>
+                <AcceptTransferButton acceptanceToken={token} />
+              </div>
+            </div>
+          </section>
         )}
-        <span style={{ fontSize: "16px", fontWeight: "700", color: "#FAFAF8" }}>
-          {product?.companies?.name || "Tagit"}
-        </span>
-      </header>
 
-      <div style={{ maxWidth: "480px", margin: "0 auto", padding: "32px 20px" }}>
-        <div
-          style={{
-            padding: "28px",
-            backgroundColor: "#fff",
-            borderRadius: "16px",
-            border: "1px solid #E8E2D5",
-          }}
-        >
-          <p style={{ margin: "0 0 4px", fontSize: "11px", fontWeight: "700", color: accent, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-            Ownership transfer
-          </p>
-          <h1 style={{ margin: "0 0 20px", fontSize: "24px", fontWeight: "700", color: "#0A0A0B", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
-            {product?.name || "Item"}
-          </h1>
+        {state === "done" && tagToken && (
+          <div className={s.section}>
+            <a href={`/v/${tagToken}`} className={s.button} style={{ textDecoration: "none" }}>
+              See the piece and its record
+              <ArrowRight size={16} aria-hidden />
+            </a>
+          </div>
+        )}
 
-          <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "24px" }}>
-            <tbody>
-              {[
-                ["From", owner?.owner_name || "—"],
-                ["To", transfer.to_name],
-                ...(transfer.sale_price ? [["Sale price", formatCurrency(transfer.sale_price, transfer.currency)]] : []),
-                ["Brand", product?.companies?.name || "—"],
-              ].map(([label, value]) => (
-                <tr key={label} style={{ borderBottom: "1px solid #F5F2EC" }}>
-                  <td style={{ padding: "10px 0", fontSize: "13px", color: "#9E9EA3", width: "35%" }}>{label}</td>
-                  <td style={{ padding: "10px 0", fontSize: "13px", color: "#1F1F22", fontWeight: "500" }}>{value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <p style={{ margin: "0 0 20px", fontSize: "13px", color: "#6E6E73", lineHeight: 1.5 }}>
-            By accepting, you confirm receipt of this item and become the new verified owner on Tagit. This action is recorded permanently.
-          </p>
-
-          <AcceptTransferButton acceptanceToken={token} primary={primary} />
-        </div>
-
-        <p style={{ textAlign: "center", marginTop: "20px", fontSize: "11px", color: "#9E9EA3" }}>
-          Powered by Tagit — Identity infrastructure for luxury
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function CenteredCard({ children, primary }: { children: React.ReactNode; primary: string }) {
-  return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#FAFAF8", fontFamily: "system-ui,-apple-system,sans-serif" }}>
-      <header style={{ backgroundColor: primary, padding: "16px 20px" }}>
-        <span style={{ fontSize: "16px", fontWeight: "700", color: "#FAFAF8" }}>Tagit</span>
-      </header>
-      <div style={{ maxWidth: "480px", margin: "48px auto", padding: "0 20px" }}>
-        <div style={{ padding: "36px", backgroundColor: "#fff", borderRadius: "16px", border: "1px solid #E8E2D5" }}>
-          {children}
-        </div>
-      </div>
+        <ScanFooter />
+      </main>
     </div>
   );
 }

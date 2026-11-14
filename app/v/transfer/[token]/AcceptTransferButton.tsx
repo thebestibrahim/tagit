@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import s from "@/components/consumer/consumer.module.css";
 
 export default function AcceptTransferButton({
   acceptanceToken,
-  primary,
 }: {
   acceptanceToken: string;
-  primary: string;
 }) {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -26,7 +25,7 @@ export default function AcceptTransferButton({
 
     const data = await res.json();
     if (!res.ok) {
-      setError(data.error || "Something went wrong");
+      setError(data.error || "We couldn't complete the transfer. Try again in a moment.");
       setLoading(false);
       return;
     }
@@ -37,53 +36,26 @@ export default function AcceptTransferButton({
 
   if (done) {
     return (
-      <div
-        style={{
-          padding: "16px",
-          backgroundColor: "#DCEEE3",
-          borderRadius: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-        }}
-      >
-        <CheckCircle2 size={20} color="#2D6A4F" />
-        <p style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: "#1E4D3A" }}>
-          You are now the verified owner. Check your email for confirmation.
+      <div className={`${s.notice} ${s.noticeOk}`} role="status">
+        <CheckCircle2 size={18} aria-hidden />
+        <p>
+          <strong>It&apos;s yours.</strong> You&apos;re now the owner on the record. Your certificate is on its way by email.
         </p>
       </div>
     );
   }
 
   return (
-    <div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       {error && (
-        <div style={{ marginBottom: "12px", padding: "10px 14px", backgroundColor: "#F9DDDD", borderRadius: "8px" }}>
-          <p style={{ margin: 0, fontSize: "13px", color: "#B85C5C" }}>{error}</p>
+        <div className={`${s.notice} ${s.noticeAlert}`} role="alert">
+          <AlertCircle size={17} aria-hidden />
+          <p>{error}</p>
         </div>
       )}
-      <button
-        onClick={handleAccept}
-        disabled={loading}
-        style={{
-          width: "100%",
-          padding: "14px",
-          fontSize: "15px",
-          fontWeight: "700",
-          color: "#FAFAF8",
-          backgroundColor: loading ? "#4A4A4F" : primary,
-          border: "none",
-          borderRadius: "10px",
-          cursor: loading ? "not-allowed" : "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "8px",
-          transition: "background-color 0.15s",
-        }}
-      >
-        {loading && <Loader2 size={16} className="animate-spin" />}
-        {loading ? "Processing…" : "Accept ownership"}
+      <button type="button" onClick={handleAccept} disabled={loading} className={s.button}>
+        {loading && <Loader2 size={16} className={s.spin} aria-hidden />}
+        {loading ? "Adding you to the record" : "Accept the piece"}
       </button>
     </div>
   );

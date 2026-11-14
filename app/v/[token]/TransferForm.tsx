@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Loader2, CheckCircle2, ArrowRightLeft, MailWarning } from "lucide-react";
+import s from "@/components/consumer/consumer.module.css";
+import { ErrorNote } from "./ClaimForm";
 
 const CURRENCIES = ["NGN", "USD", "EUR", "GBP", "GHS", "KES", "ZAR", "AED", "CHF"];
 
@@ -22,15 +24,14 @@ export default function TransferForm({
   currentOwnerEmail,
   currentOwnerName,
   defaultCurrency = "NGN",
-  accent,
-  primary,
 }: {
   tagId: string;
   currentOwnerEmail: string;
   currentOwnerName: string;
   defaultCurrency?: string;
-  accent: string;
-  primary: string;
+  /** Kept for callers; the theme now comes from the page's custom properties. */
+  accent?: string;
+  primary?: string;
 }) {
   const [step, setStep] = useState<Step>("closed");
   const [ownerEmail, setOwnerEmail] = useState("");
@@ -57,7 +58,7 @@ export default function TransferForm({
     setError("");
 
     if (ownerEmail.toLowerCase().trim() !== currentOwnerEmail.toLowerCase().trim()) {
-      setError(`That email doesn't match ${currentOwnerName}, the current owner. Only the current owner can transfer this item.`);
+      setError(`That isn't the email on the record for ${currentOwnerName}. Only the current owner can pass this piece on.`);
       return;
     }
 
@@ -191,422 +192,166 @@ export default function TransferForm({
 
   if (step === "closed") {
     return (
-      <div
-        style={{
-          padding: "20px 24px",
-          backgroundColor: "#fff",
-          borderRadius: "16px",
-          border: "1px solid #E8E2D5",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div>
-          <p style={{ margin: "0 0 2px", fontSize: "14px", fontWeight: "600", color: "#0A0A0B" }}>
-            Owned by {currentOwnerName}
-          </p>
-          <p style={{ margin: 0, fontSize: "12px", color: "#9E9EA3" }}>Current verified owner</p>
+      <section className={s.section} aria-label="Owner">
+        <div className={`${s.panel} ${s.panelPad} ${s.owner}`}>
+          <div style={{ minWidth: 0 }}>
+            <p className={s.ownerLabel}>Owned by</p>
+            <p className={s.ownerName}>{currentOwnerName}</p>
+          </div>
+          <button type="button" className={s.buttonQuiet} onClick={() => setStep("verify")}>
+            <ArrowRightLeft size={15} aria-hidden />
+            Pass it on
+          </button>
         </div>
-        <button
-          onClick={() => setStep("verify")}
-          style={{
-            padding: "9px 16px",
-            fontSize: "13px",
-            fontWeight: "600",
-            color: primary,
-            backgroundColor: "transparent",
-            border: `1px solid ${primary}`,
-            borderRadius: "8px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-          }}
-        >
-          <ArrowRightLeft size={14} />
-          Transfer
-        </button>
-      </div>
+      </section>
     );
   }
 
   if (step === "success") {
     return (
-      <div
-        style={{
-          padding: "24px",
-          backgroundColor: "#DCEEE3",
-          borderRadius: "16px",
-          border: "1px solid #B5D9C5",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-          <CheckCircle2 size={22} color="#2D6A4F" style={{ flexShrink: 0 }} />
-          <p style={{ margin: 0, fontSize: "15px", fontWeight: "700", color: "#1E4D3A" }}>
-            Transfer initiated
-          </p>
-        </div>
-
-        {acceptanceEmailSent ? (
-          <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#2D6A4F", lineHeight: 1.55 }}>
-            An acceptance email has been sent to <strong>{recipientEmail}</strong>.
-            The transfer completes once they click the link.
-          </p>
-        ) : (
-          <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#2D6A4F", lineHeight: 1.55 }}>
-            The email could not be delivered automatically. Share the link below
-            directly with <strong>{recipientEmail}</strong> via WhatsApp, SMS, or any
-            other channel. The transfer completes once they accept.
-          </p>
-        )}
-
-        {!acceptanceEmailSent && acceptanceUrl && (
-          <div
-            style={{
-              backgroundColor: "rgba(255,255,255,0.6)",
-              border: "1px solid #B5D9C5",
-              borderRadius: "10px",
-              padding: "12px 14px",
-              marginBottom: 12,
-            }}
-          >
-            <p style={{ margin: "0 0 6px", fontSize: "10px", fontWeight: "700", color: "#2D6A4F", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Acceptance link
+      <section className={s.section} aria-live="polite">
+        <div className={`${s.panel} ${s.panelPad}`}>
+          <div className={`${s.notice} ${s.noticeOk}`}>
+            <CheckCircle2 size={18} aria-hidden />
+            <p>
+              <strong>Transfer started.</strong>{" "}
+              {acceptanceEmailSent
+                ? `We've emailed ${recipientEmail}. The piece becomes theirs once they accept.`
+                : `We couldn't email ${recipientEmail}, so send them the link below yourself. The piece becomes theirs once they accept.`}
             </p>
-            <p style={{ margin: "0 0 10px", fontSize: "12px", color: "#1E4D3A", wordBreak: "break-all", lineHeight: 1.5, fontFamily: "monospace" }}>
-              {acceptanceUrl}
-            </p>
-            <button
-              onClick={handleCopy}
-              style={{
-                padding: "7px 16px",
-                fontSize: "12px",
-                fontWeight: "600",
-                color: "#1E4D3A",
-                backgroundColor: copied ? "#B5D9C5" : "rgba(255,255,255,0.8)",
-                border: "1px solid #2D6A4F",
-                borderRadius: "6px",
-                cursor: "pointer",
-                transition: "all 0.15s",
-              }}
-            >
-              {copied ? "Copied!" : "Copy link"}
+          </div>
+
+          {!acceptanceEmailSent && acceptanceUrl && (
+            <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+              <p className={s.label} style={{ margin: 0 }}>Their link to accept</p>
+              <p className={s.linkBox}>{acceptanceUrl}</p>
+              <button type="button" className={s.buttonQuiet} onClick={handleCopy} style={{ alignSelf: "flex-start" }}>
+                {copied ? "Copied" : "Copy link"}
+              </button>
+            </div>
+          )}
+
+          <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--edge)", display: "flex", flexDirection: "column", gap: 8 }}>
+            {cancelError && <ErrorNote>{cancelError}</ErrorNote>}
+            <button type="button" className={s.textButton} style={{ alignSelf: "flex-start", paddingLeft: 0 }} onClick={handleCancelFromSuccess} disabled={cancelling}>
+              {cancelling ? "Cancelling" : "Cancel this transfer"}
             </button>
           </div>
-        )}
-
-        {/* Inline cancel option */}
-        <div style={{ borderTop: "1px solid #B5D9C5", paddingTop: 12, marginTop: acceptanceEmailSent ? 4 : 0 }}>
-          {cancelError && (
-            <p style={{ margin: "0 0 8px", fontSize: "12px", color: "#B85C5C" }}>{cancelError}</p>
-          )}
-          <button
-            onClick={handleCancelFromSuccess}
-            disabled={cancelling}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: cancelling ? "not-allowed" : "pointer",
-              fontSize: "12px",
-              color: "#2D6A4F",
-              textDecoration: "underline",
-              padding: 0,
-              opacity: cancelling ? 0.6 : 1,
-            }}
-          >
-            {cancelling ? "Cancelling…" : "Cancel this transfer"}
-          </button>
         </div>
-      </div>
+      </section>
     );
   }
 
+  const lead =
+    step === "verify"
+      ? "First we confirm you're the owner on the record."
+      : step === "otp"
+        ? `We sent a 6-digit code to ${ownerEmail}.`
+        : "You're confirmed. Who is the piece going to?";
+
   return (
-    <div
-      style={{
-        padding: "24px",
-        backgroundColor: "#fff",
-        borderRadius: "16px",
-        border: "1px solid #E8E2D5",
-      }}
-    >
-      <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "20px" }}>
-        <ArrowRightLeft size={20} color={accent} style={{ marginTop: "2px", flexShrink: 0 }} />
-        <div>
-          <p style={{ margin: "0 0 2px", fontSize: "15px", fontWeight: "700", color: "#0A0A0B" }}>
-            Transfer ownership
-          </p>
-          <p style={{ margin: 0, fontSize: "13px", color: "#6E6E73" }}>
-            {step === "verify"
-              ? "First, let's confirm you're the current owner."
-              : step === "otp"
-                ? `Enter the code sent to ${ownerEmail}`
-                : "You're verified. Now enter the recipient's details."}
-          </p>
-        </div>
-      </div>
+    <section className={s.section} aria-labelledby="transfer-heading">
+      <div className={`${s.panel} ${s.panelPad}`}>
+        <h2 id="transfer-heading" className={s.formTitle}>Pass this piece on</h2>
+        <p className={s.formLead}>{lead}</p>
 
-      {error && (
-        <div style={{ marginBottom: "14px", padding: "10px 14px", backgroundColor: "#F9DDDD", borderRadius: "8px" }}>
-          <p style={{ margin: 0, fontSize: "13px", color: "#B85C5C" }}>{error}</p>
-        </div>
-      )}
-
-      {step === "verify" && (
-        <form onSubmit={handleVerifyOwner} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          <div
-            style={{
-              padding: "10px 14px",
-              backgroundColor: "#F5F2EC",
-              borderRadius: "8px",
-              marginBottom: "4px",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: "12px", color: "#6E6E73", lineHeight: 1.55 }}>
-              This item is owned by <strong style={{ color: "#1F1F22" }}>{currentOwnerName}</strong>{" "}
-              (<span style={{ fontFamily: "monospace" }}>{maskEmail(currentOwnerEmail)}</span>). Only the
-              current owner can transfer it. Enter that email and we&apos;ll send a one-time code to confirm.
+        {step === "verify" && (
+          <form onSubmit={handleVerifyOwner} className={s.form}>
+            {error && <ErrorNote>{error}</ErrorNote>}
+            <p className={s.formLead} style={{ margin: 0, fontSize: 14 }}>
+              The record lists <strong style={{ color: "var(--ink)" }}>{currentOwnerName}</strong> at{" "}
+              <span style={{ fontFamily: "var(--mono)", fontSize: 13 }}>{maskEmail(currentOwnerEmail)}</span>.
             </p>
-          </div>
+            <div>
+              <label htmlFor="owner-email" className={s.label}>Your email</label>
+              <input id="owner-email" className={s.input} type="email" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} required autoComplete="email" inputMode="email" placeholder="The email on the record" />
+            </div>
+            <button type="submit" disabled={loading} className={s.button} style={{ marginTop: 4 }}>
+              {loading && <Loader2 size={16} className={s.spin} aria-hidden />}
+              {loading ? "Sending the code" : "Send me a code"}
+            </button>
+            <button type="button" className={s.textButton} onClick={() => { setStep("closed"); setError(""); }}>
+              Not now
+            </button>
+          </form>
+        )}
 
-          <div>
-            <label style={labelStyle}>Current owner&apos;s email</label>
-            <input
-              type="email"
-              value={ownerEmail}
-              onChange={(e) => setOwnerEmail(e.target.value)}
-              required
-              placeholder="owner@example.com"
-              style={inputStyle}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ ...btnStyle(primary), marginTop: "4px" }}
-          >
-            {loading ? <Loader2 size={16} className="animate-spin" style={{ display: "inline" }} /> : null}
-            {loading ? "Sending code…" : "Send verification code"}
-          </button>
-          <button
-            type="button"
-            onClick={() => { setStep("closed"); setError(""); }}
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", color: "#6E6E73", textDecoration: "underline" }}
-          >
-            Cancel
-          </button>
-        </form>
-      )}
-
-      {step === "details" && (
-        <form onSubmit={handleFinalize} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 14px",
-              backgroundColor: "#DCEEE3",
-              borderRadius: "8px",
-              marginBottom: "4px",
-            }}
-          >
-            <CheckCircle2 size={15} color="#2D6A4F" style={{ flexShrink: 0 }} />
-            <p style={{ margin: 0, fontSize: "12px", color: "#2D6A4F", lineHeight: 1.5 }}>
-              Identity verified as <strong>{currentOwnerName}</strong>. Enter who you&apos;re transferring to.
-            </p>
-          </div>
-
-          <p style={{ margin: "0 0 2px", fontSize: "12px", fontWeight: "700", color: "#9E9EA3", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            Recipient
-          </p>
-          <div>
-            <label style={labelStyle}>Recipient name</label>
-            <input
-              type="text"
-              value={recipientName}
-              onChange={(e) => setRecipientName(e.target.value)}
-              required
-              placeholder="Full name"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label style={labelStyle}>Recipient email</label>
-            <input
-              type="email"
-              value={recipientEmail}
-              onChange={(e) => setRecipientEmail(e.target.value)}
-              required
-              placeholder="recipient@example.com"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label style={labelStyle}>Sale price (optional)</label>
-            <div style={{ display: "flex", gap: 8 }}>
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                style={{
-                  ...inputStyle,
-                  width: "auto",
-                  paddingLeft: 10,
-                  paddingRight: 10,
-                  flexShrink: 0,
-                  cursor: "pointer",
-                }}
-              >
-                {CURRENCIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+        {step === "otp" && (
+          <form onSubmit={handleVerifyOtp} className={s.form}>
+            {!otpEmailSent && (
+              <div className={`${s.notice} ${s.noticeWait}`}>
+                <MailWarning size={17} aria-hidden />
+                <div>
+                  <p>
+                    <strong>The code may not have arrived.</strong> Check your spam folder, or send it again.
+                  </p>
+                  {emailError && (
+                    <p style={{ marginTop: 4, fontFamily: "var(--mono)", fontSize: 11.5, opacity: 0.8, wordBreak: "break-all" }}>{emailError}</p>
+                  )}
+                  <button type="button" className={s.textButton} style={{ padding: "6px 0 0", color: "inherit" }} onClick={handleResendOtp} disabled={loading}>
+                    {loading ? "Sending" : "Send it again"}
+                  </button>
+                </div>
+              </div>
+            )}
+            {error && <ErrorNote>{error}</ErrorNote>}
+            <div>
+              <label htmlFor="transfer-code" className={s.label}>Code</label>
               <input
-                type="number"
-                value={salePrice}
-                onChange={(e) => setSalePrice(e.target.value)}
-                min="0"
-                step="0.01"
-                placeholder="e.g. 150000"
-                style={{ ...inputStyle, flex: 1 }}
+                id="transfer-code"
+                className={`${s.input} ${s.code}`}
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                required
+                placeholder="000000"
               />
             </div>
-          </div>
+            <button type="submit" disabled={loading || otp.length !== 6} className={s.button} style={{ marginTop: 4 }}>
+              {loading && <Loader2 size={16} className={s.spin} aria-hidden />}
+              {loading ? "Checking" : "Confirm it's me"}
+            </button>
+            <button type="button" className={s.textButton} onClick={() => { setStep("verify"); setError(""); setOtp(""); }}>
+              Go back
+            </button>
+          </form>
+        )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ ...btnStyle(primary), marginTop: "4px" }}
-          >
-            {loading ? <Loader2 size={16} className="animate-spin" style={{ display: "inline" }} /> : null}
-            {loading ? "Completing…" : "Complete transfer"}
-          </button>
-        </form>
-      )}
-
-      {step === "otp" && (
-        <form onSubmit={handleVerifyOtp} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {/* Email delivery warning */}
-          {!otpEmailSent && (
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                alignItems: "flex-start",
-                padding: "12px 14px",
-                backgroundColor: "#FEF3C7",
-                borderRadius: "8px",
-                border: "1px solid #FCD34D",
-              }}
-            >
-              <MailWarning size={16} color="#B45309" style={{ flexShrink: 0, marginTop: "1px" }} />
-              <div>
-                <p style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: "600", color: "#92400E" }}>
-                  Email delivery issue
-                </p>
-                <p style={{ margin: "0 0 4px", fontSize: "12px", color: "#92400E", lineHeight: 1.5 }}>
-                  We couldn&apos;t send the code to <strong>{ownerEmail}</strong>. Check your spam folder,
-                  or tap <em>Resend code</em> to try again.
-                </p>
-                {emailError && (
-                  <p style={{ margin: "0 0 8px", fontSize: "11px", color: "#92400E", fontFamily: "monospace", wordBreak: "break-all", opacity: 0.8 }}>
-                    {emailError}
-                  </p>
-                )}
-                <button
-                  type="button"
-                  onClick={handleResendOtp}
-                  disabled={loading}
-                  style={{
-                    padding: "5px 12px",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    color: "#92400E",
-                    backgroundColor: "rgba(255,255,255,0.7)",
-                    border: "1px solid #FCD34D",
-                    borderRadius: "6px",
-                    cursor: loading ? "not-allowed" : "pointer",
-                  }}
-                >
-                  {loading ? "Sending…" : "Resend code"}
-                </button>
+        {step === "details" && (
+          <form onSubmit={handleFinalize} className={s.form}>
+            {error && <ErrorNote>{error}</ErrorNote>}
+            <div>
+              <label htmlFor="to-name" className={s.label}>Their name</label>
+              <input id="to-name" className={s.input} type="text" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} required placeholder="Full name" />
+            </div>
+            <div>
+              <label htmlFor="to-email" className={s.label}>Their email</label>
+              <input id="to-email" className={s.input} type="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} required inputMode="email" placeholder="name@example.com" />
+            </div>
+            <div>
+              <label htmlFor="sale-price" className={s.label}>
+                Sale price <span style={{ fontWeight: 400, color: "var(--quiet)" }}>(optional, shown on the record)</span>
+              </label>
+              <div className={s.row}>
+                <select aria-label="Currency" className={s.input} style={{ width: 96, flexShrink: 0, cursor: "pointer" }} value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                  {CURRENCIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <input id="sale-price" className={s.input} type="number" inputMode="decimal" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} min="0" step="0.01" placeholder="0" />
               </div>
             </div>
-          )}
-
-          <div>
-            <label style={labelStyle}>Verification code</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]{6}"
-              maxLength={6}
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-              required
-              placeholder="000000"
-              style={{ ...inputStyle, textAlign: "center", fontSize: "24px", letterSpacing: "0.2em", fontFamily: "monospace" }}
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading || otp.length !== 6}
-            style={{ ...btnStyle(primary), marginTop: "4px" }}
-          >
-            {loading ? <Loader2 size={16} className="animate-spin" style={{ display: "inline" }} /> : null}
-            {loading ? "Verifying…" : "Verify identity"}
-          </button>
-          <button
-            type="button"
-            onClick={() => { setStep("verify"); setError(""); setOtp(""); }}
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", color: "#6E6E73", textDecoration: "underline" }}
-          >
-            Go back
-          </button>
-        </form>
-      )}
-    </div>
+            <button type="submit" disabled={loading} className={s.button} style={{ marginTop: 4 }}>
+              {loading && <Loader2 size={16} className={s.spin} aria-hidden />}
+              {loading ? "Starting the transfer" : "Send it to them"}
+            </button>
+          </form>
+        )}
+      </div>
+    </section>
   );
-}
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  marginBottom: "4px",
-  fontSize: "12px",
-  fontWeight: "600",
-  color: "#4A4A4F",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "11px 14px",
-  fontSize: "14px",
-  color: "#0A0A0B",
-  backgroundColor: "#FAFAF8",
-  border: "1px solid #C7C7CC",
-  borderRadius: "8px",
-  outline: "none",
-  boxSizing: "border-box",
-};
-
-function btnStyle(primary: string): React.CSSProperties {
-  return {
-    width: "100%",
-    padding: "13px",
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#FAFAF8",
-    backgroundColor: primary,
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "8px",
-  };
 }

@@ -6,6 +6,7 @@ import { readInfoCode, recordInfoScan } from "@/lib/exhibitions-server";
 import { resolvePalette, resolveBaseFont, normalizePhone, type BrandColors } from "@/lib/brand-page";
 import { getFlagsForConsumerPage } from "@/lib/feature-flags/server";
 import InfoGallery from "./InfoGallery";
+import { TagitMarkGlyph } from "@/components/ui/TagitMarkGlyph";
 import InfoChat from "./InfoChat";
 
 // Public exhibition info page. A calm, editorial REFERENCE placard — deliberately
@@ -18,7 +19,6 @@ import InfoChat from "./InfoChat";
 // live in the same file as this page.
 
 const DISPLAY = "'Instrument Serif', Georgia, serif";
-const MONO = "'JetBrains Mono', ui-monospace, monospace";
 
 // Relative luminance of a hex colour → decide whether the page reads as light.
 function isLightHex(hex: string): boolean {
@@ -141,8 +141,8 @@ export default async function InfoPage({
             }}
           >
             <Lozenge color={palette.accent} size={5} />
-            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: palette.badgeText }}>
-              Reference
+            <span style={{ fontSize: 12.5, fontWeight: 500, color: palette.badgeText }}>
+              For reference
             </span>
           </span>
         </header>
@@ -175,7 +175,7 @@ export default async function InfoPage({
           >
             {product.name}
           </h1>
-          <p style={{ margin: "12px 0 0", fontFamily: MONO, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: palette.textSecondary }}>
+          <p style={{ margin: "12px 0 0", fontSize: 15, color: palette.textSecondary }}>
             {brand.name}
           </p>
         </div>
@@ -202,7 +202,7 @@ export default async function InfoPage({
                   borderTop: i === 0 ? "none" : `1px solid ${palette.divider}`,
                 }}
               >
-                <dt style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", color: palette.textSecondary, flexShrink: 0 }}>
+                <dt style={{ fontSize: 13.5, color: palette.textSecondary, flexShrink: 0 }}>
                   {s.label}
                 </dt>
                 <dd style={{ margin: 0, fontSize: 14.5, color: palette.textPrimary, textAlign: "right", lineHeight: 1.45 }}>
@@ -218,7 +218,7 @@ export default async function InfoPage({
           <section key={s.key} style={{ marginTop: 40 }}>
             <p style={{ display: "flex", alignItems: "center", gap: 9, margin: "0 0 14px" }}>
               <Lozenge color={palette.accent} size={5} />
-              <span style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.18em", textTransform: "uppercase", color: palette.accent }}>
+              <span style={{ fontSize: 13.5, fontWeight: 500, color: palette.accent }}>
                 {s.label}
               </span>
             </p>
@@ -271,16 +271,13 @@ export default async function InfoPage({
               padding: "16px 22px",
               backgroundColor: palette.accent,
               color: palette.onAccent,
-              fontFamily: MONO,
-              fontSize: 11,
+              fontSize: 15,
               fontWeight: 500,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
               textDecoration: "none",
-              borderRadius: 3,
+              borderRadius: 9,
             }}
           >
-            Enquire about this piece →
+            Ask about this piece on WhatsApp
           </a>
         )}
 
@@ -289,28 +286,28 @@ export default async function InfoPage({
           style={{
             margin: "34px 0 0",
             textAlign: "center",
-            fontSize: 11.5,
+            fontSize: 13,
             lineHeight: 1.6,
             color: palette.textSecondary,
           }}
         >
-          Reference information only.
+          This page describes the piece on show.
           <br />
-          Not a verification of authenticity.
+          It does not verify that a piece is authentic.
         </p>
 
         {/* ── Small footer ── */}
         <a
-          href="/"
+          href="https://tagitlux.com"
           target="_blank"
           rel="noopener noreferrer"
           className="tg-powered"
           style={{ marginTop: 26, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: 0.7, textDecoration: "none" }}
         >
-          <Lozenge color={palette.accent} size={4} />
-          <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.2em", textTransform: "uppercase", color: palette.textSecondary }}>
-            Powered by Tagit
-          </span>
+          <svg width="16" height="16" viewBox="0 0 307 307" aria-hidden>
+            <TagitMarkGlyph cx={153.5} cy={153.5} size={307} paint={palette.accent} />
+          </svg>
+          <span style={{ fontSize: 12.5, color: palette.textSecondary }}>Made with Tagit</span>
         </a>
       </article>
 
@@ -388,32 +385,29 @@ function ExpiredState({
               gap: 9,
               marginTop: 28,
               padding: "13px 22px",
-              borderRadius: 3,
               backgroundColor: palette.accent,
               color: palette.onAccent,
-              fontFamily: MONO,
-              fontSize: 11,
+              fontSize: 15,
               fontWeight: 500,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
+              borderRadius: 9,
               textDecoration: "none",
             }}
           >
-            View {brandName ? `${brandName}’s` : "the"} collection →
+            See {brandName ? `${brandName}’s` : "the"} collection
           </Link>
         )}
 
         <a
-          href="/"
+          href="https://tagitlux.com"
           target="_blank"
           rel="noopener noreferrer"
           className="tg-powered"
           style={{ marginTop: 36, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: 0.7, textDecoration: "none" }}
         >
-          <Lozenge color={palette.accent} size={4} />
-          <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.2em", textTransform: "uppercase", color: palette.textSecondary }}>
-            Powered by Tagit
-          </span>
+          <svg width="16" height="16" viewBox="0 0 307 307" aria-hidden>
+            <TagitMarkGlyph cx={153.5} cy={153.5} size={307} paint={palette.accent} />
+          </svg>
+          <span style={{ fontSize: 12.5, color: palette.textSecondary }}>Made with Tagit</span>
         </a>
       </div>
 
