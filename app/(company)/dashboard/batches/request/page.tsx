@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Layers, ArrowRight } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { MINIMUM_ORDER, type ChipUsage } from "@/lib/billing/limits";
 
@@ -121,8 +121,8 @@ export default function BatchRequestPage() {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Batch name */}
         <div className="space-y-1.5">
-          <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-            Batch name <span style={{ color: "var(--color-mist)", fontWeight: 400 }}>(optional)</span>
+          <Label className="cz-label">
+            Batch name <span style={{ color: "var(--app-body)", fontWeight: 400 }}>(optional)</span>
           </Label>
           <input
             type="text"
@@ -130,51 +130,31 @@ export default function BatchRequestPage() {
             onChange={(e) => setBatchName(e.target.value)}
             placeholder="e.g. Spring 2026 Collection, Lagos Flagship Launch"
             maxLength={80}
-            style={{
-              width: "100%",
-              border: "1px solid var(--color-stone)",
-              borderRadius: "var(--radius-sm)",
-              padding: "10px 12px",
-              fontSize: "var(--text-body-sm)",
-              color: "var(--color-onyx)",
-              backgroundColor: "var(--color-pearl)",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
+            className="app-input"
           />
         </div>
 
         {/* Batch type */}
         <div className="space-y-3">
-          <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+          <Label className="cz-label">
             What are you ordering?
           </Label>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div role="radiogroup" aria-label="What are you ordering?" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {([
-              { value: "tags",  label: "Tags",  desc: "For embedding into items" },
-              { value: "cards", label: "Cards", desc: "For items that cannot be embedded" },
-              { value: "mixed", label: "Both",  desc: "Specify quantity of each" },
+              { value: "tags",  label: "Tags",  desc: "Set inside the piece itself" },
+              { value: "cards", label: "Cards", desc: "Travel with pieces a tag can't go into" },
+              { value: "mixed", label: "Both",  desc: "Choose how many of each" },
             ] as const).map(({ value, label, desc }) => (
               <button
                 key={value}
                 type="button"
+                role="radio"
+                aria-checked={batchType === value}
                 onClick={() => setBatchType(value)}
-                style={{
-                  padding: "14px 14px",
-                  borderRadius: "var(--radius-md)",
-                  border: `2px solid ${batchType === value ? "var(--color-gold)" : "var(--color-cream)"}`,
-                  backgroundColor: batchType === value ? "var(--color-soft-gold)" : "var(--color-pearl)",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  transition: "all 0.15s",
-                }}
+                className={`app-choice ${batchType === value ? "is-on" : ""}`}
               >
-                <p className="font-semibold" style={{ fontSize: "var(--text-body-sm)", color: batchType === value ? "var(--color-deep-gold)" : "var(--color-charcoal)", marginBottom: 2 }}>
-                  {label}
-                </p>
-                <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)", lineHeight: 1.4 }}>
-                  {desc}
-                </p>
+                <span className="block text-body-sm font-semibold mb-0.5" style={{ color: "var(--color-onyx)" }}>{label}</span>
+                <span className="block text-caption" style={{ color: "var(--app-body)", lineHeight: 1.4 }}>{desc}</span>
               </button>
             ))}
           </div>
@@ -199,16 +179,16 @@ export default function BatchRequestPage() {
               <p className="font-medium mb-1" style={{ color: "#7F1D1D", fontSize: "var(--text-body-sm)" }}>Plan limit reached</p>
               <p style={{ color: "#991B1B", fontSize: "var(--text-caption)", lineHeight: 1.6 }}>{upgradeMsg}</p>
             </div>
-            <Link href="/dashboard/features" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-micro font-semibold" style={{ backgroundColor: "#B91C1C", color: "#fff", textDecoration: "none" }}>
-              View billing <ArrowRight size={12} />
+            <Link href="/dashboard/features" className="ov-btn" style={{ backgroundColor: "#9b2c2c" }}>
+              View billing
             </Link>
           </div>
         )}
 
         {/* Notes */}
         <div className="space-y-1.5">
-          <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-            Additional notes <span style={{ color: "var(--color-mist)", fontWeight: 400 }}>(optional)</span>
+          <Label className="cz-label">
+            Additional notes <span style={{ color: "var(--app-body)", fontWeight: 400 }}>(optional)</span>
           </Label>
           <textarea
             value={notes}
@@ -216,47 +196,24 @@ export default function BatchRequestPage() {
             placeholder="e.g. We need these by end of March for a launch event. Prefer small packaging."
             rows={3}
             maxLength={500}
-            style={{
-              width: "100%",
-              border: "1px solid var(--color-stone)",
-              borderRadius: "var(--radius-sm)",
-              padding: "10px 12px",
-              fontSize: "var(--text-body-sm)",
-              color: "var(--color-onyx)",
-              backgroundColor: "var(--color-pearl)",
-              resize: "vertical",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
+            className="cz-textarea"
           />
         </div>
 
-        {/* Info */}
-        <div
-          className="flex gap-3 rounded-xl px-4 py-4"
-          style={{ backgroundColor: "var(--color-soft-gold)", border: "1px solid var(--color-champagne)" }}
-        >
-          <Layers size={16} style={{ color: "var(--color-deep-gold)", marginTop: 2, flexShrink: 0 }} />
-          <p style={{ margin: 0, fontSize: "var(--text-caption)", color: "var(--color-deep-gold)", lineHeight: 1.65 }}>
-            Once submitted, the Tagit team will review your request and contact you to confirm details, pricing, and timeline. Most batches ship within 5–10 business days.
+        <div className="pt-2" style={{ borderTop: "1px solid var(--app-edge)" }}>
+          <p className="text-caption mt-5 mb-4" style={{ color: "var(--app-body)", maxWidth: "60ch", lineHeight: 1.6 }}>
+            We&apos;ll confirm the details, price and timing with you before anything is made. Most batches ship in 5 to 10 working days.
           </p>
+          <button
+            type="submit"
+            disabled={loading || !canSubmit || tagsBlocked || cardsBlocked}
+            className="ov-btn w-full justify-center disabled:cursor-not-allowed disabled:bg-[#9e9ea3]"
+            style={{ height: 46 }}
+          >
+            {loading && <Loader2 size={14} className="animate-spin" aria-hidden />}
+            {loading ? "Sending request" : tagsBlocked || cardsBlocked ? "Plan limit reached" : "Send batch request"}
+          </button>
         </div>
-
-        <button
-          type="submit"
-          disabled={loading || !canSubmit || tagsBlocked || cardsBlocked}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium w-full justify-center"
-          style={{
-            fontSize: "var(--text-body-sm)",
-            backgroundColor: !canSubmit || loading || tagsBlocked || cardsBlocked ? "var(--color-stone)" : "var(--color-onyx)",
-            color: "var(--color-pearl)",
-            border: "none",
-            cursor: !canSubmit || loading || tagsBlocked || cardsBlocked ? "not-allowed" : "pointer",
-          }}
-        >
-          {loading && <Loader2 size={14} className="animate-spin" />}
-          {loading ? "Submitting…" : tagsBlocked || cardsBlocked ? "Plan limit reached" : "Submit batch request"}
-        </button>
       </form>
     </div>
   );
@@ -267,13 +224,13 @@ function AllowanceHint({ usage, noun }: { usage: ChipUsage | null; noun: "tag" |
   if (usage.exhausted) {
     return (
       <span style={{ color: "#B45309", fontSize: "var(--text-caption)" }}>
-        {usage.remaining} {noun}{usage.remaining === 1 ? "" : "s"} remaining — minimum order is {MINIMUM_ORDER}. Upgrade to order more.
+        {usage.remaining} {noun}{usage.remaining === 1 ? "" : "s"} left on your plan, and the smallest order is {MINIMUM_ORDER}. Upgrade to order more.
       </span>
     );
   }
   return (
-    <span style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}>
-      {usage.remaining?.toLocaleString()} of {usage.limit?.toLocaleString()} {noun}s remaining on your plan
+    <span style={{ color: "var(--app-body)", fontSize: "var(--text-caption)" }}>
+      {usage.remaining?.toLocaleString()} of {usage.limit?.toLocaleString()} {noun}s left on your plan
     </span>
   );
 }
@@ -291,7 +248,7 @@ function QtyField({
 }) {
   return (
     <div className="space-y-3">
-      <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
+      <Label className="cz-label">
         {label}
       </Label>
       {hint && <div className="-mt-1.5">{hint}</div>}
@@ -300,18 +257,9 @@ function QtyField({
           <button
             key={q}
             type="button"
+            aria-pressed={value === String(q)}
             onClick={() => onChange(String(q))}
-            style={{
-              padding: "6px 14px",
-              borderRadius: 99,
-              border: `1px solid ${value === String(q) ? "var(--color-gold)" : "var(--color-cream)"}`,
-              backgroundColor: value === String(q) ? "var(--color-soft-gold)" : "var(--color-linen)",
-              color: value === String(q) ? "var(--color-deep-gold)" : "var(--color-graphite)",
-              fontSize: "var(--text-body-sm)",
-              fontWeight: 500,
-              cursor: "pointer",
-              transition: "all 0.15s",
-            }}
+            className={`app-chip ${value === String(q) ? "is-on" : ""}`}
           >
             {q.toLocaleString()}
           </button>
@@ -321,20 +269,10 @@ function QtyField({
         type="number"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Or enter a custom quantity (10–10,000)"
+        placeholder="Or type a number from 10 to 10,000"
         min={10}
         max={10000}
-        style={{
-          width: "100%",
-          border: "1px solid var(--color-stone)",
-          borderRadius: "var(--radius-sm)",
-          padding: "10px 12px",
-          fontSize: "var(--text-body-sm)",
-          color: "var(--color-onyx)",
-          backgroundColor: "var(--color-pearl)",
-          outline: "none",
-          fontFamily: "inherit",
-        }}
+        className="app-input"
       />
     </div>
   );

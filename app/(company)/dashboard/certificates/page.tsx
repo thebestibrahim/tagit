@@ -3,7 +3,7 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import Link from "next/link";
-import { CheckCircle, AlertTriangle, Clock, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
 import FeatureWall from "@/components/company/FeatureWall";
 import Pagination from "@/components/ui/Pagination";
@@ -44,7 +44,7 @@ export default async function CertificatesPage({
   if (!flags.certificate_generation) {
     return (
       <FeatureWall
-        name="Certificate of Authenticity"
+        name="Certificates of authenticity"
         description="Issue verified certificates for every ownership confirmation."
       />
     );
@@ -82,7 +82,7 @@ export default async function CertificatesPage({
       // Supabase types a to-one parent embed as an array (FK isOneToOne: false),
       // but PostgREST returns a single object at runtime — handle both shapes.
       const product = t.products as { name: string } | { name: string }[] | null;
-      const name = Array.isArray(product) ? (product[0]?.name ?? "—") : (product?.name ?? "—");
+      const name = Array.isArray(product) ? (product[0]?.name ?? null) : (product?.name ?? null);
       return [t.id, name];
     })
   );
@@ -108,7 +108,7 @@ export default async function CertificatesPage({
     const isProvenance = cert.cert_type === "provenance";
     const isCurrent = cert.ownership_record_id ? ownerMap[cert.ownership_record_id] : false;
     const isTransferred = isProvenance || isCurrent === false;
-    return { cert, isProvenance, isTransferred, productName: productMap[cert.tag_id] ?? "—" };
+    return { cert, isProvenance, isTransferred, productName: productMap[cert.tag_id] ?? null };
   });
 
   const total = certRows.length;
@@ -123,109 +123,78 @@ export default async function CertificatesPage({
   const pageRows = certRows.slice((page - 1) * PER_PAGE, (page - 1) * PER_PAGE + PER_PAGE);
   const pageHref = (p: number) => (p > 1 ? `/dashboard/certificates?page=${p}` : "/dashboard/certificates");
 
+  // What each certificate's state means to the brand. A transfer is a normal
+  // event in a piece's life, not an error, so nothing here is red.
+  const STATE = {
+    current:    { label: "Current",      color: "#1f5a40", bg: "#e3f0e8" },
+    passedOn:   { label: "Passed on",    color: "#5e5c57", bg: "#eeebe4" },
+    provenance: { label: "Provenance",   color: "#6e5527", bg: "#f3ecdd" },
+  } as const;
+  const TYPE_LABEL: Record<string, string> = { ownership: "Origin certificate", transfer: "Transfer certificate", provenance: "Provenance record" };
+
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="page-header mb-8">
-        <h1 className="page-title">
-          Certificates
-        </h1>
+    <div className="p-5 sm:p-8 max-w-5xl mx-auto">
+      <div className="page-header">
+        <h1 className="page-title">Certificates</h1>
         <p className="page-desc">
-          Every certificate ever issued for your items — live status, always current.
+          Every certificate issued for your pieces. Each one shows whether its holder still owns the piece.
         </p>
       </div>
 
-      {/* Summary stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <section aria-label="Certificate totals" className="card-raised ov-figures mb-8">
         {[
-          { label: "Total issued", value: total, color: "var(--color-charcoal)" },
-          { label: "Active", value: active, color: "#15803D" },
-          { label: "Transferred", value: transferred, color: "#DC2626" },
-          { label: "Provenance", value: provenance, color: "#D97706" },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="card-raised p-5">
-            <p style={{ fontSize: "30px", fontWeight: 700, color, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>
-              {value}
-            </p>
-            <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>{label}</p>
+          { label: "Issued", value: total, note: "Since you joined" },
+          { label: "Current", value: active, note: "Held by the owner today" },
+          { label: "Passed on", value: transferred, note: "The piece changed hands" },
+          { label: "Provenance", value: provenance, note: "Records of earlier owners" },
+        ].map(({ label, value, note }) => (
+          <div key={label} className="ov-figure" style={{ cursor: "default" }}>
+            <span className="ov-figure-value">{value.toLocaleString()}</span>
+            <span className="block text-body-sm font-medium" style={{ color: "var(--color-onyx)" }}>{label}</span>
+            <span className="block text-caption" style={{ color: "var(--app-body)" }}>{note}</span>
           </div>
         ))}
-      </div>
+      </section>
 
-      {/* Certificate list */}
       {certRows.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="space-y-2">
-          {pageRows.map(({ cert, isProvenance, isTransferred, productName }) => (
-            <Link
-              key={cert.id}
-              href={`/certificate/${cert.id}`}
-              target="_blank"
-              className="card-raised flex items-center gap-4 p-4 transition-all duration-200 group"
-              style={{ textDecoration: "none" }}
-            >
-              {/* Status icon */}
-              <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                style={{
-                  backgroundColor: isProvenance
-                    ? "rgba(253,230,138,0.2)"
-                    : isTransferred
-                    ? "rgba(254,202,202,0.2)"
-                    : "rgba(187,247,208,0.2)",
-                }}
-              >
-                {isProvenance
-                  ? <Clock size={15} color="#D97706" />
-                  : isTransferred
-                  ? <AlertTriangle size={15} color="#DC2626" />
-                  : <CheckCircle size={15} color="#15803D" />}
-              </div>
-
-              {/* Main info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <p className="font-medium" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)" }}>
-                    {cert.issued_to_name}
-                  </p>
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 600,
-                      letterSpacing: "0.04em",
-                      color: isProvenance ? "#92400E" : isTransferred ? "#991B1B" : "#15803D",
-                      backgroundColor: isProvenance ? "#FEF3C7" : isTransferred ? "#FEE2E2" : "#DCFCE7",
-                      padding: "1px 6px",
-                      borderRadius: 4,
-                    }}
-                  >
-                    {isProvenance ? "PROVENANCE" : isTransferred ? "TRANSFERRED" : "ACTIVE"}
-                  </span>
-                </div>
-                <p style={{ fontSize: "var(--text-caption)", color: "var(--color-slate)" }}>
-                  {productName} · {cert.cert_type === "ownership" ? "Origin" : cert.cert_type === "transfer" ? "Transfer" : "Provenance"} cert
-                </p>
-              </div>
-
-              {/* Cert number + date */}
-              <div className="text-right shrink-0 hidden sm:block">
-                <p style={{ fontSize: 11, fontFamily: "monospace", color: "var(--color-graphite)", marginBottom: 2 }}>
-                  {cert.cert_number}
-                </p>
-                <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
-                  {<LocalTime iso={cert.issued_at} pattern="dd MMM yyyy" />}
-                </p>
-              </div>
-
-              <ExternalLink
-                size={14}
-                className="shrink-0 transition-opacity duration-150 opacity-0 group-hover:opacity-100"
-                style={{ color: "var(--color-mist)" }}
-              />
-            </Link>
-          ))}
-          <Pagination page={page} totalPages={totalPages} makeHref={pageHref} totalLabel={`${total} total`} />
-        </div>
+        <>
+          <div className="card-raised">
+            <ul>
+              {pageRows.map(({ cert, isProvenance, isTransferred, productName }) => {
+                const state = isProvenance ? STATE.provenance : isTransferred ? STATE.passedOn : STATE.current;
+                return (
+                  <li key={cert.id}>
+                    <Link href={`/certificate/${cert.id}`} target="_blank" className="ov-row group">
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-body-sm font-medium truncate" style={{ color: "var(--color-onyx)" }}>
+                          {cert.issued_to_name}
+                        </span>
+                        <span className="block text-caption truncate" style={{ color: "var(--app-body)" }}>
+                          {productName ?? "Product not linked"}, {TYPE_LABEL[cert.cert_type]?.toLowerCase() ?? "certificate"}
+                        </span>
+                      </span>
+                      <span className="shrink-0 rounded-full px-2.5 py-0.5 text-caption font-medium" style={{ color: state.color, backgroundColor: state.bg }}>
+                        {state.label}
+                      </span>
+                      <span className="hidden md:block w-40 text-right shrink-0">
+                        <span className="block text-caption" style={{ fontFamily: "var(--font-mono)", color: "var(--color-onyx)" }}>{cert.cert_number}</span>
+                        <span className="block text-caption" style={{ color: "var(--app-body)" }}>
+                          <LocalTime iso={cert.issued_at} pattern="d MMM yyyy" />
+                        </span>
+                      </span>
+                      <ExternalLink size={14} aria-label="Opens in a new tab" className="shrink-0 opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: "var(--app-body)" }} />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          <div className="mt-4">
+            <Pagination page={page} totalPages={totalPages} makeHref={pageHref} totalLabel={`${total} total`} />
+          </div>
+        </>
       )}
     </div>
   );

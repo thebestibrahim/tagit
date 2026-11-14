@@ -30,7 +30,7 @@ export default async function CustomizationPage() {
   if (!flags.brand_customisation) {
     return (
       <FeatureWall
-        name="Brand Customisation"
+        name="Brand customization"
         description="Personalise how your brand looks on every customer scan page."
       />
     );
@@ -69,7 +69,7 @@ export default async function CustomizationPage() {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-5 sm:p-8 max-w-5xl mx-auto">
       <div className="page-header mb-8">
         <h1 className="page-title">
           Brand customization

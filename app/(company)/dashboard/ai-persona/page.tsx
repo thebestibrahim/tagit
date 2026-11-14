@@ -14,7 +14,7 @@ export default async function AiPersonaPage() {
   if (!flags.ai_persona) {
     return (
       <FeatureWall
-        name="AI Product Persona"
+        name="AI product persona"
         description="Give your items a voice your customers can speak with after a scan."
       />
     );

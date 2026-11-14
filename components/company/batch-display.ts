@@ -37,7 +37,7 @@ export const BATCH_STATUS_STYLES: Record<string, { bg: string; color: string }> 
 };
 
 export const BATCH_STATUS_LABELS: Record<string, string> = {
-  pending:          "Request received — awaiting Tagit",
+  pending:          "Request received, with Tagit",
   awaiting_payment: "Awaiting payment",
   processing:       "In production",
   generated:        "Generated",

@@ -31,10 +31,9 @@ export default function SettingsForm({
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // The shared Input already carries the app's field style; this only sets
+  // the text size used across these forms.
   const inputStyle = {
-    backgroundColor: "var(--color-pearl)",
-    borderColor: "var(--color-stone)",
-    color: "var(--color-onyx)",
     fontSize: "var(--text-body-sm)",
   };
 
@@ -98,17 +97,13 @@ export default function SettingsForm({
     }
   }
 
-  const cardStyle = {
-    backgroundColor: "var(--color-pearl)",
-    border: "1px solid var(--color-cream)",
-    boxShadow: "var(--shadow-sm)",
-  };
+  const cardStyle = {};
 
   return (
     <div className="space-y-6">
       {/* Company profile */}
-      <form onSubmit={handleSaveProfile} className="rounded-xl p-6" style={cardStyle}>
-        <h2 className="text-body font-semibold mb-5" style={{ color: "var(--color-charcoal)" }}>
+      <form onSubmit={handleSaveProfile} className="card-raised p-6" style={cardStyle}>
+        <h2 className="ov-h2 mb-5">
           Company profile
         </h2>
 
@@ -176,7 +171,7 @@ export default function SettingsForm({
               type="email"
               value={email}
               disabled
-              style={{ ...inputStyle, opacity: 0.6, cursor: "not-allowed" }}
+              style={inputStyle}
             />
             <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
               Email cannot be changed here. Contact support if needed.
@@ -201,8 +196,8 @@ export default function SettingsForm({
       </form>
 
       {/* Change password */}
-      <form onSubmit={handleChangePassword} className="rounded-xl p-6" style={cardStyle}>
-        <h2 className="text-body font-semibold mb-1" style={{ color: "var(--color-charcoal)" }}>
+      <form onSubmit={handleChangePassword} className="card-raised p-6" style={cardStyle}>
+        <h2 className="ov-h2 mb-1">
           Change password
         </h2>
         <p className="mb-5" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)" }}>

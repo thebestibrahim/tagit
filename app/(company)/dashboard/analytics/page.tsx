@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { format, subDays } from "date-fns";
-import { BarChart2, Eye, Package, Award, TrendingUp, MapPin, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import { getCurrentBrandFlags } from "@/lib/feature-flags/server";
 import FeatureWall from "@/components/company/FeatureWall";
 import ScanChart from "./ScanChart";
@@ -181,40 +181,36 @@ export default async function AnalyticsPage({
 
   const statCards = [
     {
-      label: "Scans (30 days)",
+      label: "Scans, last 30 days",
       value: (totalScans ?? 0).toLocaleString(),
-      icon: Eye,
       delta: scanDelta,
-      sub: (prevScans ?? 0) > 0 ? `${prevScans?.toLocaleString()} prev. period` : "First period",
+      sub: (prevScans ?? 0) > 0 ? `${prevScans?.toLocaleString()} the 30 days before` : "Nothing to compare yet",
     },
     {
-      label: "Unique items scanned",
+      label: "Pieces scanned",
       value: uniqueItemsScanned.toLocaleString(),
-      icon: BarChart2,
       delta: null,
-      sub: `of ${totalTags} total tags`,
+      sub: `Out of ${totalTags.toLocaleString()} tags`,
     },
     {
-      label: "Owned items",
+      label: "Owned",
       value: ownedTags.toLocaleString(),
-      icon: Award,
       delta: null,
       sub:
         totalTags > 0
-          ? `${Math.round((ownedTags / totalTags) * 100)}% ownership rate`
-          : "—",
+          ? `${Math.round((ownedTags / totalTags) * 100)}% of your tags`
+          : "No tags yet",
     },
     {
-      label: "Total tags",
+      label: "Tags",
       value: totalTags.toLocaleString(),
-      icon: Package,
       delta: null,
-      sub: `${deployedTags} deployed`,
+      sub: `${deployedTags.toLocaleString()} out in the world`,
     },
   ];
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-5 sm:p-8 max-w-5xl mx-auto">
       <div className="page-header mb-8">
         <h1 className="page-title">
           Analytics
@@ -225,9 +221,9 @@ export default async function AnalyticsPage({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 mb-8 border-b" style={{ borderColor: "var(--color-cream)" }}>
+      <div className="cz-tabs">
         <TabLink label="Overview" tab="overview" active={activeTab === "overview"} locked={!analyticsUnlocked} />
-        <TabLink label="Resale Analytics" tab="resale" active={activeTab === "resale"} locked={!resaleUnlocked} />
+        <TabLink label="Resale" tab="resale" active={activeTab === "resale"} locked={!resaleUnlocked} />
       </div>
 
       {activeTab === "overview" && !analyticsUnlocked && (
@@ -236,70 +232,41 @@ export default async function AnalyticsPage({
 
       {activeTab === "overview" && analyticsUnlocked && (
       <>
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-4">
-        {statCards.map(({ label, value, icon: Icon, delta, sub }) => (
-          <div key={label} className="card-raised rounded-xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "var(--color-linen)" }}
-              >
-                <Icon size={15} style={{ color: "var(--color-gold)" }} />
-              </div>
+      <section aria-label="Totals" className="card-raised ov-figures mb-8">
+        {statCards.map(({ label, value, delta, sub }) => (
+          <div key={label} className="ov-figure" style={{ cursor: "default" }}>
+            <span className="flex items-baseline gap-2">
+              <span className="ov-figure-value">{value}</span>
               {delta !== null && (
-                <span
-                  className="text-micro font-semibold px-1.5 py-0.5 rounded"
-                  style={{
-                    backgroundColor: delta >= 0 ? "var(--color-verified-tint)" : "var(--color-alert-tint)",
-                    color: delta >= 0 ? "var(--color-verified)" : "var(--color-alert)",
-                  }}
-                >
-                  {delta >= 0 ? "+" : ""}
-                  {delta}%
+                <span className="text-caption font-medium" style={{ color: delta >= 0 ? "var(--color-verified)" : "#8a3b3b" }}>
+                  {delta >= 0 ? "Up" : "Down"} {Math.abs(delta)}%
                 </span>
               )}
-            </div>
-            <p
-              className="text-gradient-gold"
-              style={{ fontSize: "28px", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1 }}
-            >
-              {value}
-            </p>
-            <p className="mt-1 text-caption font-semibold" style={{ color: "var(--color-slate)" }}>
-              {label}
-            </p>
-            {sub && (
-              <p className="mt-0.5" style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
-                {sub}
-              </p>
-            )}
+            </span>
+            <span className="block text-body-sm font-medium" style={{ color: "var(--color-onyx)" }}>{label}</span>
+            {sub && <span className="block text-caption" style={{ color: "var(--app-body)" }}>{sub}</span>}
           </div>
         ))}
-      </div>
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-[1fr,300px]">
         {/* Scan activity chart */}
-        <div className="card-raised rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <TrendingUp size={16} style={{ color: "var(--color-gold)" }} />
-            <h2
-              className="font-semibold"
-              style={{ fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)" }}
-            >
-              Scan activity — last 14 days
-            </h2>
-          </div>
+        <div className="card-raised p-6">
+          <h2 className="ov-h2 mb-5">Scans, last 14 days</h2>
           {chartTotal === 0 ? (
-            <div className="py-10 text-center" style={{ color: "var(--color-mist)" }}>
-              <p style={{ fontSize: "var(--text-body-sm)" }}>No scans yet in this period</p>
+            <div className="py-10">
+              <p className="text-body-sm" style={{ color: "var(--app-body)", maxWidth: "44ch" }}>
+                {(totalScans ?? 0) > 0
+                  ? "No scans in the last two weeks. The scans counted above happened earlier in the month."
+                  : "No scans yet. Each tap of one of your tags will show up here by day."}
+              </p>
             </div>
           ) : (
             <ScanChart days={chartDays} max={chartMax} />
           )}
           <div
-            className="mt-2 flex justify-between"
-            style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}
+            className="mt-2 flex justify-between text-caption"
+            style={{ color: "var(--app-body)" }}
           >
             <span>{chartDays[0]?.label}</span>
             <span>{chartDays[13]?.label}</span>
@@ -307,20 +274,12 @@ export default async function AnalyticsPage({
         </div>
 
         {/* Top products */}
-        <div className="card-raised rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <Package size={16} style={{ color: "var(--color-gold)" }} />
-            <h2
-              className="font-semibold"
-              style={{ fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)" }}
-            >
-              Top scanned products
-            </h2>
-          </div>
+        <div className="card-raised p-6">
+          <h2 className="ov-h2 mb-5">Most scanned</h2>
           {topProducts.length === 0 ? (
-            <div className="py-8 text-center" style={{ color: "var(--color-mist)" }}>
-              <p style={{ fontSize: "var(--text-body-sm)" }}>No scan data yet</p>
-            </div>
+            <p className="text-body-sm py-6" style={{ color: "var(--app-body)" }}>
+              Your most scanned products will be ranked here.
+            </p>
           ) : (
             <div className="space-y-3">
               {topProducts.map((p, i) => (
@@ -392,30 +351,26 @@ export default async function AnalyticsPage({
         </div>
       </div>
 
-      {/* Location — where items are scanned & claimed */}
+      {/* Location: where items are scanned and claimed */}
       <div className="grid gap-6 sm:grid-cols-2 mt-6">
-        <LocationCard title="Where your items are being scanned" rows={scanCountries} empty="Location data will appear as your items are scanned." />
-        <LocationCard title="Where ownership is being claimed" rows={claimCountries} empty="Location data will appear as owners claim their items." />
+        <LocationCard title="Where pieces are scanned" rows={scanCountries} empty="Countries appear here as your pieces are scanned." />
+        <LocationCard title="Where owners claim" rows={claimCountries} empty="Countries appear here as buyers claim their pieces." />
       </div>
       </>
       )}
 
       {activeTab === "resale" && !resaleUnlocked && (
-        <FeatureWall name="Resale Analytics" description="See where your items travel after resale — the country of the previous owner versus the new owner." />
+        <FeatureWall name="Resale analytics" description="See where your pieces travel after resale: the country each one left and the country it went to." />
       )}
 
       {activeTab === "resale" && resaleUnlocked && (
         <div>
-          <div className="card-raised rounded-xl p-6 mb-6">
-            <div className="flex items-center gap-2 mb-1">
-              <MapPin size={16} style={{ color: "var(--color-gold)" }} />
-              <h2 className="font-semibold" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)" }}>Where your items travel after resale</h2>
-            </div>
-            <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>Country of the previous owner vs the new owner on completed transfers.</p>
-          </div>
+          <p className="text-body-sm mb-6" style={{ color: "var(--app-body)", maxWidth: "60ch" }}>
+            Where your pieces go when they are resold: the country of the owner who sold each one, and of the owner who bought it, across completed transfers.
+          </p>
           <div className="grid gap-6 sm:grid-cols-2">
-            <LocationCard title="Previous owner — by country" rows={resalePrev} empty="Resale location data will appear as items change hands." />
-            <LocationCard title="New owner — by country" rows={resaleNew} empty="Resale location data will appear as items change hands." />
+            <LocationCard title="Sold from" rows={resalePrev} empty="Countries appear here as your pieces change hands." />
+            <LocationCard title="Bought in" rows={resaleNew} empty="Countries appear here as your pieces change hands." />
           </div>
         </div>
       )}
@@ -427,13 +382,9 @@ function TabLink({ label, tab, active, locked }: { label: string; tab: string; a
   return (
     <Link
       href={`/dashboard/analytics?tab=${tab}`}
-      className="inline-flex items-center gap-1.5 px-4 py-2.5 -mb-px font-medium"
-      style={{
-        fontSize: "var(--text-body-sm)",
-        color: active ? "var(--color-charcoal)" : "var(--color-slate)",
-        borderBottom: `2px solid ${active ? "var(--color-gold)" : "transparent"}`,
-        textDecoration: "none",
-      }}
+      className={`cz-tab inline-flex items-center gap-1.5 ${active ? "is-active" : ""}`}
+      aria-current={active ? "page" : undefined}
+      style={{ textDecoration: "none" }}
     >
       {label}
       {locked && <Lock size={12} style={{ color: "var(--color-mist)", opacity: 0.7 }} />}
@@ -443,15 +394,10 @@ function TabLink({ label, tab, active, locked }: { label: string; tab: string; a
 
 function LocationCard({ title, rows, empty }: { title: string; rows: Ranked[]; empty: string }) {
   return (
-    <div className="card-raised rounded-xl p-6">
-      <div className="flex items-center gap-2 mb-5">
-        <MapPin size={16} style={{ color: "var(--color-gold)" }} />
-        <h2 className="font-semibold" style={{ fontSize: "var(--text-body-sm)", color: "var(--color-charcoal)" }}>{title}</h2>
-      </div>
+    <div className="card-raised p-6">
+      <h2 className="ov-h2 mb-5">{title}</h2>
       {rows.length === 0 ? (
-        <div className="py-8 text-center" style={{ color: "var(--color-mist)" }}>
-          <p style={{ fontSize: "var(--text-body-sm)" }}>{empty}</p>
-        </div>
+        <p className="text-body-sm py-6" style={{ color: "var(--app-body)" }}>{empty}</p>
       ) : (
         <div className="space-y-3">
           {rows.map((r) => (
@@ -462,7 +408,7 @@ function LocationCard({ title, rows, empty }: { title: string; rows: Ranked[]; e
               </div>
               <span className="tabular-nums" style={{ width: 90, textAlign: "right", fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
                 <span style={{ fontWeight: 600 }}>{r.count.toLocaleString()}</span>
-                <span style={{ color: "var(--color-mist)" }}> · {r.pct}%</span>
+                <span style={{ color: "var(--app-body)" }}>, {r.pct}%</span>
               </span>
             </div>
           ))}

@@ -28,7 +28,7 @@ export default function ClaimReviewActions({
       setLoading(null);
       return;
     }
-    toast.success("Claim approved — ownership confirmed");
+    toast.success("Claim approved. Ownership is confirmed.");
     router.push("/dashboard/ownership");
     router.refresh();
   }
@@ -100,7 +100,7 @@ export default function ClaimReviewActions({
               className="text-body-sm font-medium mb-1.5 block"
               style={{ color: "var(--color-graphite)" }}
             >
-              Reason for rejection (optional — will be sent to claimant)
+              Reason for rejecting (optional, sent to the claimant)
             </label>
             <textarea
               value={rejectionReason}

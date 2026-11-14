@@ -320,7 +320,7 @@ export default async function ProductDetailPage({
       kind: "certificate",
       icon: <Award size={14} />,
       iconBg: "var(--color-gold)",
-      title: `Certificate issued — ${cert.cert_type === "ownership" ? "Ownership" : "Transfer"}`,
+      title: `${cert.cert_type === "ownership" ? "Ownership" : "Transfer"} certificate issued`,
       meta: [`${cert.cert_number} · ${cert.issued_to_name}`],
       link: `/certificate/${cert.id}`,
     });

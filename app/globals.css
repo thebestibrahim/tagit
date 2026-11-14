@@ -382,6 +382,304 @@
   }
 }
 
+/* ── App building blocks ──────────────────────────────────────────
+   Buttons, list rows, figures, form controls and the customization form.
+   In `components` so a utility class on the same element still wins. */
+@layer components {
+  .ov-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 6px;
+    background: var(--color-onyx);
+    color: var(--color-pearl);
+    font-size: 14px;
+    font-weight: 550;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 0.15s;
+  }
+  .ov-btn:hover { background: #2a2824; }
+  .ov-btn-quiet {
+    background: var(--app-surface);
+    color: var(--color-onyx);
+    border: 1px solid var(--input);
+  }
+  .ov-btn-quiet:hover { background: #f1eee8; }
+  .ov-btn:focus-visible, .ov-row:focus-visible, .ov-figure:focus-visible, .ov-attention:focus-visible {
+    outline: 2px solid var(--color-onyx);
+    outline-offset: 2px;
+  }
+
+  .ov-h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 23px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    color: var(--color-onyx);
+  }
+
+  /* A row in a list inside a panel: hairline between rows, a wash on hover. */
+  .ov-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 24px;
+    text-decoration: none;
+    border-top: 1px solid var(--app-edge);
+    transition: background-color 0.12s;
+  }
+  li:first-child > .ov-row { border-top: 0; }
+  .ov-row:hover { background: #faf8f4; }
+
+  .ov-step-ring {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-champagne);
+  }
+
+  /* Something waiting on the brand: a white row with a gold mark. */
+  .ov-attention {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    border-radius: 10px;
+    background: var(--app-surface);
+    border: 1px solid var(--color-champagne);
+    text-decoration: none;
+  }
+  .ov-attention:hover { background: #fdfaf3; }
+  .ov-attention-dot {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--color-gold);
+    box-shadow: 0 0 0 4px rgba(184, 148, 93, 0.18);
+  }
+
+  /* The catalogue's figures: one strip, divided by hairlines, set in the serif. */
+  .ov-figures {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: hidden;
+  }
+  .ov-figure {
+    display: block;
+    padding: 22px 24px 20px;
+    text-decoration: none;
+    border-left: 1px solid var(--app-edge);
+    transition: background-color 0.12s;
+  }
+  .ov-figure:first-child { border-left: 0; }
+  .ov-figure:hover { background: #faf8f4; }
+  .ov-figure-value {
+    display: block;
+    margin-bottom: 10px;
+    font-family: var(--font-display);
+    font-size: 44px;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: var(--color-onyx);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  @media (max-width: 767px) {
+    .ov-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ov-figure:nth-child(3) { border-left: 0; }
+    .ov-figure:nth-child(n + 3) { border-top: 1px solid var(--app-edge); }
+    .ov-row { padding: 14px 18px; }
+  }
+
+  /* Form controls for pages that render native inputs. */
+  .app-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--input);
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+    font-size: 14px;
+    color: var(--color-onyx);
+    outline: none;
+  }
+  .app-input:focus { border-color: var(--ring); box-shadow: 0 0 0 3px rgba(184, 148, 93, 0.25); }
+
+  /* A choice card: the chosen one is outlined in ink. */
+  .app-choice {
+    display: block;
+    width: 100%;
+    padding: 14px 16px;
+    text-align: left;
+    border: 1px solid var(--input);
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .app-choice:hover { border-color: #a9a193; }
+  .app-choice.is-on { border-color: var(--color-onyx); box-shadow: inset 0 0 0 1px var(--color-onyx); }
+  .app-choice:focus-visible { outline: 2px solid var(--color-onyx); outline-offset: 2px; }
+
+  /* A quick-pick value (quantities). */
+  .app-chip {
+    height: 34px;
+    padding: 0 14px;
+    border: 1px solid var(--input);
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-onyx);
+    cursor: pointer;
+  }
+  .app-chip:hover { border-color: #a9a193; }
+  .app-chip.is-on { background: var(--color-onyx); border-color: var(--color-onyx); color: var(--color-pearl); }
+  .app-chip:focus-visible { outline: 2px solid var(--color-onyx); outline-offset: 2px; }
+
+  /* ── Customization ─────────────────────────────────────────────── */
+  .cz-tabs {
+    display: flex;
+    gap: 28px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--app-edge);
+    overflow-x: auto;
+  }
+  .cz-tab {
+    position: relative;
+    padding: 0 0 12px;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 15px;
+    color: var(--app-body);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .cz-tab:hover { color: var(--color-onyx); }
+  .cz-tab.is-active { color: var(--color-onyx); font-weight: 550; }
+  .cz-tab.is-active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--color-onyx);
+  }
+  .cz-tab:focus-visible { outline: 2px solid var(--color-onyx); outline-offset: 4px; border-radius: 2px; }
+
+  .cz-section { padding: 26px 28px 28px; }
+  .cz-section + .cz-section { border-top: 1px solid var(--app-edge); }
+  .cz-h {
+    margin: 0 0 4px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 21px;
+    line-height: 1.2;
+    letter-spacing: -0.012em;
+    color: var(--color-onyx);
+  }
+  .cz-p { margin: 0; max-width: 60ch; font-size: 14px; line-height: 1.55; color: var(--app-body); }
+  .cz-note { margin: 0; font-size: 13px; line-height: 1.45; color: var(--app-body); }
+  .cz-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-onyx);
+  }
+
+  /* A colour field: the swatch and its hex value read as one control. */
+  .cz-color {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    border: 1px solid var(--input);
+    border-radius: 6px;
+    background: #fff;
+    overflow: hidden;
+  }
+  .cz-color:focus-within { border-color: var(--ring); box-shadow: 0 0 0 3px rgba(184, 148, 93, 0.25); }
+  .cz-color input[type="color"] {
+    width: 40px;
+    height: 100%;
+    padding: 6px;
+    border: 0;
+    border-right: 1px solid var(--app-edge);
+    background: transparent;
+    cursor: pointer;
+  }
+  .cz-color input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0 12px;
+    border: 0;
+    outline: none;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    text-transform: uppercase;
+    color: var(--color-onyx);
+  }
+
+  .cz-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--input);
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--color-onyx);
+    resize: vertical;
+    outline: none;
+  }
+  .cz-textarea:focus { border-color: var(--ring); box-shadow: 0 0 0 3px rgba(184, 148, 93, 0.25); }
+
+  .cz-text-btn {
+    height: 38px;
+    padding: 0 10px;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 14px;
+    color: var(--app-body);
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .cz-text-btn:hover { color: #8a3b3b; background: #f8eeee; }
+
+  .cz-savebar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    margin: 32px -32px 0;
+    padding: 14px 32px;
+    background: rgba(246, 244, 239, 0.92);
+    backdrop-filter: blur(6px);
+    border-top: 1px solid var(--app-edge);
+  }
+  @media (max-width: 639px) {
+    .cz-section { padding: 22px 18px 24px; }
+    .cz-savebar { margin: 24px -20px 0; padding: 12px 20px; }
+    .cz-savebar p { display: none; }
+  }
+}
+
 /* ── Modal input placeholder colour ── */
 .tagit-modal-input::placeholder { color: #3A3A3F; }
 

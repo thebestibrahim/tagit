@@ -6,11 +6,11 @@ import { Loader2, Bot, Mic, Volume2, Play, Square, Sparkles, CheckCircle2, Chevr
 import { Label } from "@/components/ui/label";
 
 const VOICES = [
-  { id: "21m00Tcm4TlvDq8ikWAM", label: "Rachel — Calm, professional (female)" },
-  { id: "pNInz6obpgDQGcFmaJgB", label: "Adam — Deep, authoritative (male)" },
-  { id: "AZnzlk1XvdvUeBnXmlld", label: "Domi — Natural, energetic (female)" },
-  { id: "TxGEqnHWrfWFTfGW9XjX", label: "Josh — Warm, conversational (male)" },
-  { id: "EXAVITQu4vr4xnSDxMaL", label: "Bella — Soft, elegant (female)" },
+  { id: "21m00Tcm4TlvDq8ikWAM", label: "Rachel: calm, professional (female)" },
+  { id: "pNInz6obpgDQGcFmaJgB", label: "Adam: deep, authoritative (male)" },
+  { id: "AZnzlk1XvdvUeBnXmlld", label: "Domi: natural, energetic (female)" },
+  { id: "TxGEqnHWrfWFTfGW9XjX", label: "Josh: warm, conversational (male)" },
+  { id: "EXAVITQu4vr4xnSDxMaL", label: "Bella: soft, elegant (female)" },
 ];
 
 type InitialValues = {
@@ -353,7 +353,7 @@ export default function PersonaForm({ initialValues }: { initialValues: InitialV
       {/* Voice */}
       <div className="space-y-2">
         <Label style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-          Voice <span style={{ color: "var(--color-mist)", fontWeight: 400 }}>— powered by ElevenLabs</span>
+          Voice <span style={{ color: "var(--color-mist)", fontWeight: 400 }}>(by ElevenLabs)</span>
         </Label>
         <div className="space-y-2">
           {VOICES.map((v) => (

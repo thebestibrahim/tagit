@@ -1,9 +1,13 @@
 import Link from "next/link";
-import { Lock, ArrowRight } from "lucide-react";
 
 /**
  * Shown in place of a feature when its flag is disabled for the brand.
- * Server component — no client JS needed.
+ *
+ * Laid out like every other page: the feature is the title, the sentence under
+ * it says what it does, and one panel says it isn't on the plan and how to get
+ * it. A brand landing here should learn what they would gain first.
+ *
+ * Server component, no client JS needed.
  */
 export default function FeatureWall({
   name,
@@ -13,75 +17,29 @@ export default function FeatureWall({
   description?: string;
 }) {
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <div
-        className="flex flex-col items-center text-center"
-        style={{ minHeight: "62vh", justifyContent: "center" }}
-      >
-        <div
-          className="flex items-center justify-center mb-6"
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: "50%",
-            backgroundColor: "var(--color-smoke)",
-            border: "1px solid var(--color-cream)",
-          }}
-        >
-          <Lock size={26} style={{ color: "var(--color-mist)" }} />
-        </div>
+    <div className="p-5 sm:p-8 max-w-3xl mx-auto">
+      <div className="page-header">
+        <h1 className="page-title">{name}</h1>
+        {description && <p className="page-desc">{description}</p>}
+      </div>
 
-        <p
-          className="text-caption font-semibold mb-2"
-          style={{ color: "var(--color-gold)" }}
-        >
-          {name}
+      <section className="card-raised px-6 py-6">
+        <h2 className="ov-h2">Not on your plan yet</h2>
+        <p className="mt-2 text-body-sm" style={{ color: "var(--app-body)", maxWidth: "56ch", lineHeight: 1.6 }}>
+          {`${name} isn't included in your current plan. Ask us to add it and we'll reply with the price and switch it on for your account.`}
         </p>
-        <h1 className="page-title">
-          Not on your current plan
-        </h1>
-        <p
-          className="mt-3"
-          style={{
-            color: "var(--color-slate)",
-            fontSize: "var(--text-body-sm)",
-            maxWidth: 440,
-            lineHeight: 1.6,
-          }}
-        >
-          {description ? `${description} ` : ""}
-          {`${name} isn't included in your current plan. Upgrade to unlock it.`}
-        </p>
-
-        <div className="flex items-center gap-3 mt-7">
+        <div className="flex flex-wrap items-center gap-2 mt-5">
           <a
-            href={`mailto:business@tagitlux.com?subject=${encodeURIComponent(`Upgrade request — ${name}`)}`}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg font-medium"
-            style={{
-              backgroundColor: "var(--color-onyx)",
-              color: "var(--color-pearl)",
-              fontSize: "var(--text-body-sm)",
-              textDecoration: "none",
-            }}
+            href={`mailto:business@tagitlux.com?subject=${encodeURIComponent(`Add ${name} to our plan`)}`}
+            className="ov-btn"
           >
-            Request upgrade
-            <ArrowRight size={15} />
+            Ask to add it
           </a>
-          <Link
-            href="/dashboard/features"
-            className="inline-flex items-center px-5 py-2.5 rounded-lg font-medium"
-            style={{
-              backgroundColor: "var(--color-pearl)",
-              color: "var(--color-graphite)",
-              border: "1px solid var(--color-cream)",
-              fontSize: "var(--text-body-sm)",
-              textDecoration: "none",
-            }}
-          >
-            View your plan
+          <Link href="/dashboard/features" className="ov-btn ov-btn-quiet">
+            See your plan
           </Link>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

@@ -27,7 +27,7 @@ export default async function BatchesPage({
   if (!flags.bulk_tag_creation) {
     return (
       <FeatureWall
-        name="Bulk Tag Creation"
+        name="Bulk tag ordering"
         description="Request and manage large batches of tags and cards in one operation."
       />
     );

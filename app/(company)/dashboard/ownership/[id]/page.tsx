@@ -326,14 +326,14 @@ export default async function ClaimDetailPage({
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-graphite)", flexShrink: 0 }} />
             <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
-              Claim submitted — {<LocalTime iso={claim.created_at} pattern="MMM d, yyyy 'at' HH:mm" />}
+              Claim submitted {<LocalTime iso={claim.created_at} pattern="MMM d, yyyy 'at' HH:mm" />}
             </span>
           </div>
           {claim.reviewed_at && (
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
               <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: claim.status === "approved" ? "var(--color-verified)" : "var(--color-alert)", flexShrink: 0 }} />
               <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
-                {claim.status === "approved" ? "Approved" : "Rejected"} — {<LocalTime iso={claim.reviewed_at} pattern="MMM d, yyyy 'at' HH:mm" />}
+                {claim.status === "approved" ? "Approved" : "Rejected"} {<LocalTime iso={claim.reviewed_at} pattern="MMM d, yyyy 'at' HH:mm" />}
               </span>
             </div>
           )}
@@ -341,7 +341,7 @@ export default async function ClaimDetailPage({
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
               <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-gold)", flexShrink: 0 }} />
               <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-graphite)" }}>
-                Certificate issued ({cert.cert_number}) — {<LocalTime iso={cert.issued_at} pattern="MMM d, yyyy 'at' HH:mm" />}
+                Certificate {cert.cert_number} issued {<LocalTime iso={cert.issued_at} pattern="MMM d, yyyy 'at' HH:mm" />}
               </span>
             </div>
           )}
@@ -351,8 +351,8 @@ export default async function ClaimDetailPage({
               <span style={{ fontSize: "var(--text-body-sm)", color: "var(--color-slate)" }}>
                 {claim.expires_at
                   ? expired
-                    ? <>Review window closed {<LocalTime iso={claim.expires_at} pattern="MMM d, yyyy 'at' HH:mm" />} — this claim has expired and can no longer be approved.</>
-                    : <>Approve or reject before {<LocalTime iso={claim.expires_at} pattern="MMM d, yyyy 'at' HH:mm" />} — the claim expires after that.</>
+                    ? <>Review window closed {<LocalTime iso={claim.expires_at} pattern="MMM d, yyyy 'at' HH:mm" />}. This claim has expired and can no longer be approved.</>
+                    : <>Approve or reject before {<LocalTime iso={claim.expires_at} pattern="MMM d, yyyy 'at' HH:mm" />}. After that, the claim expires.</>
                   : "Approve or reject this claim."}
               </span>
             </div>

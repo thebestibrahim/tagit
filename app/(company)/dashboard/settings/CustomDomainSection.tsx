@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import { Lock, Check, Copy, Globe, Loader2, AlertTriangle, ArrowRight } from "lucide-react";
+import { Lock, Check, Copy, Loader2, AlertTriangle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { CustomDomain } from "@/types/database";
 
@@ -106,17 +106,11 @@ export function CustomDomainSection({ enabled, initialDomain }: Props) {
   }
 
   return (
-    <section
-      className="rounded-2xl p-6 mt-6"
-      style={{ backgroundColor: "var(--color-pearl)", border: "1px solid var(--color-cream)" }}
-    >
+    <section className="card-raised p-6 mt-6">
       <div className="flex items-center gap-2 mb-1">
-        <Globe size={16} style={{ color: enabled ? "var(--color-gold)" : "var(--color-mist)" }} />
-        <p className="text-caption font-semibold" style={{ color: enabled ? "var(--color-gold)" : "var(--color-mist)" }}>
-          Custom Domain
-        </p>
+        <h2 className="ov-h2">Custom domain</h2>
         {!enabled && (
-          <Lock size={14} style={{ color: "var(--color-mist)", marginLeft: 2 }} />
+          <Lock size={14} style={{ color: "var(--app-body)", marginLeft: 2 }} aria-label="Not on your plan" />
         )}
       </div>
 

@@ -77,27 +77,27 @@ export default async function ProductsPage({
   }
 
   const tagStatusColor = (status: string) => {
-    if (status === "owned" || status === "transferred") return { bg: "#ECFDF5", color: "#065F46" };
-    if (status === "live") return { bg: "var(--color-soft-gold)", color: "var(--color-deep-gold)" };
-    if (status === "flagged") return { bg: "var(--color-alert-tint)", color: "var(--color-alert)" };
-    return { bg: "var(--color-linen)", color: "var(--color-slate)" };
+    // Green once someone owns the piece, warm neutral while it waits for a
+    // first owner, red only when something is actually wrong.
+    if (status === "owned" || status === "transferred") return { bg: "#e3f0e8", color: "#1f5a40" };
+    if (status === "live") return { bg: "#f3ecdd", color: "#6e5527" };
+    if (status === "flagged") return { bg: "#f6e4e4", color: "#8a3b3b" };
+    return { bg: "#eeebe4", color: "#5e5c57" };
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="flex items-start justify-between mb-8">
+    <div className="p-5 sm:p-8 max-w-5xl mx-auto">
+      <div className="page-header flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
         <div>
           <h1 className="page-title">Products</h1>
           <p className="page-desc">
-            {count ?? 0} registered product{(count ?? 0) !== 1 ? "s" : ""}
+            {(count ?? 0) === 0
+              ? "Every piece you register, with the tag that proves it."
+              : `${count} registered product${count !== 1 ? "s" : ""}, each linked to its tag.`}
           </p>
         </div>
-        <Link
-          href="/dashboard/products/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium"
-          style={{ backgroundColor: "var(--color-onyx)", color: "var(--color-pearl)", textDecoration: "none", fontSize: "var(--text-body-sm)" }}
-        >
-          <Plus size={14} />
+        <Link href="/dashboard/products/new" className="ov-btn">
+          <Plus size={15} aria-hidden />
           Register product
         </Link>
       </div>
@@ -133,7 +133,7 @@ export default async function ProductsPage({
         </div>
       </div>
 
-      <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--color-cream)", boxShadow: "var(--shadow-sm)" }}>
+      <div className="card-raised overflow-hidden">
         {filtered.length === 0 ? (
           q ? (
             <EmptyState title={`Nothing matches “${q}”`}>
@@ -188,10 +188,10 @@ export default async function ProductsPage({
                       </td>
                       <td className="px-5 py-4">
                         <span
-                          className="px-2 py-0.5 rounded-full text-micro font-medium capitalize"
+                          className="px-2.5 py-0.5 rounded-full text-caption font-medium capitalize"
                           style={{ backgroundColor: badge.bg, color: badge.color }}
                         >
-                          {product.tags[0]?.status?.replace(/_/g, " ") ?? "—"}
+                          {product.tags[0]?.status?.replace(/_/g, " ") ?? "No tag"}
                         </span>
                       </td>
                       <td className="px-5 py-4">

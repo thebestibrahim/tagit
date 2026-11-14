@@ -110,27 +110,14 @@ export default function BrandPageSection({
   const secondaryStyle = { backgroundColor: "var(--color-linen)", color: "var(--color-graphite)", fontSize: "var(--text-caption)", textDecoration: "none" };
 
   return (
-    <div
-      className="rounded-xl mb-6 overflow-hidden"
-      style={{ border: "1px solid var(--color-cream)", boxShadow: "var(--shadow-sm)", backgroundColor: "var(--color-pearl)" }}
-    >
+    <div className="card-raised mb-8 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 p-5 pb-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <div
-            className="flex items-center justify-center shrink-0"
-            style={{ width: 34, height: 34, borderRadius: "var(--radius-md)", backgroundColor: "var(--color-soft-gold)" }}
-          >
-            <Globe size={17} style={{ color: "var(--color-deep-gold)" }} />
-          </div>
-          <div className="min-w-0">
-            <h3 style={{ color: "var(--color-charcoal)", fontSize: "var(--text-body-lg)", fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.25 }}>
-              Your brand page
-            </h3>
-            <p className="truncate" style={{ color: "var(--color-slate)", fontSize: "var(--text-caption)" }}>
-              A public showcase of your products. Share the link anywhere.
-            </p>
-          </div>
+      <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4">
+        <div className="min-w-0">
+          <h2 className="ov-h2">Your brand page</h2>
+          <p className="text-body-sm" style={{ color: "var(--app-body)" }}>
+            A public page of your products. Share the link anywhere.
+          </p>
         </div>
 
         {slug && (
@@ -148,7 +135,7 @@ export default function BrandPageSection({
         )}
       </div>
 
-      <div className="px-5 pb-5">
+      <div className="px-6 pb-5">
         {!slug ? (
           <button
             onClick={handleGenerate}
@@ -157,14 +144,14 @@ export default function BrandPageSection({
             style={{ backgroundColor: "var(--color-onyx)", color: "var(--color-pearl)", fontSize: "var(--text-body-sm)", opacity: generating ? 0.6 : 1 }}
           >
             {generating ? <Loader2 size={15} className="animate-spin" /> : <Globe size={15} />}
-            {generating ? "Generating…" : "Generate page"}
+            {generating ? "Creating your page" : "Create your brand page"}
           </button>
         ) : (
           <>
             {/* Link card */}
             <div
               className="rounded-lg"
-              style={{ border: "1px solid var(--color-cream)", backgroundColor: "var(--color-smoke)" }}
+              style={{ border: "1px solid var(--app-edge)", backgroundColor: "#faf8f4" }}
             >
               {editing ? (
                 <div className="flex flex-wrap items-center gap-2 p-3">
@@ -266,7 +253,7 @@ export default function BrandPageSection({
               <div className="flex items-center justify-between gap-3 mt-3">
                 {savedBio ? (
                   <p className="min-w-0 truncate" style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-                    <span style={{ color: "var(--color-mist)" }}>Bio · </span>{savedBio}
+                    <span style={{ color: "var(--app-body)" }}>Bio: </span>{savedBio}
                   </p>
                 ) : (
                   <span style={{ color: "var(--color-mist)", fontSize: "var(--text-body-sm)" }}>No bio yet</span>

@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { getStroke } from "perfect-freehand";
-import { Loader2, Upload, RotateCcw, PenLine, X } from "lucide-react";
+import { Loader2, Upload, RotateCcw, PenLine } from "lucide-react";
 
 // ─── Canvas constants ────────────────────────────────────────────────────────
 
@@ -184,32 +184,21 @@ export function SignaturePanel({ companyName, preview, onSave, onRemove }: Signa
             minHeight: 88,
           }}
         >
-          <div style={{ position: "relative", display: "inline-block" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={preview}
-              alt="Signature"
-              style={{ maxHeight: 60, maxWidth: "100%", objectFit: "contain" }}
-            />
-            <button
-              type="button"
-              onClick={handleRemove}
-              disabled={isRemoving}
-              style={{
-                position: "absolute", top: -8, right: -8,
-                width: 20, height: 20, borderRadius: "50%",
-                backgroundColor: "var(--color-alert)", border: "2px solid #fff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: isRemoving ? "not-allowed" : "pointer",
-              }}
-            >
-              {isRemoving ? <Loader2 size={9} color="#fff" className="animate-spin" /> : <X size={10} color="#fff" />}
-            </button>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={preview}
+            alt="Your signature"
+            style={{ maxHeight: 60, maxWidth: "100%", objectFit: "contain" }}
+          />
         </div>
-        <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
-          Remove to replace with a new signature.
-        </p>
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={handleRemove} disabled={isRemoving} className="cz-text-btn" style={{ paddingLeft: 0 }}>
+            {isRemoving ? "Removing" : "Remove signature"}
+          </button>
+          <p className="text-caption" style={{ color: "var(--app-body)" }}>
+            Remove it to draw or upload a new one.
+          </p>
+        </div>
       </div>
     );
   }
@@ -292,10 +281,10 @@ export function SignaturePanel({ companyName, preview, onSave, onRemove }: Signa
                     lineHeight: 1,
                   }}
                 >
-                  Sign here…
+                  Sign here
                 </p>
                 <p style={{ fontSize: 11, color: "var(--color-mist)", opacity: 0.7 }}>
-                  Mouse · trackpad · or stylus
+                  Use a mouse, trackpad or stylus
                 </p>
               </div>
             )}
@@ -399,7 +388,7 @@ export function SignaturePanel({ companyName, preview, onSave, onRemove }: Signa
               {isUploading ? "Uploading…" : "Upload signature image"}
             </button>
             <p style={{ fontSize: "var(--text-caption)", color: "var(--color-mist)" }}>
-              PNG · transparent background recommended · max 2 MB
+              A PNG with a transparent background works best, up to 2 MB.
             </p>
           </div>
         </div>

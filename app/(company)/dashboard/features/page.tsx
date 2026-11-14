@@ -85,8 +85,8 @@ export default async function BillingPage() {
             <Row label="Interval" value={cap(sub.billing_interval)} />
             <Row label="Next billing" value={fmtDate(sub.current_period_end ?? sub.trial_ends_at)} />
             <Row label="Next amount" value={subDiscount ? `${formatNaira(discountedNext)}  (after ${subDiscount.percentage}% off)` : formatNaira(nextAmount)} />
-            {subDiscount && <Row label="Subscription discount" value={`${subDiscount.percentage}% off — ${subDiscount.duration - subDiscount.used} cycles left`} />}
-            {batchDiscount && <Row label="Batch discount" value={`${batchDiscount.percentage}% off — ${batchDiscount.duration - batchDiscount.used} orders left`} />}
+            {subDiscount && <Row label="Subscription discount" value={`${subDiscount.percentage}% off for ${subDiscount.duration - subDiscount.used} cycles left`} />}
+            {batchDiscount && <Row label="Batch discount" value={`${batchDiscount.percentage}% off for ${batchDiscount.duration - batchDiscount.used} orders left`} />}
           </dl>
 
           {/* Tag and card usage — lifetime limits */}
@@ -181,7 +181,7 @@ export default async function BillingPage() {
                   </span>
                 ) : (
                   <a
-                    href={`mailto:business@tagitlux.com?subject=${encodeURIComponent(`Upgrade request — ${feature.name}`)}`}
+                    href={`mailto:business@tagitlux.com?subject=${encodeURIComponent(`Add ${feature.name} to our plan`)}`}
                     className="shrink-0 text-micro font-semibold px-3 py-1 rounded-full"
                     style={{ backgroundColor: "var(--color-soft-gold)", color: "var(--color-deep-gold)", textDecoration: "none" }}
                   >
@@ -278,7 +278,7 @@ function StatusBanner({ sub, nextAmount, discountedNext, subDiscount, batchDisco
   if (sub.status === "trialing" && sub.trial_ends_at) {
     return (
       <Banner tone="gold">
-        <p className="font-medium" style={{ color: "var(--color-charcoal)" }}>You are on a free trial — {daysUntil(sub.trial_ends_at)} days remaining.</p>
+        <p className="font-medium" style={{ color: "var(--color-charcoal)" }}>You are on a free trial with {daysUntil(sub.trial_ends_at)} days remaining.</p>
         <p className="mt-1" style={{ color: "var(--color-slate)", fontSize: "var(--text-body-sm)" }}>
           Your first invoice of {formatNaira(discountedNext)} will be sent on {fmtDate(sub.trial_ends_at)}.
         </p>
@@ -294,7 +294,7 @@ function StatusBanner({ sub, nextAmount, discountedNext, subDiscount, batchDisco
     // to suspended, never past_due.)
     const title = suspended
       ? "Your account is suspended."
-      : `Your plan is awaiting payment — ${formatNaira(amount)}.`;
+      : `Your plan is waiting for a payment of ${formatNaira(amount)}.`;
     const detail = suspended
       ? "Pay your outstanding balance to restore dashboard access. Scanning is never affected."
       : `Pay this invoice${openInvoice?.due_date ? ` by ${fmtDate(openInvoice.due_date)}` : ""} to activate your plan and start ordering tags.`;
@@ -332,8 +332,8 @@ function StatusBanner({ sub, nextAmount, discountedNext, subDiscount, batchDisco
       </div>
       {(subDiscount || batchDiscount) && (
         <div className="mt-2 space-y-0.5" style={{ fontSize: "var(--text-body-sm)" }}>
-          {subDiscount && <p style={{ color: "var(--color-gold)" }}>Subscription: {subDiscount.percentage}% off — {subDiscount.duration - subDiscount.used} cycles remaining</p>}
-          {batchDiscount && <p style={{ color: "var(--color-gold)" }}>Batch orders: {batchDiscount.percentage}% off — {batchDiscount.duration - batchDiscount.used} orders remaining</p>}
+          {subDiscount && <p style={{ color: "var(--color-gold)" }}>Subscription: {subDiscount.percentage}% off for {subDiscount.duration - subDiscount.used} cycles remaining</p>}
+          {batchDiscount && <p style={{ color: "var(--color-gold)" }}>Batch orders: {batchDiscount.percentage}% off for {batchDiscount.duration - batchDiscount.used} orders remaining</p>}
         </div>
       )}
     </Banner>
