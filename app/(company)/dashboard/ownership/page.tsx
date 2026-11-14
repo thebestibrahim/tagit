@@ -10,6 +10,7 @@ import OwnerLedgerTable, { type OwnerRow } from "@/components/OwnerLedgerTable";
 import LocalTime from "@/components/ui/LocalTime";
 import { sanitizeSearch } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
+import { embeddedName } from "@/lib/utils";
 
 type Claim = {
   id: string;
@@ -19,7 +20,7 @@ type Claim = {
   status: string;
   created_at: string;
   expires_at: string;
-  tags: { short_id: string; products: { name: string }[] | null } | null;
+  tags: { short_id: string; products: { name: string } | { name: string }[] | null } | null;
 };
 
 type OwnerRecord = {
@@ -29,7 +30,7 @@ type OwnerRecord = {
   acquisition_type: string;
   is_current: boolean | null;
   acquired_at: string | null;
-  tags: { short_id: string; products: { name: string }[] | null } | null;
+  tags: { short_id: string; products: { name: string } | { name: string }[] | null } | null;
 };
 
 const STATUS_FILTER = ["all", "pending", "approved", "rejected"];
@@ -102,7 +103,7 @@ export default async function OwnershipPage({
       id: r.id,
       ownerName: r.owner_name,
       ownerEmail: r.owner_email,
-      productName: r.tags?.products?.[0]?.name ?? null,
+      productName: embeddedName(r.tags?.products),
       tagShortId: r.tags?.short_id ?? null,
       acquisitionType: r.acquisition_type,
       isCurrent: !!r.is_current,
@@ -241,7 +242,7 @@ export default async function OwnershipPage({
                     </td>
                     <td className="px-5 py-4">
                       <span style={{ color: "var(--color-graphite)", fontSize: "var(--text-body-sm)" }}>
-                        {claim.tags?.products?.[0]?.name ?? "—"}
+                        {embeddedName(claim.tags?.products) ?? "Not linked"}
                       </span>
                     </td>
                     <td className="px-5 py-4">

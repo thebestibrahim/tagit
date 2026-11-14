@@ -27,3 +27,13 @@ export function normalizeEmail(email: string): string {
 export function sanitizeSearch(input: string): string {
   return input.replace(/[,()*:\\]/g, "").trim().slice(0, 100)
 }
+
+/**
+ * The name from a PostgREST embedded `products(name)` join. A tag belongs to
+ * one product, so PostgREST returns an object, not an array. Older code read
+ * `products[0].name`, which was always undefined; this accepts either shape.
+ */
+export function embeddedName(rel: { name: string } | { name: string }[] | null | undefined): string | null {
+  if (!rel) return null;
+  return Array.isArray(rel) ? rel[0]?.name ?? null : rel.name ?? null;
+}
